@@ -11,7 +11,7 @@ Same brain. Smaller mouth.
 
 ## When to use
 
-`chief` agent defaults to terse output. Load this skill to change intensity, apply to another agent, or temporarily turn off.
+The chief agents (`chief-ds`, `chief-glm`) default to terse output. Load this skill to change intensity, apply to another agent, or temporarily turn off.
 
 ## How to use
 

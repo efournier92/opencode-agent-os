@@ -6,7 +6,8 @@ Template for installing this system in another codebase or workspace.
 
 ## Shape
 
-One **operator** agent (`chief`) runs a session: decomposes work, routes to specialist subagents, verifies their output, writes handoffs.
+One **operator** role runs a session: decomposes work, routes to specialist subagents, verifies their output, writes handoffs.
+The shipped system resolves the operator per profile as `chief-ds` and `chief-glm`; press Tab in the TUI to switch between them.
 The user talks to the operator in outcomes, not steps.
 Specialists each own a narrow lane and enforce their own contract.
 The operator never re-does their job; it only integrates and verifies.
@@ -25,20 +26,23 @@ Two more layers alongside agents:
 ## Model tiers
 
 Model assignments are centralized in `models.yaml` in this plugin tree.
+The file holds `profiles:` (a per-profile tier-to-model map), a global `agent_tiers:` (role to tier), and `default_profile:`.
 Seven tiers:
 
-- **top**: highest-reasoning workers (currently unused).
+- **top**: highest-reasoning workers (`critic`, `qa`, `compliance-officer`).
 - **mid**: bounded workers that still need reasoning depth.
 - **language-high**: nuanced prose, register control, and voice work (`wordsmith`).
 - **vision-high**: visual review with a vision-capable model (`visual-critic`).
 - **vision-low**: fast vision-capable fixes (`visual-builder`).
-- **image-generation-high**: image generation via a dedicated image model (`photo-generator`).
+- **image-generation**: image generation via a dedicated image model (`photo-generator`).
 - **low**: shallow locate-and-compress tasks (`scout`, `investigator`).
 
-`models.yaml` maps each agent to a tier.
-Run `scripts/apply-models.py` after editing it; the script renders `models.yaml` into `opencode.json.sample`, which is the file OpenCode actually reads at runtime.
-The JSON config (`opencode.json` or `opencode.jsonc`) is therefore the live source of truth; agent and skill `.md` files never declare a model in their frontmatter.
-Agents not listed in `agent_tiers` inherit the invoking primary agent's model.
+Each profile supplies its own tier-to-model map, so the same role runs that vendor's model under each profile.
+Run `scripts/apply-models.py` after editing `models.yaml`; the script generates one resolved agent per profile and role under `agents/generated/`, named `<role>-<profile>` (for example `builder-ds`), and renders `opencode.json.sample`.
+Role bodies are profile-agnostic and name crew by bare role; the profile shows up only in the generated filename, the injected `model:`, and the chief's task scope.
+Generated agent files carry a concrete `model:` line; role sources under `agents/roles/` and skill `.md` files never declare one.
+The two primaries are `chief-ds` and `chief-glm`; each chief can dispatch only its own crew, and its prompt names that crew by bare role (`builder`, `qa`, and so on).
+Every role named in `agent_tiers` resolves to a model per profile, so resolved agents never inherit the invoking chief's model.
 
 ## Core operating loop (operator)
 
@@ -171,24 +175,25 @@ Hard constraints:
 ## Roster
 
 Naming convention: agents are role nouns (`builder`, `critic`); skills are verbs/actions (`specify`, `commit`).
+Role sources live in `agents/roles/`; each resolves to one generated agent per profile under `agents/generated/`, named `<role>-<profile>` (for example `builder-ds`).
 New additions follow the same word-class split.
 
 | Path | Kind | Job |
 |---|---|---|
-| `agents/chief.md` | agent | operator: decides, decomposes, routes, verifies, writes handoffs |
-| `agents/builder.md` | agent | bounded implementation from an exact scope |
-| `agents/qa.md` | agent | PASS/FAIL verification, evidence = executed commands only |
-| `agents/critic.md` | agent | attacks handoffs/diffs/claims before they're trusted |
-| `agents/system-fixer.md` | agent | repairs the agent system itself; improvement mode for recurring failures |
-| `agents/context-curator.md` | agent | keeps instruction docs / memory / handoffs true and lean |
-| `agents/scout.md` | agent | external facts: docs, versions, APIs (low tier) |
-| `agents/investigator.md` | agent | in-repo code locator: where X is defined, what calls Y (low tier) |
-| `agents/compliance-officer.md` | agent | pre-filters spec/branch/PR for real regulatory/compliance questions |
-| `agents/product-manager.md` | agent | harsh product/UX critique of spec/branch/PR |
-| `agents/photo-generator.md` | agent | local AI photo-generation: rig setup, model downloads, identity-consistent image batches |
-| `agents/wordsmith.md` | agent | communicative language: formal writing, messages, speeches, talking points in an American Millennial voice |
-| `agents/visual-critic.md` | agent | holistic visual design sweep of print, PDF, and HTML deliverables |
-| `agents/visual-builder.md` | agent | applies visual fixes from `visual-critic` findings |
+| `agents/roles/chief.md` | agent | operator: decides, decomposes, routes, verifies, writes handoffs |
+| `agents/roles/builder.md` | agent | bounded implementation from an exact scope |
+| `agents/roles/qa.md` | agent | PASS/FAIL verification, evidence = executed commands only |
+| `agents/roles/critic.md` | agent | attacks handoffs/diffs/claims before they're trusted |
+| `agents/roles/system-fixer.md` | agent | repairs the agent system itself; improvement mode for recurring failures |
+| `agents/roles/context-curator.md` | agent | keeps instruction docs / memory / handoffs true and lean |
+| `agents/roles/scout.md` | agent | external facts: docs, versions, APIs (low tier) |
+| `agents/roles/investigator.md` | agent | in-repo code locator: where X is defined, what calls Y (low tier) |
+| `agents/roles/compliance-officer.md` | agent | pre-filters spec/branch/PR for real regulatory/compliance questions |
+| `agents/roles/product-manager.md` | agent | harsh product/UX critique of spec/branch/PR |
+| `agents/roles/photo-generator.md` | agent | local AI photo-generation: rig setup, model downloads, identity-consistent image batches |
+| `agents/roles/wordsmith.md` | agent | communicative language: formal writing, messages, speeches, talking points in an American Millennial voice |
+| `agents/roles/visual-critic.md` | agent | holistic visual design sweep of print, PDF, and HTML deliverables |
+| `agents/roles/visual-builder.md` | agent | applies visual fixes from `visual-critic` findings |
 | `skills/specify/SKILL.md` | skill | turns a rough spec into an implementation-ready design doc |
 | `skills/implement/SKILL.md` | skill | builds exactly what a finished spec says, iterating to green |
 | `skills/commit/SKILL.md` | skill | organizes finished work into logical commits, never auto-commits |

@@ -28,7 +28,7 @@ A spec file path, given at invocation. If missing, ask for it.
 7. **Never commits or stages.** Leaves changes for review; a separate commit-organizing step runs afterward.
 8. **No special characters** (em dashes, arrows); plain punctuation, shorter sentences instead.
 9. **No tests for pure network/API-surface wiring** (thin endpoint/query/mutation glue); document usage examples in the spec instead of testing the wiring layer directly; test the underlying logic layer instead.
-10. **Comment discipline**: identical rule to `@builder`: comments state only what code can't; large comment block needed signals code unclear, extract a well-named method/variable instead (this kind of clarity extraction is not "innovation" under rule 2).
+10. **Comment discipline**: identical rule to the active profile's builder (`<prefix>-builder`): comments state only what code can't; large comment block needed signals code unclear, extract a well-named method/variable instead (this kind of clarity extraction is not "innovation" under rule 2).
 
 ## Stuck protocol: prime directive while iterating
 
