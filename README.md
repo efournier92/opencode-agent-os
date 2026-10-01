@@ -64,6 +64,11 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 - Installs generated agents, skills, the rulebook, and the TUI keybinds into the OpenCode config dir, with a timestamped backup.
 - Overwrites plugin-owned agents, skills, and rulebook; keeps an existing `models.yaml` and config; sets keybinds only when unset.
 
+### `scripts/release.sh`
+
+- Tags a release with today's date (`YYYY-MM-DD`) and pushes the branch and tag.
+- Re-running the same day moves that day's tag to the new `HEAD`; other dates are never touched.
+
 ### `opencode.json.sample`
 
 - Sample global config: `chief-ds` as default agent, the default model, and the built-in `build` and `scout` agents disabled.
@@ -110,6 +115,14 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `minimalist` | Force the laziest, minimal solution that works: cut over-engineering, reuse existing code, ship the smallest diff. |
 | `ui-craft` | Sleek, distinctive frontend design guidance: typography, palette, layout, and anti-AI-slop checks. |
 | `burn` | Delete the current session from local history once you quit, after confirming. Session-only. |
+
+## Releases
+
+Releases are marked with a date tag, `YYYY-MM-DD` (for example `2026-10-01`).
+
+- Cut one with `scripts/release.sh`.
+- It tags the current `HEAD` and pushes the branch and the tag.
+- One release per day: running it again the same day moves that day's tag to the new `HEAD`, replacing the earlier tag locally and on `origin`. Tags for other dates are never touched.
 
 ## Model Tiers
 
