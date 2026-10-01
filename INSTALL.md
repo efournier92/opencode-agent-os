@@ -4,14 +4,31 @@ Install this plugin into OpenCode so the multi-agent system is available in ever
 
 ## What gets installed
 
-- Subagents in `agents/` to `<config-dir>/agents/`
+- Generated per-profile agents in `agents/generated/` to `<config-dir>/agents/`
 - **12 skills** in `skills/` to `<config-dir>/skills/`
 - **Shared rulebook** `AGENTS.md` to `~/.config/opencode/AGENTS.md` (global) or `<project-root>/AGENTS.md` (per-project)
 - **OpenCode config** `opencode.json.sample` merged into `~/.config/opencode/opencode.json` or `opencode.jsonc`
 - **Model tiers** `models.yaml` to `<config-dir>/models.yaml` (copied only if not already present; never overwrites a customized copy on reinstall)
+- **TUI keybinds** `tui.json`: sets `agent_cycle: shift+tab` and `agent_cycle_reverse: none` only when those keys are unset. A keybind you chose is never overridden and no other keybind is touched.
 
-Models are pinned only in the JSON config.
-Agent and skill `.md` files declare mode and permissions but never a `model:` line; doing so would shadow the JSON and silently override your tier mapping.
+Each generated agent carries a concrete `model:` line injected from its profile.
+Role sources under `agents/roles/` and skill `.md` files declare mode and permissions but never a `model:` line; the generator strips and reports any stray one.
+
+## Scripted install (recommended)
+
+Run the installer from the plugin checkout:
+
+```bash
+scripts/install.sh
+```
+
+- Writes to `~/.config/opencode` by default; override with `--config-dir DIR` or `OPENCODE_CONFIG_DIR`.
+- Backs up whatever it replaces into `backup-<timestamp>` before touching it, so it is safe to re-run.
+- Overwrites `agents/`, `skills/`, and `AGENTS.md`; these are plugin-owned. Local additions in `agents/` and `skills/` are removed, so keep machine-specific agents and skills outside `~/.config/opencode/agents` and `~/.config/opencode/skills`.
+- Keeps an existing `models.yaml` and `opencode.json`/`opencode.jsonc`; merge `opencode.json.sample` by hand when a config already exists.
+- In `tui.json`, sets the agent-switch keybinds only when unset, leaving your keybinds alone.
+
+The manual steps below are what the installer performs, for running by hand or for a per-project install.
 
 ## Prerequisites
 
@@ -28,7 +45,7 @@ Makes agents and skills available everywhere OpenCode runs.
 
 ```bash
 mkdir -p ~/.config/opencode/agents
-cp -n agents/*.md ~/.config/opencode/agents/
+cp -n agents/generated/*.md ~/.config/opencode/agents/
 
 mkdir -p ~/.config/opencode/skills
 cp -Rn skills/* ~/.config/opencode/skills/
@@ -67,19 +84,19 @@ fi
 ```
 
 The sample sets:
-- `default_agent`: `chief`: every new session starts as the operator agent.
-- `model`: the default for agents without an explicit override; `chief`, `builder`, and every other listed agent have their own `agent.<name>.model` overrides in the same file.
-- `agent.*.model`: per-agent overrides for every agent listed in `models.yaml`'s `agent_tiers`.
+- `default_agent`: `chief-ds`: every new session starts as the DeepSeek operator agent. `chief-glm` is the other primary; press Tab to switch between them.
+- `model`: the fallback for any agent without an explicit override; every generated agent carries its own `model` line, so this rarely applies.
+- `agent.build.disable` and `agent.scout.disable`: hide the built-in `build` primary and the built-in `scout` subagent.
 - `permission`: `edit`/`bash` ask, `skill` allow.
 
-To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/apply-models.py` (prerequisite: Python 3 with PyYAML installed; `pip install pyyaml`), then merge the regenerated `opencode.json.sample` back into your `opencode.json` or `opencode.jsonc`. Agent `.md` files are not regenerated and need no reinstallation. Note: `apply-models.py` reads the **repo** copy, not the installed `<config-dir>/models.yaml`; the installed copy is preserved across reinstalls and documents your chosen tiers.
+To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/apply-models.py` (prerequisite: Python 3 with PyYAML installed; `pip install pyyaml`), then reinstall the regenerated `agents/generated/*.md` and merge the regenerated `opencode.json.sample` back into your `opencode.json` or `opencode.jsonc`. Note: `apply-models.py` reads the **repo** copy, not the installed `<config-dir>/models.yaml`; the installed copy is preserved across reinstalls and documents your chosen tiers.
 
 5. Restart OpenCode or reload config.
 
 6. Verify:
-   - Run `/agents` in the TUI; expect `chief` plus all installed subagents.
+   - Run `/agents` in the TUI; expect `chief-ds`, `chief-glm`, plus all installed subagents.
    - Check the `skill` tool description; it should list all 12 skills.
-   - Start a new session; it should begin as `chief`.
+   - Start a new session; it should begin as `chief-ds`; press Tab to cycle to `chief-glm`.
 
 ## Per-project install
 
@@ -91,7 +108,7 @@ Use when the plugin should travel with a specific repo.
 
 ```bash
 mkdir -p .opencode/agents
-cp -n agents/*.md .opencode/agents/
+cp -n agents/generated/*.md .opencode/agents/
 
 mkdir -p .opencode/skills
 cp -Rn skills/* .opencode/skills/
@@ -135,7 +152,9 @@ OpenCode merges config and rules from all discovered locations; later sources ov
 
 ## Reinstalling / upgrading
 
-`cp -n` and `cp -Rn` only add files; they never remove renamed or deleted ones. Reinstalling over an older version therefore leaves stale agents/skills behind (e.g. old names like `caveman`, `specifier`, `qa-engineer` alongside their renames `terse`, `specify`, `qa`). Before upgrading, clear the agent/skill dirs and reinstall fresh:
+`cp -n` and `cp -Rn` only add files; they never remove renamed or deleted ones.
+Reinstalling over an older version therefore leaves stale entries behind; in particular the older bare agents (`builder`, `qa`, and the rest) coexist with the per-profile agents that replace them (`builder-ds`, `builder-glm`, and so on).
+Before upgrading, clear the agent and skill dirs so no stale bare agent survives, then reinstall fresh:
 
 ```bash
 # global
@@ -147,7 +166,17 @@ rm -rf .opencode/agents .opencode/skills
 # then re-run the copy commands from the per-project section
 ```
 
-Your `models.yaml` and `opencode.json`/`opencode.jsonc` are untouched by this.
+This release changes `models.yaml` from a single `tiers:` map to `profiles:` plus `agent_tiers:`.
+Replace the installed copy so it matches the generator's schema, backing the old one up first.
+
+```bash
+ts=$(date +%Y-%m-%d_%H%M%S)
+[ -f ~/.config/opencode/models.yaml ] && cp ~/.config/opencode/models.yaml ~/.config/opencode/models.yaml.bak-$ts
+cp models.yaml ~/.config/opencode/models.yaml
+```
+
+Replace the active config rather than merging it: the old per-agent `model` pins name agents that no longer exist (`chief`, `builder`), and the sample now sets `default_agent: chief-ds` and disables the built-ins.
+Back up the current config, then copy the regenerated `opencode.json.sample` over it (or hand-merge only the `model`, `default_agent`, `permission`, `provider`, and `agent` keys).
 
 ## Uninstall
 
@@ -171,5 +200,5 @@ rm AGENTS.md
 
 - **Agents not listed**: confirm the `.md` files are in a directory OpenCode searches (`~/.config/opencode/agents/` or `.opencode/agents/`) and that YAML frontmatter is valid.
 - **Skills not listed**: confirm each skill is in its own folder with a file named exactly `SKILL.md` and that the frontmatter `name` matches the folder name.
-- **Chief is not the default**: confirm `default_agent: chief` is set in the active `opencode.json` or `opencode.jsonc`.
+- **Chief is not the default**: confirm `default_agent: chief-ds` (or `chief-glm`) is set in the active `opencode.json` or `opencode.jsonc`.
 - **Model overrides not applied**: confirm the provider prefix in `models.yaml` matches your OpenCode provider, then re-run `python3 scripts/apply-models.py` and merge the regenerated `opencode.json.sample` into your active config.

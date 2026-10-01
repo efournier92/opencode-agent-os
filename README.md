@@ -14,24 +14,26 @@
 ### Overview
 
 - See [`INSTALL.md`](INSTALL.md) for step-by-step instructions, meant for an agent to execute.
+- For the common case, run `scripts/install.sh`.
 - **Supports:**
   - Global install *(recommended for personal use)*.
   - Per-project install *(team-shared, in a repo).*
 
 ### Quick Global Install
 
+From the plugin checkout:
+
 ```bash
-mkdir -p ~/.config/opencode/agents ~/.config/opencode/skills
-cp -n agents/*.md ~/.config/opencode/agents/
-cp -Rn skills/* ~/.config/opencode/skills/
-cp -n AGENTS.md ~/.config/opencode/AGENTS.md
-# merge opencode.json.sample into ~/.config/opencode/opencode.json or opencode.jsonc
+scripts/install.sh
 ```
+
+It backs up what it replaces, installs the generated agents, skills, and rulebook, seeds `models.yaml` and the config on a fresh machine, and sets the TUI keybinds so agent switching is on `shift+tab` (only when those keys are unset).
+See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### Verify
 
 1. **Run `/agents` in the OpenCode TUI**
-    - Expect all many agents available *(`chief`, `builder`, `critic`, etc).*
+    - Expect both primaries and their crews: `chief-ds`, `chief-glm`, and each `<role>-<prefix>` subagent *(`builder-ds`, `qa-glm`, etc).*
 2. The `skill` tool description should list all 12 skills *(`specify`, `implement`, etc).*
 
 ## Contents
@@ -49,40 +51,46 @@ cp -n AGENTS.md ~/.config/opencode/AGENTS.md
 
 ### `models.yaml`
 
-- Single source of truth for model tiers and agent-to-tier mapping.
-  - *Supports (`top`, `mid`, `low`, `language-high`, `vision-high`, `vision-low`, `image-generation-high`).*
+- Single source of truth for profiles, per-profile model tiers, and role-to-tier mapping.
+  - *Supports (`top`, `mid`, `low`, `language-high`, `vision-high`, `vision-low`, `image-generation`).*
 
 ### `scripts/apply-models.py`
 
-- Renders `models.yaml` into `opencode.json.sample`.
-- Strips any stray `model:` line from agent frontmatter; fails loud if a skill file ever grows one.
+- Resolves `models.yaml` into one generated agent per profile under `agents/generated/`, named `<role>-<prefix>` (for example `builder-ds`).
+- Renders `opencode.json.sample` and strips any stray `model:` line from role frontmatter; fails loud if a skill file ever grows one.
+
+### `scripts/install.sh`
+
+- Installs generated agents, skills, the rulebook, and the TUI keybinds into the OpenCode config dir, with a timestamped backup.
+- Overwrites plugin-owned agents, skills, and rulebook; keeps an existing `models.yaml` and config; sets keybinds only when unset.
 
 ### `opencode.json.sample`
 
-- Sample global config: `chief` as default agent, default model, `scout` pinned to the low tier, etc.
+- Sample global config: `chief-ds` as default agent, the default model, and the built-in `build` and `scout` agents disabled.
 
 ### `agents/`
 
-- All agent files *(markdown + YAML frontmatter)*.
+- Role sources live in `agents/roles/` *(markdown + YAML frontmatter)*.
+- `scripts/apply-models.py` renders each role into one generated agent per profile under `agents/generated/`, named `<role>-<prefix>` (for example `builder-ds`).
 
-| Agent | Mode | Tier | Description |
+| Role | Mode | Tier | Description |
 |---|---|---|---|
 | `chief` | primary | mid | Operator agent that decides, decomposes, routes work to specialists, verifies output, and writes handoffs. |
 | `builder` | subagent | mid | Bounded implementation worker for a well-specified task with a clear done-check. |
-| `qa` | subagent | mid | PASS/FAIL verification agent that proves claims by executing commands; read-only on code. |
-| `critic` | subagent | mid | Red-team reviewer that attacks handoffs, plans, diffs, and claims for fake progress before they are trusted. |
+| `qa` | subagent | top | PASS/FAIL verification agent that proves claims by executing commands; read-only on code. |
+| `critic` | subagent | top | Red-team reviewer that attacks handoffs, plans, diffs, and claims for fake progress before they are trusted. |
 | `system-fixer` | subagent | mid | Repairs the agent system itself (configs, hooks, instruction docs) and runs improvement mode for recurring failures. |
 | `context-curator` | subagent | mid | Hygiene agent for instruction docs, memory index, and handoffs; keeps context lean and claims true. |
 | `scout` | subagent | low | Low-tier external-research agent for docs, versions, APIs, and changelogs outside the codebase. |
 | `investigator` | subagent | low | Low-tier read-only in-repo code locator that finds where symbols are defined and what calls them, with compressed deterministic output. |
-| `compliance-officer` | subagent | mid | Pre-filters specs, branches, and PRs for regulatory/legal/fiduciary/privacy questions worth a human compliance officer's time. |
+| `compliance-officer` | subagent | top | Pre-filters specs, branches, and PRs for regulatory/legal/fiduciary/privacy questions worth a human compliance officer's time. |
 | `product-manager` | subagent | mid | Harsh product/UX critique of specs, branches, and PRs from the user's perspective. |
-| `photo-generator` | subagent | image-generation-high | Local AI photo-generation specialist: sets up a ComfyUI/SDXL rig, downloads models, produces identity-consistent artistic images via scripted runners. |
+| `photo-generator` | subagent | image-generation | Local AI photo-generation specialist: sets up a ComfyUI/SDXL rig, downloads models, produces identity-consistent artistic images via scripted runners. |
 | `wordsmith` | subagent | language-high | Communicative-language specialist: formal writing, messages, speeches, talking points in an American Millennial voice. |
 | `visual-critic` | subagent | vision-high | Holistic visual design sweep of print, PDF, and HTML deliverables. |
 | `visual-builder` | subagent | vision-low | Applies visual fixes from `visual-critic` findings. |
 
-*Mode and tier are shipped defaults. Model IDs are user-configurable via `models.yaml` (see Model Tiers).*
+*Mode and tier ship with each role. Each profile injects a concrete model per tier from `models.yaml` (see Model Tiers); the two primaries are `chief-ds` and `chief-glm`.*
 
 ### `skills/` (12 skills)
 
@@ -108,49 +116,57 @@ cp -n AGENTS.md ~/.config/opencode/AGENTS.md
 ### Configure
 
 All model assignments are driven by `models.yaml`.
-The script renders that file into `opencode.json.sample`, which is the JSON config OpenCode actually reads at runtime.
-Agent and skill `.md` files never declare a `model:` line in their frontmatter; doing so would shadow the JSON config and break this single-source-of-truth architecture.
+The file holds `profiles:` (a per-profile tier-to-model map), a global `agent_tiers:` (role to tier), and `default_profile:`.
+The generator renders that file into one agent per profile under `agents/generated/` and into `opencode.json.sample`, which is the JSON config OpenCode actually reads at runtime.
+Role sources under `agents/roles/` and skill `.md` files never declare a `model:` line; doing so would shadow the generated config and break this single-source-of-truth architecture.
 
 ```yaml
-tiers:
-  # DeepSeek V4.1 (shipped default)
-  top:         deepseek/deepseek-v4-pro    # thinking mode on
-  mid:         deepseek/deepseek-v4-pro
-  low:         deepseek/deepseek-flash
-  language-high: opencode-go/glm-5.3
-  vision-high:   opencode-go/qwen3.8-max
-  vision-low:    opencode-go/deepseek-v4.1-flash
-
-  # Claude:
-  # top:   anthropic/claude-opus-5
-  # mid:   anthropic/claude-sonnet-5
-  # low:   anthropic/claude-haiku-4-5
-
-  # OpenAI (GPT-5.6 family, 2026-08):
-  # top:   openai/gpt-5.6-sol
-  # mid:   openai/gpt-5.6-terra
-  # low:   openai/gpt-5.6-luna
+default_profile: ds
 
 agent_tiers:
   chief: mid
   builder: mid
-  qa: mid
-  critic: mid
+  qa: top
+  critic: top
   scout: low
   investigator: low
   ...
+
+profiles:
+  ds:
+    label: DeepSeek
+    provider: deepseek
+    tiers:
+      top: deepseek/deepseek-v4-pro
+      mid: deepseek/deepseek-flash
+      low: deepseek/deepseek-flash
+      language-high: deepseek/deepseek-flash
+      vision-high: deepseek/deepseek-flash
+      vision-low: deepseek/deepseek-flash
+      image-generation: google/gemini-3-pro-image
+  glm:
+    label: GLM
+    provider: zai-coding-plan
+    tiers:
+      top: zai-coding-plan/glm-5.3
+      mid: zai-coding-plan/glm-5.3
+      low: zai-coding-plan/glm-5.3-flash
+      language-high: zai-coding-plan/glm-5.3
+      vision-high: zai-coding-plan/glm-5.3-flash
+      vision-low: zai-coding-plan/glm-5.3-flash
+      image-generation: openrouter/google/gemini-2.5-flash-image
 ```
 
-*Shipped default is DeepSeek V4.1; commented Claude and OpenAI alternatives live in `models.yaml`.*
+*The shipped default is the DeepSeek profile; the two primaries are `chief-ds` and `chief-glm`.*
 
 ### Update
 
-To change model IDs, or move an agent between tiers, edit `models.yaml` and run:
+To change model IDs, add a profile, or move a role between tiers, edit `models.yaml` and run:
 
 ```bash
 python3 scripts/apply-models.py
 ```
 
-The script writes the regenerated `opencode.json.sample`; merge it into your `opencode.json` or `opencode.jsonc` (or copy it on top if the file is unmodified).
-Agent `.md` files are touched only to strip stale `model:` lines from frontmatter; no other modification.
+The script regenerates `agents/generated/*.md` and `opencode.json.sample`; reinstall the generated agents and merge the sample into your `opencode.json` or `opencode.jsonc` (or copy it on top if the file is unmodified).
+Role sources are touched only to strip a stray `model:` line from frontmatter; no other modification.
 
