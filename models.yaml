@@ -1,55 +1,45 @@
-# Model tier mapping for the multi-agent plugin.
-# This is the single source of truth for agent model assignments.
-# models.yaml drives opencode.json.sample (and ultimately your
-# opencode.json / opencode.jsonc); that JSON file is what OpenCode
-# actually reads at runtime.
-#
-# Agent and skill .md files must NOT declare a model: in their
-# frontmatter; doing so shadows the JSON config. scripts/apply-models.py
-# enforces this by stripping any stray model: lines from agent files on
-# each run and failing loudly if a skill file ever grows one.
-#
-# After editing this file, run scripts/apply-models.py to regenerate
-# opencode.json.sample from this file.
+# Single source of truth for profile model assignments.
+# Run scripts/apply-models.py after editing to regenerate agents/generated/
+# and opencode.json.sample.
 
-# Tier model IDs (OpenCode provider/model-id format).
-# Shipped default: DeepSeek V4.1. Commented alternatives: Claude, OpenAI (2026-08).
-# Verify exact IDs with `/models` after connecting the provider.
-tiers:
-  top:   deepseek/deepseek-v4-pro    # thinking mode on
-  mid:   deepseek/deepseek-v4-pro
-  low:   deepseek/deepseek-flash
-  language-high: opencode-go/glm-5.3
-  vision-high: opencode-go/qwen3.8-max
-  vision-low: opencode-go/deepseek-v4.1-flash
-  image-generation-high: openrouter/google/gemini-3-pro-image
+default_profile: ds
 
-  # Claude:
-  # top:   anthropic/claude-opus-5
-  # mid:   anthropic/claude-sonnet-5
-  # low:   anthropic/claude-haiku-4-5
-
-  # OpenAI (GPT-5.6 family, 2026-08):
-  # top:   openai/gpt-5.6-sol
-  # mid:   openai/gpt-5.6-terra
-  # low:   openai/gpt-5.6-luna
-
-# Agent-to-tier mapping.
-# Agents not listed here inherit the invoking primary agent's model.
 agent_tiers:
   chief: mid
-
-  critic: mid
+  builder: mid
+  qa: top
+  critic: top
   system-fixer: mid
   product-manager: mid
-  builder: mid
-  qa: mid
-  compliance-officer: mid
+  compliance-officer: top
   context-curator: mid
-  photo-generator: image-generation-high
+  photo-generator: image-generation
   wordsmith: language-high
   visual-critic: vision-high
   visual-builder: vision-low
-
   scout: low
   investigator: low
+
+profiles:
+  ds:
+    label: DeepSeek
+    provider: deepseek
+    tiers:
+      top: deepseek/deepseek-v4-pro
+      mid: deepseek/deepseek-flash
+      low: deepseek/deepseek-flash
+      language-high: deepseek/deepseek-flash
+      vision-high: deepseek/deepseek-flash
+      vision-low: deepseek/deepseek-flash
+      image-generation: google/gemini-3-pro-image
+  glm:
+    label: GLM
+    provider: zai-coding-plan
+    tiers:
+      top: zai-coding-plan/glm-5.3
+      mid: zai-coding-plan/glm-5.3
+      low: zai-coding-plan/glm-5.3-flash
+      language-high: zai-coding-plan/glm-5.3
+      vision-high: zai-coding-plan/glm-5.3-flash
+      vision-low: zai-coding-plan/glm-5.3-flash
+      image-generation: openrouter/google/gemini-2.5-flash-image

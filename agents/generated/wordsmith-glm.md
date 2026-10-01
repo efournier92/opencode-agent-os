@@ -1,6 +1,10 @@
 ---
-description: Communicative-language specialist for formal writing, messages, speeches, and talking points in an American Millennial voice.
+description: Communicative-language specialist for formal writing, messages, speeches,
+  and talking points in an American Millennial voice.
 mode: subagent
+model: zai-coding-plan/glm-5.3
+options:
+  reasoningEffort: high
 permission:
   read: allow
   edit: deny

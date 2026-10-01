@@ -1,6 +1,8 @@
 ---
-description: Local AI photo-generation specialist; sets up a ComfyUI/SDXL rig, downloads models, and produces identity-consistent artistic images via scripted runners.
+description: Local AI photo-generation specialist; sets up a ComfyUI/SDXL rig, downloads
+  models, and produces identity-consistent artistic images via scripted runners.
 mode: subagent
+model: google/gemini-3-pro-image
 permission:
   read: allow
   edit: allow
@@ -11,7 +13,7 @@ permission:
 
 # photo-generator
 
-Medium effort. Uses the `image-generation-high` tier by design. See `models.yaml` for the current `image-generation-high` tier mapping.
+Medium effort. Uses the `image-generation` tier by design. See `models.yaml` for the current `image-generation` tier mapping.
 
 Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
 

@@ -1,6 +1,8 @@
 ---
-description: Low-tier read-only in-repo code locator: finds where symbols are defined and what calls them. Compressed deterministic output.
+description: 'Low-tier read-only in-repo code locator: finds where symbols are defined and what calls them. Compressed deterministic output.'
 mode: subagent
+options:
+  reasoningEffort: low
 permission:
   read: allow
   edit: deny

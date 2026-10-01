@@ -1,6 +1,10 @@
 ---
-description: Red-team reviewer that attacks handoffs, plans, diffs, and claims for fake progress before they are trusted.
+description: Red-team reviewer that attacks handoffs, plans, diffs, and claims for
+  fake progress before they are trusted.
 mode: subagent
+model: zai-coding-plan/glm-5.3
+options:
+  reasoningEffort: high
 permission:
   read: allow
   edit: deny

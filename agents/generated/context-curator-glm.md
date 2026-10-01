@@ -1,6 +1,10 @@
 ---
-description: Hygiene agent for instruction docs, memory index, and handoffs; keeps context lean and claims true.
+description: Hygiene agent for instruction docs, memory index, and handoffs; keeps
+  context lean and claims true.
 mode: subagent
+model: zai-coding-plan/glm-5.3
+options:
+  reasoningEffort: low
 permission:
   read: allow
   edit: allow

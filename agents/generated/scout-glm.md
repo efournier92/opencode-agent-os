@@ -1,6 +1,10 @@
 ---
-description: Low-tier external-research agent for docs, versions, APIs, and changelogs outside the codebase.
+description: Low-tier external-research agent for docs, versions, APIs, and changelogs
+  outside the codebase.
 mode: subagent
+model: zai-coding-plan/glm-5.3-flash
+options:
+  reasoningEffort: low
 permission:
   read: allow
   edit: deny

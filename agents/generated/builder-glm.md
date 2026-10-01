@@ -1,6 +1,10 @@
 ---
-description: Bounded implementation worker for a well-specified task with a clear done-check.
+description: Bounded implementation worker for a well-specified task with a clear
+  done-check.
 mode: subagent
+model: zai-coding-plan/glm-5.3
+options:
+  reasoningEffort: high
 permission:
   read: allow
   edit: allow

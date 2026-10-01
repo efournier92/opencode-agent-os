@@ -1,6 +1,10 @@
 ---
-description: Visual design builder that applies fixes to HTML/CSS based on visual-critic's findings, matching the design reference and framework conventions.
+description: Visual design builder that applies fixes to HTML/CSS based on visual-critic's
+  findings, matching the design reference and framework conventions.
 mode: subagent
+model: deepseek/deepseek-flash
+options:
+  reasoningEffort: low
 permission:
   read: allow
   edit: allow

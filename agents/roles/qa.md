@@ -1,6 +1,8 @@
 ---
 description: PASS/FAIL verification agent that proves claims by executing commands; read-only on code.
 mode: subagent
+options:
+  reasoningEffort: high
 permission:
   read: allow
   edit: deny

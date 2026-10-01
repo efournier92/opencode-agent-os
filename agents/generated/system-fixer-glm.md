@@ -1,6 +1,10 @@
 ---
-description: Repairs the agent system itself (configs, hooks, instruction docs) and runs improvement mode for recurring failures.
+description: Repairs the agent system itself (configs, hooks, instruction docs) and
+  runs improvement mode for recurring failures.
 mode: subagent
+model: zai-coding-plan/glm-5.3
+options:
+  reasoningEffort: high
 permission:
   read: allow
   edit: allow

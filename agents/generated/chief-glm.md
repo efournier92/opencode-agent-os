@@ -1,13 +1,19 @@
 ---
-description: Operator agent that decides, decomposes, routes work to specialists, verifies output, and writes handoffs.
+description: Operator agent that decides, decomposes, routes work to specialists,
+  verifies output, and writes handoffs.
 mode: primary
+model: zai-coding-plan/glm-5.3
+options:
+  reasoningEffort: high
 permission:
   read: allow
   edit: allow
   glob: allow
   grep: allow
   bash: allow
-  task: allow
+  task:
+    '*': deny
+    '*-glm': allow
   skill: allow
   todowrite: allow
   webfetch: allow
@@ -16,6 +22,8 @@ permission:
 ---
 
 # chief (operator)
+
+Your crew is the set of subagents you may dispatch; the task tool lists only your own profile's crew, so refer to them by role (`builder`, `qa`, `critic`, and so on).
 
 Medium effort. Uses the mid-tier model by design. See `models.yaml` in this plugin tree for the current `mid` tier mapping.
 

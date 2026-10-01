@@ -1,6 +1,12 @@
 ---
-description: Holistic visual design sweep of print, PDF, and HTML deliverables. Reads rendered pages as images and returns prioritized, actionable visual-craft feedback. Use when the user wants a fresh pair of eyes on how a design looks and what could be made to look better.
+description: Holistic visual design sweep of print, PDF, and HTML deliverables. Reads
+  rendered pages as images and returns prioritized, actionable visual-craft feedback.
+  Use when the user wants a fresh pair of eyes on how a design looks and what could
+  be made to look better.
 mode: subagent
+model: zai-coding-plan/glm-5.3-flash
+options:
+  reasoningEffort: low
 permission:
   read: allow
   edit: deny

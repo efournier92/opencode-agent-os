@@ -1,6 +1,8 @@
 ---
 description: Harsh product/UX critique of specs, branches, and PRs from the user's perspective.
 mode: subagent
+options:
+  reasoningEffort: high
 permission:
   read: allow
   edit: deny
