@@ -39,7 +39,7 @@ These come first because they decide whether a file should exist at all.
 4. **Never invent facts.** Capture only what the session actually established. Unknown stays unknown; list it under open questions.
 5. **One topic per file.** Split rather than bloat; cross-link related captures.
 6. **Decide, do not ask, when reversible.** Folder, date, and label are decide-and-log. Ask only when the destination is genuinely ambiguous (no convention found and a new set) or the choice is irreversible.
-7. **Style.** Follow the Markdown style rules in `AGENTS.md`: no em dashes, en dashes, arrows, ellipsis, or smart quotes; a blank line after every heading; title-cased titles and headings (capitalize every word); no sentence split across lines.
+7. **Style.** Follow the Markdown style rules in `docs/rulebook/markdown-style.md`: no em dashes, en dashes, arrows, ellipsis, or smart quotes; a blank line after every heading; title-cased titles and headings (capitalize every word); no sentence split across lines.
 
 ## Output Location And Naming
 

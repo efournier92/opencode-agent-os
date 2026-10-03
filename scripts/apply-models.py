@@ -232,6 +232,7 @@ def render_sample_config(profiles, default_profile):
             "edit": "ask",
             "bash": "ask",
             "skill": {"*": "allow"},
+            "external_directory": {"/tmp/*": "allow"},
         },
         "compaction": {"prune": True},
         "agent": {

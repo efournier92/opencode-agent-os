@@ -7,6 +7,7 @@ Install this plugin into OpenCode so the multi-agent system is available in ever
 - Generated per-profile agents in `agents/generated/` to `<config-dir>/agents/`
 - **13 skills** in `skills/` to `<config-dir>/skills/`
 - **Shared rulebook** `AGENTS.md` to `~/.config/opencode/AGENTS.md` (global) or `<project-root>/AGENTS.md` (per-project)
+- **Rulebook references** `docs/rulebook/` to `<config-dir>/docs/rulebook/`, linked from `AGENTS.md` and read on demand
 - **OpenCode config** `opencode.json.sample`: seeded on a fresh install, or its plugin-managed keys merged into an existing `~/.config/opencode/opencode.json` or `opencode.jsonc` (see Managed Config Keys).
 - **Model pins** `models.yaml` to `<config-dir>/models.yaml` (copied only if not already present; never overwrites a customized copy on reinstall)
 - **TUI keybinds** `tui.json`: sets `agent_cycle: shift+tab` and `agent_cycle_reverse: none` only when those keys are unset. A keybind you chose is never overridden and no other keybind is touched.
@@ -24,7 +25,7 @@ scripts/install.sh
 
 - Writes to `~/.config/opencode` by default; override with `--config-dir DIR` or `OPENCODE_CONFIG_DIR`.
 - Backs up whatever it replaces into `backup-<timestamp>` before touching it, so it is safe to re-run.
-- Overwrites `agents/`, `skills/`, and `AGENTS.md`; these are plugin-owned. Local additions in `agents/` and `skills/` are removed, so keep machine-specific agents and skills outside `~/.config/opencode/agents` and `~/.config/opencode/skills`.
+- Overwrites `agents/`, `skills/`, `AGENTS.md`, and `docs/rulebook/`; these are plugin-owned. Local additions in `agents/` and `skills/` are removed, so keep machine-specific agents and skills outside `~/.config/opencode/agents` and `~/.config/opencode/skills`.
 - Keeps an existing `models.yaml` and `opencode.json`/`opencode.jsonc`. When a config exists, the installer overrides only the plugin-managed keys (see Managed Config Keys); every other key, including providers, MCP servers, permissions, and custom agents, is preserved. A config that is not strict JSON, such as one with JSONC comments, is skipped with a warning and needs a hand merge.
 - In `tui.json`, sets the agent-switch keybinds only when unset, leaving your keybinds alone.
 
@@ -32,7 +33,7 @@ The manual steps below are what the installer performs, for running by hand or f
 
 ## Managed Config Keys
 
-On install and every upgrade, the installer merges this fixed set of leaf keys from `opencode.json.sample` into an existing config, overriding the local value: `default_agent`, `subagent_depth`, `compaction.prune`, `agent.build.disable`, and `agent.scout.disable`.
+On install and every upgrade, the installer merges this fixed set of leaf keys from `opencode.json.sample` into an existing config, overriding the local value: `default_agent`, `subagent_depth`, `compaction.prune`, `agent.build.disable`, `agent.scout.disable`, and `permission.external_directory./tmp/*`.
 
 Everything else is left alone, including `provider`, `mcp`, `permission`, `model`, and any custom `agent` entries.
 
@@ -61,10 +62,12 @@ mkdir -p ~/.config/opencode/skills
 cp -Rn skills/* ~/.config/opencode/skills/
 ```
 
-3. Copy the shared rulebook:
+3. Copy the shared rulebook and its on-demand references:
 
 ```bash
 cp -n AGENTS.md ~/.config/opencode/AGENTS.md
+mkdir -p ~/.config/opencode/docs
+cp -Rn docs/rulebook ~/.config/opencode/docs/rulebook
 ```
 
 4. Copy the model-pin mapping (preserved on reinstall), then merge the sample config into your global OpenCode config.
@@ -97,7 +100,7 @@ The sample sets:
 - `subagent_depth`: `2`, allowing a subagent to launch one nested level.
 - `compaction.prune`: `true`, dropping old tool outputs from context to reduce token cost.
 - `agent.build.disable` and `agent.scout.disable`: hide the built-in `build` primary and the built-in `scout` subagent.
-- `permission`: `edit`/`bash` ask, `skill` allow.
+- `permission`: `edit`/`bash` ask, `skill` allow, and `external_directory` allows `/tmp/*` so scratch files under `/tmp` do not prompt for approval.
 
 To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/apply-models.py` (prerequisite: Python 3 with PyYAML installed; `pip install pyyaml`), then reinstall the regenerated `agents/generated/*.md` and merge the regenerated `opencode.json.sample` back into your `opencode.json` or `opencode.jsonc`. Note: `apply-models.py` reads the **repo** copy, not the installed `<config-dir>/models.yaml`; the installed copy is preserved across reinstalls and documents your chosen model pins.
 
@@ -124,10 +127,12 @@ mkdir -p .opencode/skills
 cp -Rn skills/* .opencode/skills/
 ```
 
-3. Copy the shared rulebook to the project root (not inside `.opencode/`):
+3. Copy the shared rulebook to the project root (not inside `.opencode/`), plus its on-demand references:
 
 ```bash
 cp -n AGENTS.md ./AGENTS.md
+mkdir -p ./docs
+cp -Rn docs/rulebook ./docs/rulebook
 ```
 
 If the repo already has an `AGENTS.md`, merge this plugin's `AGENTS.md` into it.

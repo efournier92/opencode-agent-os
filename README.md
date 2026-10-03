@@ -41,7 +41,8 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### `AGENTS.md`
 
-- Shared rulebook *(operating loop, delegation contract, shell discipline, roster)*.
+- Always-loaded core rulebook *(cross-cutting contracts: delegation, decisions, verify, markdown, shell)*.
+- Operator-only detail lives in `agents/roles/chief.md`; phase and reference detail lives in `docs/rulebook/`, read on demand.
 - Install to either:
   - `~/.config/opencode/AGENTS.md` *(global)*.
   - `<project-root>/AGENTS.md` *(per-project)*.
@@ -56,6 +57,12 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 - The index `docs/discovery/DISCOVERY.md` holds one line per finding, decision, assumption, trap, question, or outcome, each with evidence.
 - Grep it by scope token or `[type]` when scoping a task; open a linked detail file only when an entry is load-bearing.
 - The operator appends at checkpoints; the commit skill reconciles and stages it. Without the directory, the practice is skipped and nothing is created or read. See Progressive Discovery in `AGENTS.md`.
+
+### `docs/rulebook/`
+
+- On-demand reference split out of `AGENTS.md` and `chief.md` to keep the always-loaded pair under the context budget.
+- `roster.md` is the full agent and skill catalog; `model-profiles.md` is the profile and generator contract; `markdown-style.md` is the full Markdown style rules; `stash-discipline.md` is the procedure for destructive git operations.
+- `scripts/install.sh` ships this directory beside the installed `AGENTS.md`.
 
 ### `models.yaml`
 
@@ -78,9 +85,18 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 - Tags a release with today's date (`YYYY-MM-DD`) and pushes the branch and tag.
 - Re-running the same day moves that day's tag to the new `HEAD`; other dates are never touched.
 
+### `scripts/check.sh`
+
+- Single quality gate: context size budget, the unit suite, and the markdown linter.
+- Wired into `.githooks/pre-commit` *(enable with `git config core.hooksPath .githooks`)* and `.github/workflows/check.yml`.
+
+### `scripts/test_doc_budget.py`
+
+- Enforces the Context Size Budget in `AGENTS.md`: a 200-line and 16 KB cap on `agents/roles/*.md`, `agents/generated/*.md`, and `skills/*/SKILL.md`, a tighter 120-line and 10 KB cap on the always-loaded `AGENTS.md` and `agents/roles/chief.md`, plus skill sibling-reference and relative-link checks.
+
 ### `opencode.json.sample`
 
-- Sample global config: `chief-ds+glm` as default agent, the default model, the built-in `build` and `scout` agents disabled, `subagent_depth: 2`, and `compaction.prune: true`.
+- Sample global config: `chief-ds+glm` as default agent, the default model, the built-in `build` and `scout` agents disabled, `subagent_depth: 2`, `compaction.prune: true`, and `/tmp/*` allowed without an approval prompt.
 - The installer merges the plugin-managed keys from this sample into an existing config; see Managed Config Keys in `INSTALL.md`.
 
 ### `agents/`
@@ -109,7 +125,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### `skills/` (13 Skills)
 
-- 1 directory per skill, each with with a `SKILL.md` inside.
+- 1 directory per skill, each with a `SKILL.md` inside, capped at 200 lines; detail moves to sibling files.
 
 | Skill | Description |
 |---|---|

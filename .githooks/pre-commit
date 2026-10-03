@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: run the full quality gate before each commit.
+# Enable with: git config core.hooksPath .githooks
+# Bypass once with: git commit --no-verify
+
+set -euo pipefail
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec "$REPO/scripts/check.sh"

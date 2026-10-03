@@ -47,7 +47,10 @@ class TestMergeConfig(unittest.TestCase):
         sample = json.loads(SAMPLE.read_text())
 
         self.assertEqual(cfg["provider"], existing["provider"])
-        self.assertEqual(cfg["permission"], existing["permission"])
+        self.assertEqual(cfg["permission"]["edit"], "deny")
+        self.assertEqual(
+            cfg["permission"]["external_directory"], {"/tmp/*": "allow"}
+        )
         self.assertEqual(cfg["agent"]["custom"], {"disable": True})
         self.assertEqual(cfg["default_agent"], sample["default_agent"])
         self.assertEqual(cfg["subagent_depth"], sample["subagent_depth"])
@@ -75,6 +78,9 @@ class TestMergeConfig(unittest.TestCase):
             "agent": {
                 "build": {"disable": sample["agent"]["build"]["disable"]},
                 "scout": {"disable": sample["agent"]["scout"]["disable"]},
+            },
+            "permission": {
+                "external_directory": sample["permission"]["external_directory"]
             },
         }
         original = json.dumps(existing, indent=4)

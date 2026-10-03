@@ -8,6 +8,9 @@
     "bash": "ask",
     "skill": {
       "*": "allow"
+    },
+    "external_directory": {
+      "/tmp/*": "allow"
     }
   },
   "compaction": {

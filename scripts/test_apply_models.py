@@ -87,6 +87,9 @@ class TestApplyModels(unittest.TestCase):
         )
         self.assertTrue(config["agent"]["build"]["disable"])
         self.assertTrue(config["agent"]["scout"]["disable"])
+        self.assertEqual(
+            config["permission"]["external_directory"], {"/tmp/*": "allow"}
+        )
 
     def test_role_models_use_known_providers(self):
         # Profiles may mix providers per seat, so no single-provider

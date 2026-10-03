@@ -55,6 +55,15 @@ mkdir -p "$CFG/agents" "$CFG/skills"
 cp -n "$REPO"/agents/generated/*.md "$CFG/agents/"
 cp -Rn "$REPO"/skills/* "$CFG/skills/"
 
+# 2b. On-demand rulebook references linked from AGENTS.md.
+if [ -e "$CFG/docs/rulebook" ]; then
+  mkdir -p "$bak/docs"
+  cp -R "$CFG/docs/rulebook" "$bak/docs/rulebook"
+fi
+rm -rf "$CFG/docs/rulebook"
+mkdir -p "$CFG/docs"
+cp -R "$REPO/docs/rulebook" "$CFG/docs/rulebook"
+
 # 3. Shared rulebook.
 cp "$REPO/AGENTS.md" "$CFG/AGENTS.md"
 

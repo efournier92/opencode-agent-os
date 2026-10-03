@@ -40,6 +40,7 @@ class TestInstall(unittest.TestCase):
             )
             self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 13)
             self.assertTrue((root / "AGENTS.md").is_file())
+            self.assertTrue((root / "docs" / "rulebook" / "roster.md").is_file())
             self.assertTrue((root / "opencode.jsonc").is_file())
             self.assertIn("default_profile", (root / "models.yaml").read_text())
             keybinds = json.loads((root / "tui.json").read_text())["keybinds"]

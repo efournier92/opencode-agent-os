@@ -21,6 +21,7 @@ MANAGED = [
     "compaction.prune",
     "agent.build.disable",
     "agent.scout.disable",
+    "permission.external_directory./tmp/*",
 ]
 
 
