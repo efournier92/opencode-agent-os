@@ -31,7 +31,7 @@ If not already in a plan-style mode when invoked, enters one before doing anythi
 
 ### Phase 1: Explore (Parallel, Capped)
 
-Before asking questions, ground in current reality. Use the `task` tool to dispatch a small number (e.g. up to 3) of parallel, low-tier recon subagents on the topics most relevant to the spec's scope. Each recon dispatch must specify: focused topic, explicit "location + one-line fact only, no prose, no pasted file bodies" output shape, and instructions to flag asymmetries, missing audit trails, race risk, edge cases, or any behavior the draft would unintentionally change. Findings get spot-read at the cited location before being used as load-bearing spec claims; low-tier recon can misattribute details.
+Before asking questions, ground in current reality. In an opted-in repo, read `docs/discovery/DISCOVERY.md` first and cite relevant entries as grounded facts; ignore entries outside the spec's scope. Use the `task` tool to dispatch a small number (e.g. up to 3) of parallel, low-tier recon subagents on the topics most relevant to the spec's scope. Each recon dispatch must specify: focused topic, explicit "location + one-line fact only, no prose, no pasted file bodies" output shape, and instructions to flag asymmetries, missing audit trails, race risk, edge cases, or any behavior the draft would unintentionally change. Findings get spot-read at the cited location before being used as load-bearing spec claims; low-tier recon can misattribute details.
 
 ### Phase 2: Question Rounds
 

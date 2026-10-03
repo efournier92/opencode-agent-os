@@ -40,6 +40,7 @@ Restores the agent system itself: agent/skill definitions, hooks, settings, inst
   1. Root cause, one sentence.
   2. Fix: which file + exact wording/diff, written as a proposal (dated, in the handoff-style location) rather than applied directly; unless the dispatch explicitly says to apply it.
   3. Detector: an executable check that exits 0 on pass and prints the failure detail on fail, with a header comment naming exactly what it catches. This check file is the actual deliverable of improvement mode, not an afterthought.
+- Return one discovery candidate (pattern + detector path) naming the recurring failure, for the operator to promote; never write the index (see Progressive Discovery in `AGENTS.md`).
 - No speculative process improvements; only patterns backed by real evidence.
 
 ## Output

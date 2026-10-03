@@ -8,6 +8,7 @@
 
 - Centralized per-role model config: each profile pins a concrete model per seat
   - *See `models.yaml`.*
+- Progressive Discovery: an opt-in, per-repo `docs/discovery/` index so a future agent finds relevant findings cheaply and ignores the rest.
 
 ## Installation
 
@@ -34,7 +35,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 1. **Run `/agents` in the OpenCode TUI**
     - Expect all primaries and their crews: `chief-ds`, `chief-glm`, `chief-ds+glm`, and each `<role>-<profile>` subagent *(`builder-ds`, `qa-ds+glm`, etc).*
-2. The `skill` tool description should list all 12 skills *(`specify`, `implement`, etc).*
+2. The `skill` tool description should list all 13 skills *(`specify`, `implement`, etc).*
 
 ## Contents
 
@@ -48,6 +49,13 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 ### `INSTALL.md`
 
 - Agent-oriented install guide for global and per-project setups.
+
+### `docs/discovery/`
+
+- Opt-in per repository: a repo enables discovery by containing this directory, and only inside a git working tree.
+- The index `docs/discovery/DISCOVERY.md` holds one line per finding, decision, assumption, trap, question, or outcome, each with evidence.
+- Grep it by scope token or `[type]` when scoping a task; open a linked detail file only when an entry is load-bearing.
+- The operator appends at checkpoints; the commit skill reconciles and stages it. Without the directory, the practice is skipped and nothing is created or read. See Progressive Discovery in `AGENTS.md`.
 
 ### `models.yaml`
 
@@ -87,7 +95,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `qa` | subagent | PASS/FAIL verification agent that proves claims by executing commands; read-only on code. |
 | `critic` | subagent | Red-team reviewer that attacks handoffs, plans, diffs, and claims for fake progress before they are trusted. |
 | `system-fixer` | subagent | Repairs the agent system itself (configs, hooks, instruction docs) and runs improvement mode for recurring failures. |
-| `context-curator` | subagent | Hygiene agent for instruction docs, memory index, and handoffs; keeps context lean and claims true. |
+| `context-curator` | subagent | Hygiene agent for instruction docs, memory index, handoffs, and the discovery index; keeps context lean and claims true. |
 | `scout` | subagent | Cheap external-research agent for docs, versions, APIs, and changelogs outside the codebase. |
 | `investigator` | subagent | Cheap read-only in-repo code locator that finds where symbols are defined and what calls them, with compressed deterministic output. |
 | `compliance-officer` | subagent | Pre-filters specs, branches, and PRs for regulatory/legal/fiduciary/privacy questions worth a human compliance officer's time. |
@@ -99,7 +107,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 *Mode ships with each role. Each profile injects a concrete model per role from `models.yaml` (see Model Profiles); the primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm`.*
 
-### `skills/` (12 Skills)
+### `skills/` (13 Skills)
 
 - 1 directory per skill, each with with a `SKILL.md` inside.
 
@@ -110,6 +118,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `commit` | Organize already-completed work into logical commits: stages chunks and suggests messages, never commits. |
 | `handoff` | Write a structured session handoff so a fresh session resumes without re-exploring. |
 | `capture` | Distill session learnings into a terse, standalone knowledge file for a human or future agent. |
+| `progressive-discovery` | Maintain the opted-in `docs/discovery/DISCOVERY.md` index of durable findings, decisions, traps, and outcomes. |
 | `browser-verify` | Prove a feature works end-to-end in a real browser against the local dev stack only. |
 | `ship-check` | Run a parallel pre-ship quality gate on a feature branch with read-only reviewers. |
 | `worktree` | Create, list, or remove grouped git worktrees across repos, each with isolated ports and its own database. |

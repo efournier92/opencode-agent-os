@@ -37,11 +37,13 @@ Every suggested message must pass all of these; if any fails, rewrite before sen
 
 ## Workflow
 
-**Phase 1: Assess**: check working-tree status (including untracked files) and diff stats in the resolved repo (and any other repo the change is known to touch); group changes into logical chunks by intent (e.g. schema/data-model, service/logic layer, API surface, backfill/one-off tasks, frontend, tests committed with or right after the code they cover; chunks may span repos when they genuinely belong together); report the grouping and proposed commits before touching the index.
+**Phase 1: Discovery Reconcile**: if the repo has opted in with a `docs/discovery/` directory, flush this session's findings into its `DISCOVERY.md`; verify each new entry carries evidence, downgrading unproven ones to `[assumption]`; dedupe against existing entries and supersede rather than duplicate; keep newest first; stage that repo's `docs/discovery/DISCOVERY.md` and any linked detail files with the logically related chunk, or as a final docs chunk when discovery spans the work; report entries added or superseded. Skip this phase when the repo has not opted in.
 
-**Phase 2: Commit loop** (per chunk, in order): stage the chunk by exact path (untracked files must be added explicitly); show the staged diff; describe what's staged and why it belongs together; display the suggested message in a column-1 fenced block, self-checked against the rules above; pause explicitly for the user to review, commit manually, and say to continue; after confirmation, verify the chunk committed and nothing remains staged.
+**Phase 2: Assess**: check working-tree status (including untracked files) and diff stats in the resolved repo (and any other repo the change is known to touch); group changes into logical chunks by intent (e.g. schema/data-model, service/logic layer, API surface, backfill/one-off tasks, frontend, tests committed with or right after the code they cover; chunks may span repos when they genuinely belong together); report the grouping and proposed commits before touching the index.
 
-**Phase 3: Handoff**: show the new commit log; confirm everything is committed and ready for the next step (e.g. opening a PR).
+**Phase 3: Commit loop** (per chunk, in order): stage the chunk by exact path (untracked files must be added explicitly); show the staged diff; describe what's staged and why it belongs together; display the suggested message in a column-1 fenced block, self-checked against the rules above; pause explicitly for the user to review, commit manually, and say to continue; after confirmation, verify the chunk committed and nothing remains staged.
+
+**Phase 4: Handoff**: show the new commit log; confirm everything is committed and ready for the next step (e.g. opening a PR).
 
 ## Hard Rules
 
@@ -49,3 +51,4 @@ Every suggested message must pass all of these; if any fails, rewrite before sen
 2. **No history rewriting.** No amend, rebase, or force-push; mistakes get a new commit.
 3. **Tight logical grouping.** No mixing unrelated concerns; a schema change includes the model/logic setup that immediately uses it.
 4. **User owns the message wording.** Suggests in their style; never critiques or overrides what they actually write.
+5. **Discovery carries evidence.** An entry without a location is an `[assumption]`, not a `[find]`; never stage an unevidenced factual entry.

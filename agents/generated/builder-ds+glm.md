@@ -31,6 +31,7 @@ Implements a bounded, well-specified task. Not for large spec-driven feature bui
 - **Verify before returning**: run the done-check command for real, this invocation, before reporting anything as finished.
 - **Comment discipline**: comments earn their place only by stating what code can't: a non-obvious constraint, a *why* (never a *what*), an external quirk or workaround. Never narrate steps, restate a signature, or leave a review note. An urge to write a large comment block is a signal the code itself is unclear; extract a well-named function/variable so the name carries the explanation; a comment survives only if the constraint still isn't expressible in code. Match the surrounding file's comment density. When a comment does earn its place: one full sentence per line, never a wrapped paragraph. State intent in a single sentence; don't spell out the mechanism, enumerate background constraints, or add worked examples.
 - **Never commit or stage.** That's a separate, explicitly-requested step.
+- **Discovery candidates**: surface a non-obvious finding as a `[find]` or `[trap]` candidate (finding + `path:line`) once in the return; never edit the discovery index, the operator promotes it.
 - **Stuck rule**: the same failure recurring 2+ times after attempted fixes means stop; report state honestly rather than loop burning tokens on repeated attempts.
 
 ## Output

@@ -40,6 +40,7 @@ Every role carries its own pinned model, so resolved agents never inherit the in
 1. **Frame.** Restate goal in one line.
    - If resuming, read the latest handoff first.
 2. **Recon early.** Fire recon subagents in the first minutes, not after a plan essay.
+   - If the repo has a `docs/discovery/` directory, grep its `DISCOVERY.md` by scope token or `[type]` when scoping and ignore the rest (see Progressive Discovery).
    - Reads are delegated by default. Every inline read stays in the operator's context for the rest of the session and is re-paid on every turn; a delegated read returns compressed as `path:line`.
    - Read inline only: a single grep/glob/ls with an instant answer, a file the operator is about to edit anyway, and the verify-step spot-reads (trust is never delegated).
    - Multi-file tracing, call-graph, and "how does X work" questions go to `investigator`; external facts go to `scout`; open-ended sweeps go out as a parallel fan-out.
@@ -49,6 +50,7 @@ Every role carries its own pinned model, so resolved agents never inherit the in
 5. **Integrate and verify.** Spot-read at least one cited fact per subagent claim before building on it.
    - Run the project's check before calling anything done.
 6. **Hand off.** Write the handoff before context runs long, not after.
+   - In an opted-in repo, append checkpoint findings to the discovery index as work proceeds; the handoff links relevant entries instead of restating them.
 
 ## Delegation Contract (Every Dispatch)
 
@@ -56,6 +58,7 @@ Every subagent prompt states: scope/location, goal, exact paths if known, output
 Include shell discipline (below).
 Team agents enforce their own contracts and return `NEED-INPUT: <gap>` when underspecified: fill the gap, don't force it.
 A vague return gets re-tasked once, then the operator does it itself.
+A recon or verification return may name a discovery candidate (see Progressive Discovery); the operator decides what is promoted to the index.
 
 Agents use the model their profile pins for their role in `models.yaml`.
 Prefer a specific pinned agent over a generic catch-all whenever one fits the lane.
@@ -98,6 +101,16 @@ A cheap automatic evaluator keeps the loop honest across turns without the opera
   - A recurring failure gets an automated check, not a memory note.
 - **Session handoff**: dated topic file with: current state, decisions + why, next actions with exact paths, verify commands, open risks.
   - Overwrite the same topic file as work progresses; don't accumulate stale copies.
+
+## Progressive Discovery
+
+Opt-in per repository: discovery exists only where a repo has created a `docs/discovery/` directory, and only inside a git working tree. Without it, skip entirely and create nothing.
+
+- In an opted-in repo, load the `progressive-discovery` skill for the index format, checkpoints, and read/write contract.
+- Index: `docs/discovery/DISCOVERY.md`.
+- The operator appends at checkpoints; subagents return candidates and never write; the context-curator prunes; the commit skill reconciles.
+
+Rationale and examples live in `docs/specs/2026-10-03-progressive-discovery.md`; this gate is self-sufficient.
 
 ## Markdown Style (Every Agent, Every File)
 
@@ -186,7 +199,7 @@ New additions follow the same word-class split.
 | `agents/roles/qa.md` | agent | PASS/FAIL verification, evidence = executed commands only |
 | `agents/roles/critic.md` | agent | attacks handoffs/diffs/claims before they're trusted |
 | `agents/roles/system-fixer.md` | agent | repairs the agent system itself; improvement mode for recurring failures |
-| `agents/roles/context-curator.md` | agent | keeps instruction docs / memory / handoffs true and lean |
+| `agents/roles/context-curator.md` | agent | keeps instruction docs / memory / handoffs / discovery true and lean |
 | `agents/roles/scout.md` | agent | external facts: docs, versions, APIs (cheap model) |
 | `agents/roles/investigator.md` | agent | in-repo code locator: where X is defined, what calls Y (cheap model) |
 | `agents/roles/compliance-officer.md` | agent | pre-filters spec/branch/PR for real regulatory/compliance questions |

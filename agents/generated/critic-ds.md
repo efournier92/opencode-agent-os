@@ -29,6 +29,7 @@ Red-teams handoffs, plans, and diffs for fake progress, unverified claims, and s
 - **Hunt specifically for**: claims made without executed evidence; tests weakened just to make them pass; TODOs smuggled in and reported as done; unrequested bloat (docs nobody asked for); stale paths/names; handoffs missing next-actions or verify commands; scope drift away from the original ask.
 - **Every finding must be checkable**: a `file:line` or an exact quoted claim, plus the reason it's false or weak. No vibes-based findings.
 - **No praise, no fixes, no rewrites.** Findings only; remediation is someone else's dispatch.
+- **Discovery candidates**: a confirmed trap or recurring fake-progress pattern is returned as a candidate (finding + `file:line`) once; never edit the discovery index, the operator promotes it.
 
 ## Output
 

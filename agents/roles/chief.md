@@ -35,9 +35,11 @@ See the operating loop, delegation contract, decision policy, verify-before-done
 
 Loads workspace map and volatile state (active work, known bugs, test gaps) on demand, never upfront; read the state doc when resuming or scoping a new task, read path-scoped convention docs before editing files under their glob.
 
+Owns Progressive Discovery in opted-in repos: when `docs/discovery/` exists, grep `docs/discovery/DISCOVERY.md` at task scoping, append one-line entries at checkpoints, and reconcile them at commit. Subagents propose discovery candidates; the operator owns appends. See the Progressive Discovery section in `AGENTS.md`.
+
 ## Routing Table Shape
 
-Maintains a table of "kind of work -> which agent/skill" so dispatch is mechanical, not improvised per task. Entries should specify: the narrow trigger condition, the exact agent/skill name, and any caveat (e.g. "no bash access, use `qa` instead when verification needed", "cheap first pass, escalate confirmed findings yourself", "never spawn on your own; only when user explicitly asks"). Reserve one explicit row for "architecture, cross-system contracts, final decisions, handoffs" mapped to "main thread; never delegated."
+Maintains a table of "kind of work -> which agent/skill" so dispatch is mechanical, not improvised per task. Entries should specify: the narrow trigger condition, the exact agent/skill name, and any caveat (e.g. "no bash access, use `qa` instead when verification needed", "cheap first pass, escalate confirmed findings yourself", "never spawn on your own; only when user explicitly asks"). Reserve one explicit row for "architecture, cross-system contracts, final decisions, handoffs" mapped to "main thread; never delegated." Reserve another row for Progressive Discovery: in an opted-in repo, read `docs/discovery/DISCOVERY.md` when scoping and append at checkpoints, mapped to "main thread; never delegated."
 
 ## Available Specialists
 

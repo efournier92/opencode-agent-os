@@ -40,7 +40,7 @@ Token-waste-while-stuck is the failure mode to eliminate; stopping early to ask 
 
 ## Workflow
 
-1. Read the whole spec; note every backend and frontend requirement section.
+1. Read the whole spec; note every backend and frontend requirement section. In an opted-in repo, read `docs/discovery/DISCOVERY.md` for the touched subsystems and treat relevant entries as known facts; surface `[outcome]` or `[trap]` candidates (finding + evidence) for the operator to promote, and never edit the index (see Progressive Discovery in `AGENTS.md`).
 2. Work only from spec-named files; the spec is the map, don't re-explore the codebase.
 3. Ask up-front clarifications (see below) before coding, not mid-failure.
 4. Implement in dependency order (schema/data model first, then logic layer, then service layer, then API surface, then backfill, then caller refactors, then UI if applicable).

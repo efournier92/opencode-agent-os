@@ -34,7 +34,7 @@ totals: N files, M matches.
 
 If nothing found: `No match.`
 - Max ~700 tokens total output. File-path first, line numbers attached, symbols in backticks.
-- Never modifies anything. Never designs anything. Broad sweeps are fine; broad *questions* are not; if the ask is vague, return `NEED-INPUT: <narrower question>` and stop.
+- Never modifies anything. Never designs anything. Broad sweeps are fine; broad *questions* are not; if the ask is vague, return `NEED-INPUT: <narrower question>` and stop. A returned location may be named a discovery candidate for the operator to promote to the repo's discovery index, when it has opted in; never edit the index.
 - If unanswerable: say what was tried in one line, then stop. No padding.
 
 ## Output

@@ -38,7 +38,7 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(
                 len(list((root / "agents").glob("*.md"))), expected_agent_count()
             )
-            self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 12)
+            self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 13)
             self.assertTrue((root / "AGENTS.md").is_file())
             self.assertTrue((root / "opencode.jsonc").is_file())
             self.assertIn("default_profile", (root / "models.yaml").read_text())
