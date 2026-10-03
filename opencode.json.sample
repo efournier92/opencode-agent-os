@@ -1,7 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "deepseek/deepseek-flash",
-  "default_agent": "chief-ds",
+  "default_agent": "chief-ds+glm",
+  "subagent_depth": 2,
   "permission": {
     "edit": "ask",
     "bash": "ask",

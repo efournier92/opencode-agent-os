@@ -11,8 +11,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import yaml
+
 REPO = Path(__file__).resolve().parent.parent
 INSTALL = REPO / "scripts" / "install.sh"
+
+
+def expected_agent_count():
+    data = yaml.safe_load((REPO / "models.yaml").read_text())
+    return sum(len(profile["roles"]) for profile in data["profiles"].values())
 
 
 def run_install(cfg):
@@ -28,7 +35,9 @@ class TestInstall(unittest.TestCase):
             root = Path(tmp)
             result = run_install(root)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(len(list((root / "agents").glob("*.md"))), 28)
+            self.assertEqual(
+                len(list((root / "agents").glob("*.md"))), expected_agent_count()
+            )
             self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 12)
             self.assertTrue((root / "AGENTS.md").is_file())
             self.assertTrue((root / "opencode.jsonc").is_file())

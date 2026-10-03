@@ -1,45 +1,91 @@
-# Single source of truth for profile model assignments.
+# Single source of truth for model assignments: profile -> role -> model id.
 # Run scripts/apply-models.py after editing to regenerate agents/generated/
 # and opencode.json.sample.
+#
+# ds+glm (default): GLM plan credits are charged on cached
+# context re-reads too (input 6.9 / cached 1.7 / output 24 per 10k tokens
+# for glm-5.3), so any many-turn seat on glm-5.3 dominates the weekly
+# quota. Measured 2026-10: an operator on glm-5.3 burned ~75% of a week's
+# credits in 351 steps, almost entirely cached input; DeepSeek carried
+# ~80% of all steps for single-digit dollars pay-as-you-go. So GLM 5.3
+# stays only on low-volume, high-stakes seats; every many-turn seat runs
+# on pay-as-you-go DeepSeek.
+#
+# glm-5.3 and glm-5.3-flash are text-only. visual-critic/visual-builder
+# need the zai glm-4.6v line (pay-as-you-go, needs a Z.ai API key) or a
+# vision-capable DeepSeek model.
+#
+# Operator context is the cost center, not subagent count. Measured 2026-10
+# over 988 sessions on this machine: chief operator sessions cost ~$65.53
+# (2.37B cache-read tokens), while 235 scout sessions cost $4.66 and 38
+# builder sessions cost $1.81. Cut turns and context at the top first.
+#
+# Subagent nesting: config subagent_depth is 2 (one nested level allowed).
+# This is a latent switch, not a validated need. No subagent role grants
+# `task`, so nothing nests today; all 571 subagent sessions were depth 1 and
+# no session has ever compacted. Do not grant a subagent `task` (for example
+# builder -> child worker) until one of these actually fires:
+#   - a builder session compacts, or
+#   - a builder task fails on context size, or
+#   - a single-level builder returns repeated NEED-INPUT from context churn.
 
-default_profile: ds
-
-agent_tiers:
-  chief: mid
-  builder: mid
-  qa: top
-  critic: top
-  system-fixer: mid
-  product-manager: mid
-  compliance-officer: top
-  context-curator: mid
-  photo-generator: image-generation
-  wordsmith: language-high
-  visual-critic: vision-high
-  visual-builder: vision-low
-  scout: low
-  investigator: low
+default_profile: ds+glm
 
 profiles:
   ds:
     label: DeepSeek
-    provider: deepseek
-    tiers:
-      top: deepseek/deepseek-v4-pro
-      mid: deepseek/deepseek-flash
-      low: deepseek/deepseek-flash
-      language-high: deepseek/deepseek-flash
-      vision-high: deepseek/deepseek-flash
-      vision-low: deepseek/deepseek-flash
-      image-generation: google/gemini-3-pro-image
+    roles:
+      chief: deepseek/deepseek-flash
+      qa: deepseek/deepseek-v4-pro
+      critic: deepseek/deepseek-v4-pro
+      compliance-officer: deepseek/deepseek-v4-pro
+      product-manager: deepseek/deepseek-v4-pro
+      builder: deepseek/deepseek-flash
+      system-fixer: deepseek/deepseek-flash
+      scout: deepseek/deepseek-flash
+      investigator: deepseek/deepseek-flash
+      context-curator: deepseek/deepseek-flash
+      wordsmith: deepseek/deepseek-flash
+      visual-critic: deepseek/deepseek-flash
+      visual-builder: deepseek/deepseek-flash
+      photo-generator: google/gemini-3-pro-image
   glm:
     label: GLM
-    provider: zai-coding-plan
-    tiers:
-      top: zai-coding-plan/glm-5.3
-      mid: zai-coding-plan/glm-5.3
-      low: zai-coding-plan/glm-5.3-flash
-      language-high: zai-coding-plan/glm-5.3
-      vision-high: zai-coding-plan/glm-5.3-flash
-      vision-low: zai-coding-plan/glm-5.3-flash
-      image-generation: openrouter/google/gemini-2.5-flash-image
+    roles:
+      chief: zai-coding-plan/glm-5.3
+      qa: zai-coding-plan/glm-5.3
+      critic: zai-coding-plan/glm-5.3
+      compliance-officer: zai-coding-plan/glm-5.3
+      product-manager: zai-coding-plan/glm-5.3
+      builder: zai-coding-plan/glm-5.3
+      system-fixer: zai-coding-plan/glm-5.3
+      scout: zai-coding-plan/glm-5.3-flash
+      investigator: zai-coding-plan/glm-5.3-flash
+      context-curator: zai-coding-plan/glm-5.3-flash
+      wordsmith: zai-coding-plan/glm-5.3
+      visual-critic: zai/glm-4.6v
+      visual-builder: zai/glm-4.6v-flash
+      photo-generator: openrouter/google/gemini-2.5-flash-image
+  ds+glm:
+    label: DeepSeek + GLM hybrid
+    # Agent ids are lowercase `<role>-ds+glm` (chief-ds+glm, qa-ds+glm, ...);
+    # the TUI prettifies ids for display (chief-ds+glm shows as Chief-Ds+Glm).
+    roles:
+      # Operator re-reads full session context every turn; pay-go beats plan credits.
+      chief: deepseek/deepseek-flash
+      # GLM research strength on the low-turn, high-stakes gates.
+      qa: zai-coding-plan/glm-5.3
+      critic: zai-coding-plan/glm-5.3
+      compliance-officer: zai-coding-plan/glm-5.3
+      product-manager: zai-coding-plan/glm-5.3
+      wordsmith: zai-coding-plan/glm-5.3
+      # Many-turn volume seats; deepseek-flash cache-hit input ~$0.006/1M.
+      builder: deepseek/deepseek-flash
+      system-fixer: deepseek/deepseek-flash
+      scout: deepseek/deepseek-flash
+      investigator: deepseek/deepseek-flash
+      context-curator: deepseek/deepseek-flash
+      # deepseek-flash is vision-capable; avoids a zai pay-go dependency.
+      visual-critic: deepseek/deepseek-flash
+      visual-builder: deepseek/deepseek-flash
+      photo-generator: google/gemini-3-pro-image

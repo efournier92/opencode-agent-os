@@ -33,21 +33,23 @@ def read_frontmatter(path):
 class TestApplyModels(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.profiles, cls.agent_tiers, cls.default_profile = apply_models.load_models(
+        cls.profiles, cls.default_profile = apply_models.load_models(
             REPO / "models.yaml"
         )
 
     def test_generates_all_resolved_agents(self):
-        for prefix in self.profiles:
-            for role in self.agent_tiers:
+        for prefix, profile in self.profiles.items():
+            for role in profile["roles"]:
                 path = GENERATED_DIR / f"{apply_models.resolved_name(prefix, role)}.md"
                 self.assertTrue(path.is_file(), f"missing {path}")
 
     def test_model_resolution(self):
         for prefix, profile in self.profiles.items():
-            for role, tier in self.agent_tiers.items():
-                fm = read_frontmatter(GENERATED_DIR / f"{apply_models.resolved_name(prefix, role)}.md")
-                self.assertEqual(fm["model"], profile["tiers"][tier])
+            for role, model in profile["roles"].items():
+                fm = read_frontmatter(
+                    GENERATED_DIR / f"{apply_models.resolved_name(prefix, role)}.md"
+                )
+                self.assertEqual(fm["model"], model)
 
     def test_role_sources_have_no_model(self):
         for path in sorted(ROLES_DIR.glob("*.md")):
@@ -69,9 +71,11 @@ class TestApplyModels(unittest.TestCase):
             )
 
     def test_chief_is_primary(self):
-        for prefix in self.profiles:
-            for role in self.agent_tiers:
-                fm = read_frontmatter(GENERATED_DIR / f"{apply_models.resolved_name(prefix, role)}.md")
+        for prefix, profile in self.profiles.items():
+            for role in profile["roles"]:
+                fm = read_frontmatter(
+                    GENERATED_DIR / f"{apply_models.resolved_name(prefix, role)}.md"
+                )
                 expected = "primary" if role == "chief" else "subagent"
                 self.assertEqual(fm["mode"], expected, f"{prefix}-{role}")
 
@@ -84,14 +88,19 @@ class TestApplyModels(unittest.TestCase):
         self.assertTrue(config["agent"]["build"]["disable"])
         self.assertTrue(config["agent"]["scout"]["disable"])
 
-    def test_profile_models_match_provider(self):
+    def test_role_models_use_known_providers(self):
+        # Profiles may mix providers per seat, so no single-provider
+        # assertion can hold. Keep the typo-catching spirit: every pinned
+        # model must use a known provider prefix.
+        known = {"deepseek", "zai-coding-plan", "zai", "google", "openrouter"}
         for prefix, profile in self.profiles.items():
-            for tier, model in profile["tiers"].items():
-                if tier == "image-generation":
+            for role, model in profile["roles"].items():
+                if role == "photo-generator":
                     continue
-                self.assertTrue(
-                    model.startswith(profile["provider"] + "/"),
-                    f"{prefix} {tier} -> {model}",
+                self.assertIn(
+                    model.split("/", 1)[0],
+                    known,
+                    f"{prefix} {role} -> {model}",
                 )
 
     def test_idempotent(self):
@@ -111,8 +120,7 @@ class TestApplyModels(unittest.TestCase):
             data = yaml.safe_load((root / "models.yaml").read_text())
             data["profiles"]["zz"] = {
                 "label": "Temp",
-                "provider": "temp",
-                "tiers": dict(data["profiles"]["ds"]["tiers"]),
+                "roles": dict(data["profiles"]["ds"]["roles"]),
             }
             (root / "models.yaml").write_text(yaml.safe_dump(data))
 
@@ -121,7 +129,7 @@ class TestApplyModels(unittest.TestCase):
 
             apply_models.run(root)
 
-            for role in data["agent_tiers"]:
+            for role in data["profiles"]["zz"]["roles"]:
                 path = (
                     root
                     / "agents"
@@ -132,29 +140,36 @@ class TestApplyModels(unittest.TestCase):
             self.assertFalse(stale.exists(), "stale generated file not pruned")
 
     def test_validation_errors(self):
-        profiles, agent_tiers, default_profile = (
-            self.profiles,
-            self.agent_tiers,
-            self.default_profile,
-        )
-
-        bad_tiers = dict(agent_tiers)
-        bad_tiers["builder"] = "nope"
-        with self.assertRaises(SystemExit):
-            apply_models.validate_models(profiles, bad_tiers, default_profile)
+        profiles, default_profile = (self.profiles, self.default_profile)
 
         with self.assertRaises(SystemExit):
-            apply_models.validate_models(
-                profiles, {"ghost": "mid"}, default_profile
-            )
-
-        with self.assertRaises(SystemExit):
-            apply_models.validate_models(profiles, agent_tiers, "nope")
+            apply_models.validate_models(profiles, "nope", ROLES_DIR)
 
         bad_profiles = dict(profiles)
-        bad_profiles["Bad"] = profiles["ds"]
+        bad_profiles["bad!id"] = profiles["ds"]
         with self.assertRaises(SystemExit):
-            apply_models.validate_models(bad_profiles, agent_tiers, default_profile)
+            apply_models.validate_models(bad_profiles, default_profile, ROLES_DIR)
+
+        missing_role = dict(profiles)
+        missing_role["ds"] = {
+            "label": "DeepSeek",
+            "roles": {k: v for k, v in profiles["ds"]["roles"].items()
+                      if k != "qa"},
+        }
+        with self.assertRaises(SystemExit):
+            apply_models.validate_models(missing_role, default_profile, ROLES_DIR)
+
+        unknown_role = dict(profiles)
+        unknown_role["ds"] = dict(profiles["ds"])
+        unknown_role["ds"]["roles"] = dict(profiles["ds"]["roles"])
+        unknown_role["ds"]["roles"]["ghost"] = "deepseek/deepseek-flash"
+        with self.assertRaises(SystemExit):
+            apply_models.validate_models(unknown_role, default_profile, ROLES_DIR)
+
+        no_roles = dict(profiles)
+        no_roles["zz"] = {"label": "Empty"}
+        with self.assertRaises(SystemExit):
+            apply_models.validate_models(no_roles, default_profile, ROLES_DIR)
 
     def test_no_skill_model_lines(self):
         apply_models.assert_no_skill_model_lines()

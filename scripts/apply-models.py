@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Generate per-profile OpenCode agents and the sample config from models.yaml.
 
-models.yaml is the single source of truth: it names the profiles, the
-tier-to-model map per profile, and which tier each role runs on. Role
-prompts are authored once under agents/roles/; this script resolves them
-into agents/generated/<profile>-<role>.md with a concrete model injected.
+models.yaml is the single source of truth: it names the profiles and, per
+profile, the concrete model each role runs on (`profiles.<name>.roles`).
+Role prompts are authored once under agents/roles/; this script resolves
+them into agents/generated/<profile>-<role>.md with a concrete model
+injected.
 
 It also enforces the architecture invariant:
 
@@ -34,7 +35,7 @@ GENERATED_DIR = ROOT / "agents" / "generated"
 SKILLS_DIR = ROOT / "skills"
 SAMPLE_CONFIG = ROOT / "opencode.json.sample"
 
-PROFILE_ID_RE = re.compile(r"^[a-z][a-z0-9]*$")
+PROFILE_ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_+-]*$")
 
 # Matches a single `model:` line. Used only against the frontmatter
 # slice of a file (extracted by strip_frontmatter_model_line), never
@@ -45,36 +46,38 @@ MODEL_LINE_RE = re.compile(r"^[ \t]*model:[ \t]*\S+[ \t]*$")
 def load_models(path=MODELS_YAML):
     with open(path) as f:
         data = yaml.safe_load(f)
-    for key in ("profiles", "agent_tiers", "default_profile"):
+    for key in ("profiles", "default_profile"):
         if key not in data:
             raise SystemExit(f"models.yaml missing required key: {key}")
-    return data["profiles"], data["agent_tiers"], data["default_profile"]
+    return data["profiles"], data["default_profile"]
 
 
-def validate_models(profiles, agent_tiers, default_profile, roles_dir=ROLES_DIR):
+def validate_models(profiles, default_profile, roles_dir=ROLES_DIR):
     """Fail loud on inconsistent models.yaml before touching any file."""
     if default_profile not in profiles:
         raise SystemExit(
             f"default_profile '{default_profile}' is not a profile; "
             f"known profiles: {sorted(profiles)}"
         )
+    role_files = {p.stem for p in roles_dir.glob("*.md")}
     for pid, profile in profiles.items():
         if not PROFILE_ID_RE.match(pid):
             raise SystemExit(
-                f"invalid profile id '{pid}': must match ^[a-z][a-z0-9]*$"
+                f"invalid profile id '{pid}': must match ^[A-Za-z][A-Za-z0-9_+-]*$"
             )
-        if "tiers" not in profile:
-            raise SystemExit(f"profile '{pid}' missing required key: tiers")
-        for name, tier in agent_tiers.items():
-            if tier not in profile["tiers"]:
-                raise SystemExit(
-                    f"profile '{pid}' missing tier '{tier}' required by agent "
-                    f"'{name}'; known tiers: {sorted(profile['tiers'])}"
-                )
-    for name in agent_tiers:
-        if not (roles_dir / f"{name}.md").is_file():
+        if "roles" not in profile:
+            raise SystemExit(f"profile '{pid}' missing required key: roles")
+        pinned = set(profile["roles"])
+        missing = sorted(role_files - pinned)
+        if missing:
             raise SystemExit(
-                f"agent_tiers entry '{name}' has no agents/roles/{name}.md"
+                f"profile '{pid}' has no model for role(s): {missing}"
+            )
+        unknown = sorted(pinned - role_files)
+        if unknown:
+            raise SystemExit(
+                f"profile '{pid}' pins unknown role(s): {unknown}; "
+                f"known roles: {sorted(role_files)}"
             )
 
 
@@ -181,17 +184,14 @@ def resolved_name(prefix, role):
     return f"{role}-{prefix}"
 
 
-def generate_agents(profiles, agent_tiers, roles_dir=ROLES_DIR,
-                    generated_dir=GENERATED_DIR):
+def generate_agents(profiles, roles_dir=ROLES_DIR, generated_dir=GENERATED_DIR):
     """Write agents/generated/<resolved_name>.md; return count changed."""
     generated_dir.mkdir(parents=True, exist_ok=True)
     changed = 0
     for prefix, profile in profiles.items():
-        for role, tier in agent_tiers.items():
+        for role, model in profile["roles"].items():
             role_content = (roles_dir / f"{role}.md").read_text()
-            content = generate_agent(
-                role_content, profile["tiers"][tier], prefix, role == "chief"
-            )
+            content = generate_agent(role_content, model, prefix, role == "chief")
             path = generated_dir / f"{resolved_name(prefix, role)}.md"
             existing = path.read_text() if path.exists() else None
             if existing != content:
@@ -199,22 +199,35 @@ def generate_agents(profiles, agent_tiers, roles_dir=ROLES_DIR,
                 changed += 1
     expected = {
         f"{resolved_name(prefix, role)}.md"
-        for prefix in profiles
-        for role in agent_tiers
+        for prefix, profile in profiles.items()
+        for role in profile["roles"]
     }
+    expected_lower = {name.lower(): name for name in expected}
     for path in generated_dir.glob("*.md"):
-        if path.name not in expected:
-            path.unlink()
-            changed += 1
+        if path.name in expected:
+            continue
+        target = expected_lower.get(path.name.lower())
+        if target is not None:
+            target_path = generated_dir / target
+            if path.samefile(target_path):
+                # Case-only mismatch on a case-insensitive filesystem: this
+                # IS the expected file under a stale-case directory entry.
+                # A case-only rename fixes the entry instead of losing the file.
+                path.rename(target_path)
+                changed += 1
+                continue
+        path.unlink()
+        changed += 1
     return changed
 
 
-def render_sample_config(profiles, agent_tiers, default_profile):
+def render_sample_config(profiles, default_profile):
     profile = profiles[default_profile]
     return {
         "$schema": "https://opencode.ai/config.json",
-        "model": profile["tiers"][agent_tiers["chief"]],
+        "model": profile["roles"]["chief"],
         "default_agent": resolved_name(default_profile, "chief"),
+        "subagent_depth": 2,
         "permission": {
             "edit": "ask",
             "bash": "ask",
@@ -249,18 +262,17 @@ def run(root=ROOT):
     skills_dir = root / "skills"
     sample_config = root / "opencode.json.sample"
 
-    profiles, agent_tiers, default_profile = load_models(models_yaml)
+    profiles, default_profile = load_models(models_yaml)
     print(f"Profiles: {sorted(profiles)}")
     print(f"Default profile: {default_profile}")
-    print(f"Agent tiers: {agent_tiers}")
 
-    validate_models(profiles, agent_tiers, default_profile, roles_dir)
+    validate_models(profiles, default_profile, roles_dir)
     assert_no_skill_model_lines(skills_dir)
     stripped = strip_agent_model_lines(roles_dir)
-    generated = generate_agents(profiles, agent_tiers, roles_dir, generated_dir)
+    generated = generate_agents(profiles, roles_dir, generated_dir)
 
     rendered, sample_changed = write_sample_config(
-        render_sample_config(profiles, agent_tiers, default_profile), sample_config
+        render_sample_config(profiles, default_profile), sample_config
     )
     if sample_changed:
         print(f"Updated {sample_config.name}")
