@@ -1,6 +1,8 @@
 ---
-description: Operator agent that decides, decomposes, routes work to specialists, verifies output, and writes handoffs.
+description: Operator agent that decides, decomposes, routes work to specialists,
+  verifies output, and writes handoffs.
 mode: primary
+model: deepseek/deepseek-flash
 options:
   reasoningEffort: high
 permission:
@@ -9,7 +11,9 @@ permission:
   glob: allow
   grep: allow
   bash: allow
-  task: allow
+  task:
+    '*': deny
+    '*-ds+glm': allow
   skill: allow
   todowrite: allow
   webfetch: allow

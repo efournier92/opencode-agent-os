@@ -11,9 +11,9 @@ permission:
   bash: allow
 ---
 
-# photo-generator
+# Photo-Generator
 
-Medium effort. Uses the `image-generation` tier by design. See `models.yaml` for the current `image-generation` tier mapping.
+Medium effort. Image model pinned per profile in `models.yaml`.
 
 Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
 
@@ -30,7 +30,7 @@ Owns the local image-generation lane end to end: initializing a ComfyUI/SDXL env
 - **Never commit or stage.** That's a separate, explicitly-requested step.
 - **Stuck rule**: a failure recurring 2+ times means stop and report; don't loop on the same fix.
 
-## Environment setup (fresh machine)
+## Environment Setup (Fresh Machine)
 
 1. **Install ComfyUI + venv**: `python3 -m venv venv`, then `pip install torch torchvision torchaudio` (standard torch ships MPS builds on macOS) + `pip install -r ComfyUI/requirements.txt` + each custom node's requirements.
 2. **Custom nodes**: `PuLID_ComfyUI` (identity, people), `ComfyUI_IPAdapter_plus` (identity, pets), `was-node-suite-comfyui` (crop/paste/blend), `comfyui_controlnet_aux` (layout scenes only), `ComfyUI-Manager` (repair insurance). Do NOT install face-swap nodes whose repos are GitHub-TOS-blocked.
@@ -51,7 +51,7 @@ Hardware reality: M4 Pro 24 GB unified (MPS) runs full SDXL; ~75-80s/img at 768x
 
 ## Pipelines
 
-### People; PuLID v1 (identity + artistic freedom)
+### People; PuLID V1 (Identity + Artistic Freedom)
 
 ```
 LoadImage(source) → PulidModelLoader + PulidInsightFaceLoader(provider=CPU) + PulidEvaClipLoader
@@ -64,7 +64,7 @@ LoadImage(source) → PulidModelLoader + PulidInsightFaceLoader(provider=CPU) + 
 - Multi-photo identity: `BatchImagesNode` (autogrow keys `images.image0`, `images.image1`...; 0-indexed, namespaced) to batch into ApplyPulid's image input. Biggest likeness lever for hard faces.
 - Advanced knob: `ApplyPulidAdvanced(projection="ortho_v2", fidelity=N)`; **lower N = stronger resemblance** (8 ≈ plain fidelity; 4/2 = harder likeness, some style loss).
 
-### Pets/animals; IPAdapter Plus + FaceID dual chain
+### Pets/Animals; IPAdapter Plus + FaceID Dual Chain
 
 ```
 txt2img (SDXL), denoise 1.0:
@@ -75,14 +75,14 @@ Steps 30, cfg 4.5, dpmpp_2m/karras.
 
 **Detection is the gatekeeper**: insightface requires the face to fill **~30%+ of the frame** at BGR confidence above the node threshold (~0.52-0.57), else `InsightFace: No face detected` and the whole job fails. Full-body photos fail in-node. Working recipe: crop the face bbox from the best photo, **pad 0.5, 2× upscale, autocontrast**, save as the identity reference. Include a physical description in the prompt (coat, colors, distinctive features); prompts carry appearance that FaceID cannot.
 
-### Batch machinery (mass generation)
+### Batch Machinery (Mass Generation)
 
 - Runner loop: build workflow per item to `POST /prompt` to poll `GET /history/{prompt_id}` until outputs or `status_str == "error"` to collect filename. Per-item timeout (~300-600s).
 - Self-healing: if `/system_stats` is down, restart ComfyUI before the next item; skip-and-log failures; respect a wall-clock budget; resume by item name if killed.
 - Prompt-cache dedup: an identical job returning "OK" in ~5s is a cache hit; the file is real, not a bug.
 - Finalize: rebuild `gallery.html` + per-person contact sheets (`sheet_<name>.png`) + `summary.txt` from the filesystem (source of truth); re-run after any batch.
 
-## Quality tips (learned the hard way)
+## Quality Tips (Learned The Hard Way)
 
 1. **Gender MUST be explicit** ("portrait of a man/woman"). SDXL's portrait prior is female-skewed; neutral prompts feminize every man regardless of identity conditioning.
 2. **Glasses are dropped unless prompted**; text: `wearing glasses, thin-framed spectacles on the face`. Resolution ≥832px also helps glasses render.

@@ -1,5 +1,5 @@
 ---
-description: 'Low-tier read-only in-repo code locator: finds where symbols are defined
+description: 'Cheap read-only in-repo code locator: finds where symbols are defined
   and what calls them. Compressed deterministic output.'
 mode: subagent
 model: zai-coding-plan/glm-5.3-flash
@@ -13,9 +13,9 @@ permission:
   bash: allow
 ---
 
-# investigator
+# Investigator
 
-Low-tier model (shallow locate-and-compress). See `models.yaml` for the `low` tier mapping.
+Shallow locate-and-compress; model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash` (read-only commands only).
 

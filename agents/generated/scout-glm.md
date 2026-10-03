@@ -1,5 +1,5 @@
 ---
-description: Low-tier external-research agent for docs, versions, APIs, and changelogs
+description: Cheap external-research agent for docs, versions, APIs, and changelogs
   outside the codebase.
 mode: subagent
 model: zai-coding-plan/glm-5.3-flash
@@ -15,9 +15,9 @@ permission:
   websearch: allow
 ---
 
-# scout
+# Scout
 
-Low-tier model (shallow fetch-and-compress). See `models.yaml` for the `low` tier mapping.
+Shallow fetch-and-compress; model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`, `webfetch`, `websearch`.
 

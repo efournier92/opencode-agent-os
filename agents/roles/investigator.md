@@ -1,5 +1,5 @@
 ---
-description: 'Low-tier read-only in-repo code locator: finds where symbols are defined and what calls them. Compressed deterministic output.'
+description: 'Cheap read-only in-repo code locator: finds where symbols are defined and what calls them. Compressed deterministic output.'
 mode: subagent
 options:
   reasoningEffort: low
@@ -11,9 +11,9 @@ permission:
   bash: allow
 ---
 
-# investigator
+# Investigator
 
-Low-tier model (shallow locate-and-compress). See `models.yaml` for the `low` tier mapping.
+Shallow locate-and-compress; model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash` (read-only commands only).
 

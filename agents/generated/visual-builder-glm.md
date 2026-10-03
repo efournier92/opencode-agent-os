@@ -2,7 +2,7 @@
 description: Visual design builder that applies fixes to HTML/CSS based on visual-critic's
   findings, matching the design reference and framework conventions.
 mode: subagent
-model: zai-coding-plan/glm-5.3-flash
+model: zai/glm-4.6v-flash
 options:
   reasoningEffort: low
 permission:
@@ -14,11 +14,11 @@ permission:
   bash: allow
 ---
 
-# visual-builder
+# Visual-Builder
 
-Low effort (flash model). Uses the `vision-low` tier by design. See `models.yaml` for the current `vision-low` tier mapping.
+Low effort (fast vision model). Model pinned per profile in `models.yaml`.
 
-**Requires a vision-capable model** to verify changes against PDF/screenshot references. Switch the `vision-low` tier in `models.yaml` if your current default lacks vision.
+**Requires a vision-capable model** to verify changes against PDF/screenshot references. Fix the pin in `models.yaml` if your current default lacks vision.
 
 Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
 

@@ -11,9 +11,9 @@ permission:
   bash: allow
 ---
 
-# product-manager
+# Product-Manager
 
-High effort (product critique benefits from deeper reasoning), read-only. Uses the mid-tier model by design. See `models.yaml` for the current `mid` tier mapping.
+High effort (product critique benefits from deeper reasoning), read-only. Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 
@@ -41,7 +41,7 @@ Reads a spec or a branch's changes and challenges the product decisions in it; d
   3. **Choice without a default**: any decision point shipped without a sane default or recommendation forces the user to think on the product's behalf; worth asking why.
   4. **Exit test**: from every new state, what does the user do next? No visible next action = dead end = finding.
 
-## Product map
+## Product Map
 
 Like the compliance officer's domain map, this agent needs a project-specific "what raises the bar for this product" section (which user types exist, which surfaces are highest-stakes: money movement, irreversible actions, error states, etc.). Fill in per project; it orients attention and doesn't license critiquing surfaces the change doesn't touch.
 

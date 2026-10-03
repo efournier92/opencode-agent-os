@@ -11,9 +11,9 @@ permission:
   bash: allow
 ---
 
-# visual-critic
+# Visual-Critic
 
-High effort (visual design critique benefits from depth), read-only. Uses the `vision-high` tier by design. See `models.yaml` for the current `vision-high` tier mapping.
+High effort (visual design critique benefits from depth), read-only. Model pinned per profile in `models.yaml`; must be vision-capable.
 
 Tools: `read`, `glob`, `grep`, `bash`.
 

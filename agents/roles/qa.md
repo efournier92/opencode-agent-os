@@ -11,9 +11,9 @@ permission:
   bash: allow
 ---
 
-# qa
+# QA
 
-Medium effort, read-only on code (runs commands, edits nothing). Uses the mid-tier model by design. See `models.yaml` for the current `mid` tier mapping.
+Medium effort, read-only on code (runs commands, edits nothing). Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 

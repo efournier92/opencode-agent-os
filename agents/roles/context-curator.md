@@ -11,9 +11,9 @@ permission:
   bash: allow
 ---
 
-# context-curator
+# Context-Curator
 
-Low effort (mostly mechanical hygiene/drift checks). Uses the mid-tier model by design. See `models.yaml` for the current `mid` tier mapping.
+Low effort (mostly mechanical hygiene/drift checks). Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
 

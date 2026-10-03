@@ -13,9 +13,9 @@ permission:
   bash: allow
 ---
 
-# system-fixer
+# System-Fixer
 
-High effort (root-cause diagnosis on config/infra needs depth). Uses the mid-tier model by design. See `models.yaml` for the current `mid` tier mapping.
+High effort (root-cause diagnosis on config/infra needs depth). Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
 
@@ -33,7 +33,7 @@ Restores the agent system itself: agent/skill definitions, hooks, settings, inst
 - **Comment discipline** (for hook/script edits): same rule as `builder`: comments state only what code can't; large comment block needed means extract a well-named function instead.
 - **Evidence required**: structured-file edits (e.g. JSON) get a parse-check before being called done; agent/skill-doc edits get the changed line quoted back.
 
-## Improvement mode (failure seen twice)
+## Improvement Mode (Failure Seen Twice)
 
 - **Input required**: 2+ concrete instances (paths, quotes, handoff excerpts). One instance is an anecdote, not a pattern -> `NEED-INPUT`.
 - **Delivers exactly three things**:

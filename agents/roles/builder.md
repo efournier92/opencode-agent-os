@@ -11,9 +11,9 @@ permission:
   bash: allow
 ---
 
-# builder
+# Builder
 
-Medium effort. Uses the mid-tier model by design. See `models.yaml` for the current `mid` tier mapping.
+Medium effort. Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
 

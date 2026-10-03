@@ -11,9 +11,9 @@ permission:
   bash: allow
 ---
 
-# critic
+# Critic
 
-High effort (red-team reasoning benefits from depth), read-only. Uses the mid-tier model by design. See `models.yaml` for the current `mid` tier mapping.
+High effort (red-team reasoning benefits from depth), read-only. Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 
