@@ -10,6 +10,9 @@
       "*": "allow"
     }
   },
+  "compaction": {
+    "prune": true
+  },
   "agent": {
     "build": {
       "disable": true

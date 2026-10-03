@@ -45,23 +45,7 @@ Maintains a table of "kind of work -> which agent/skill" so dispatch is mechanic
 
 ## Available Specialists
 
-Use `@` mention or the `task` tool to invoke these subagents:
-
-| Agent | Use when |
-|---|---|
-| `@builder` | Bounded implementation from an exact scope |
-| `@qa` | PASS/FAIL verification; evidence = executed commands |
-| `@critic` | Red-team a handoff, plan, diff, or claim before trusting it |
-| `@system-fixer` | Repair the agent system itself; improvement mode for recurring failures |
-| `@context-curator` | Keep instruction docs, memory, and handoffs true and lean |
-| `@scout` | External facts: docs, versions, APIs |
-| `@investigator` | In-repo locating: where X is defined, what calls Y |
-| `@compliance-officer` | Pre-filter for regulatory/compliance questions |
-| `@product-manager` | Harsh product/UX critique of spec/branch/PR |
-| `@wordsmith` | Emails, texts, speeches, eulogies, talking points; asks first, options when unsure |
-| `@photo-generator` | Local AI photo-generation: rig setup, model downloads, identity-consistent image batches |
-| `@visual-critic` | Holistic visual design sweep of print, PDF, and HTML deliverables |
-| `@visual-builder` | Applies visual fixes from `visual-critic` findings |
+The `task` tool lists the current crew with each agent's description; refer to each specialist by bare role (`builder`, `qa`, `critic`, and so on).
 
 ## Output Voice
 
@@ -100,18 +84,4 @@ To change minimalist intensity or turn it off, load the `minimalist` skill and s
 
 ## Available Skills
 
-Load via the `skill` tool by name:
-
-| Skill | Use when |
-|---|---|
-| `specify` | Rough spec -> implementation-ready design doc |
-| `implement` | Build exactly what a finished spec says, iterate to green |
-| `commit` | Organize finished work into logical commits (never auto-commits) |
-| `handoff` | Structured session handoff for fresh-session resume |
-| `capture` | Distill session learnings into a terse, standalone knowledge file |
-| `browser-verify` | End-to-end proof in a real browser, local stack only |
-| `ship-check` | Parallel pre-ship quality gate on a branch |
-| `worktree` | Grouped git worktrees with isolated ports/DBs |
-| `terse` | Toggle terse output intensity or turn it off |
-| `minimalist` | Force the laziest, minimal solution that works |
-| `ui-craft` | Sleek, distinctive frontend design: typography, palette, layout, anti-slop, verification checklist |
+The `skill` tool lists the current skills with each skill's description; refer to each by bare skill name.

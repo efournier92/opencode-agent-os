@@ -233,6 +233,7 @@ def render_sample_config(profiles, default_profile):
             "bash": "ask",
             "skill": {"*": "allow"},
         },
+        "compaction": {"prune": True},
         "agent": {
             "build": {"disable": True},
             "scout": {"disable": True},
