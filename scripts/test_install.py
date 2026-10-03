@@ -68,6 +68,29 @@ class TestInstall(unittest.TestCase):
             self.assertIn("# custom", (root / "models.yaml").read_text())
             self.assertTrue(list(root.glob("backup-*")), "no backup dir written")
 
+    def test_merge_updates_managed_preserves_provider(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "opencode.jsonc").write_text(
+                json.dumps(
+                    {
+                        "provider": {"foo": {"models": {"bar": {}}}},
+                        "subagent_depth": 9,
+                    }
+                )
+            )
+
+            result = run_install(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            cfg = json.loads((root / "opencode.jsonc").read_text())
+            sample = json.loads((REPO / "opencode.json.sample").read_text())
+            self.assertEqual(cfg["provider"], {"foo": {"models": {"bar": {}}}})
+            self.assertEqual(cfg["subagent_depth"], sample["subagent_depth"])
+            self.assertEqual(
+                cfg["compaction"]["prune"], sample["compaction"]["prune"]
+            )
+
     def test_refuses_root(self):
         env = dict(os.environ, OPENCODE_CONFIG_DIR="/")
         result = subprocess.run(

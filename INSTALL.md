@@ -7,7 +7,7 @@ Install this plugin into OpenCode so the multi-agent system is available in ever
 - Generated per-profile agents in `agents/generated/` to `<config-dir>/agents/`
 - **12 skills** in `skills/` to `<config-dir>/skills/`
 - **Shared rulebook** `AGENTS.md` to `~/.config/opencode/AGENTS.md` (global) or `<project-root>/AGENTS.md` (per-project)
-- **OpenCode config** `opencode.json.sample` merged into `~/.config/opencode/opencode.json` or `opencode.jsonc`
+- **OpenCode config** `opencode.json.sample`: seeded on a fresh install, or its plugin-managed keys merged into an existing `~/.config/opencode/opencode.json` or `opencode.jsonc` (see Managed Config Keys).
 - **Model pins** `models.yaml` to `<config-dir>/models.yaml` (copied only if not already present; never overwrites a customized copy on reinstall)
 - **TUI keybinds** `tui.json`: sets `agent_cycle: shift+tab` and `agent_cycle_reverse: none` only when those keys are unset. A keybind you chose is never overridden and no other keybind is touched.
 
@@ -25,10 +25,20 @@ scripts/install.sh
 - Writes to `~/.config/opencode` by default; override with `--config-dir DIR` or `OPENCODE_CONFIG_DIR`.
 - Backs up whatever it replaces into `backup-<timestamp>` before touching it, so it is safe to re-run.
 - Overwrites `agents/`, `skills/`, and `AGENTS.md`; these are plugin-owned. Local additions in `agents/` and `skills/` are removed, so keep machine-specific agents and skills outside `~/.config/opencode/agents` and `~/.config/opencode/skills`.
-- Keeps an existing `models.yaml` and `opencode.json`/`opencode.jsonc`; merge `opencode.json.sample` by hand when a config already exists.
+- Keeps an existing `models.yaml` and `opencode.json`/`opencode.jsonc`. When a config exists, the installer overrides only the plugin-managed keys (see Managed Config Keys); every other key, including providers, MCP servers, permissions, and custom agents, is preserved. A config that is not strict JSON, such as one with JSONC comments, is skipped with a warning and needs a hand merge.
 - In `tui.json`, sets the agent-switch keybinds only when unset, leaving your keybinds alone.
 
 The manual steps below are what the installer performs, for running by hand or for a per-project install.
+
+## Managed Config Keys
+
+On install and every upgrade, the installer merges this fixed set of leaf keys from `opencode.json.sample` into an existing config, overriding the local value: `default_agent`, `subagent_depth`, `compaction.prune`, `agent.build.disable`, and `agent.scout.disable`.
+
+Everything else is left alone, including `provider`, `mcp`, `permission`, `model`, and any custom `agent` entries.
+
+Nested keys merge as leaves, so an existing `compaction.reserved` survives while `compaction.prune` is set. The file is rewritten only when a managed value actually changes; otherwise it is left byte-for-byte.
+
+A config that is not strict JSON, such as one with JSONC comments, is skipped with a warning and must be merged by hand. To change the managed set, edit `MANAGED` in `scripts/merge-config.py`.
 
 ## Prerequisites
 
@@ -69,15 +79,13 @@ else
 fi
 ```
 
-If you already have an OpenCode config, add the keys from `opencode.json.sample` into it. If neither config exists, copy the sample directly:
+If a config already exists, merge the plugin-managed keys with the helper; otherwise copy the sample directly. The helper skips a config with JSONC comments, which then needs a hand merge:
 
 ```bash
 if [ -f ~/.config/opencode/opencode.jsonc ]; then
-  # Manually merge: add model, default_agent, permission, and agent keys
-  # from opencode.json.sample into the existing JSONC object.
-  echo "Merge opencode.json.sample into ~/.config/opencode/opencode.jsonc"
+  python3 scripts/merge-config.py ~/.config/opencode/opencode.jsonc opencode.json.sample
 elif [ -f ~/.config/opencode/opencode.json ]; then
-  echo "Merge opencode.json.sample into ~/.config/opencode/opencode.json"
+  python3 scripts/merge-config.py ~/.config/opencode/opencode.json opencode.json.sample
 else
   cp opencode.json.sample ~/.config/opencode/opencode.jsonc
 fi
@@ -86,6 +94,8 @@ fi
 The sample sets:
 - `default_agent`: `chief-ds+glm`: every new session starts as the hybrid operator agent (DeepSeek operator model, GLM on the verification gates). `chief-ds` and `chief-glm` are the other primaries; press Tab to switch between them.
 - `model`: the fallback for any agent without an explicit override; every generated agent carries its own `model` line, so this rarely applies.
+- `subagent_depth`: `2`, allowing a subagent to launch one nested level.
+- `compaction.prune`: `true`, dropping old tool outputs from context to reduce token cost.
 - `agent.build.disable` and `agent.scout.disable`: hide the built-in `build` primary and the built-in `scout` subagent.
 - `permission`: `edit`/`bash` ask, `skill` allow.
 

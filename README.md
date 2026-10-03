@@ -62,7 +62,8 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 ### `scripts/install.sh`
 
 - Installs generated agents, skills, the rulebook, and the TUI keybinds into the OpenCode config dir, with a timestamped backup.
-- Overwrites plugin-owned agents, skills, and rulebook; keeps an existing `models.yaml` and config; sets keybinds only when unset.
+- Overwrites plugin-owned agents, skills, and rulebook; keeps an existing `models.yaml`.
+- Merges only the plugin-managed config keys into an existing `opencode.json`/`opencode.jsonc`, overriding those and preserving every other key; seeds the sample on a fresh install; sets keybinds only when unset.
 
 ### `scripts/release.sh`
 
@@ -71,7 +72,8 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### `opencode.json.sample`
 
-- Sample global config: `chief-ds+glm` as default agent, the default model, and the built-in `build` and `scout` agents disabled.
+- Sample global config: `chief-ds+glm` as default agent, the default model, the built-in `build` and `scout` agents disabled, `subagent_depth: 2`, and `compaction.prune: true`.
+- The installer merges the plugin-managed keys from this sample into an existing config; see Managed Config Keys in `INSTALL.md`.
 
 ### `agents/`
 
@@ -173,6 +175,6 @@ To change model IDs, add a profile, or move a role to a different model, edit `m
 python3 scripts/apply-models.py
 ```
 
-The script regenerates `agents/generated/*.md` and `opencode.json.sample`; reinstall the generated agents and merge the sample into your `opencode.json` or `opencode.jsonc` (or copy it on top if the file is unmodified).
+The script regenerates `agents/generated/*.md` and `opencode.json.sample`; reinstall the generated agents and re-run the installer, which merges the plugin-managed keys into your existing `opencode.json` or `opencode.jsonc`.
 Role sources are touched only to strip a stray `model:` line from frontmatter; no other modification.
 

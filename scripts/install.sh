@@ -66,9 +66,22 @@ else
 fi
 
 # 5. Active config: seed only when absent. An existing config may hold providers,
-#    MCP servers, or permissions we must not clobber; merge the sample by hand.
-if [ -f "$CFG/opencode.jsonc" ] || [ -f "$CFG/opencode.json" ]; then
-  echo "kept existing opencode config; merge $REPO/opencode.json.sample by hand"
+#    MCP servers, or permissions we must not clobber; merge only plugin-managed
+#    keys and never abort the install if that merge is unavailable.
+if [ -f "$CFG/opencode.jsonc" ]; then
+  cfgfile="$CFG/opencode.jsonc"
+elif [ -f "$CFG/opencode.json" ]; then
+  cfgfile="$CFG/opencode.json"
+else
+  cfgfile=""
+fi
+if [ -n "$cfgfile" ]; then
+  if command -v python3 >/dev/null 2>&1 && \
+     python3 "$REPO/scripts/merge-config.py" "$cfgfile" "$REPO/opencode.json.sample"; then
+    :
+  else
+    echo "warning: could not merge plugin keys into $cfgfile; merge $REPO/opencode.json.sample by hand" >&2
+  fi
 else
   cp "$REPO/opencode.json.sample" "$CFG/opencode.jsonc"
 fi
