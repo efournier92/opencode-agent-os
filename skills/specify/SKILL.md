@@ -1,13 +1,13 @@
 ---
 name: specify
-description: Turn a rough design sketch into an implementation-ready spec document. Read-only on the codebase; produces exactly one deliverable file. Invoked by the operator.
+description: Turn a rough design sketch into an implementation-ready spec document. Read-only except for the spec plus a docs/-gated glossary. Invoked by the operator.
 license: MIT
 compatibility: opencode
 ---
 
 # Specify
 
-High effort. Read-only on the codebase; produces exactly one deliverable file (the spec itself).
+High effort. Read-only except for the spec itself plus a docs/-gated glossary (`docs/GLOSSARY.md`); the spec is the primary deliverable.
 
 ## Role
 
@@ -17,10 +17,10 @@ Turns a rough sketch of a design spec into a detailed, test-and-implementation-r
 
 ## Hard Rules (Self-Enforced)
 
-1. **Read-only on the codebase.** Read/glob/grep freely; never edit, create, or delete any file other than the one spec file being worked on.
+1. **Read-only on the codebase.** Read/glob/grep freely; never edit, create, or delete any file other than the spec being worked on, plus `docs/GLOSSARY.md` when the repo has a `docs/` directory.
 2. **No commits, no destructive commands.** Nothing that mutates repo state (commit, push, migrations, build/test runs). If something like that seems needed, ask the user to run it themselves.
-3. **The spec file is the only deliverable.** Built incrementally in place; never split across multiple files, never a scratch/notes sidecar file.
-4. **Asks as many questions as needed**, grouped by theme into rounds, each offering 2-4 options with the strongest one marked recommended. Doesn't artificially cap rounds; runs as many as needed for a high-quality spec.
+3. **The spec is the primary deliverable.** Built incrementally in place; never split across multiple files, never a scratch/notes sidecar file. The only other file it may touch is `docs/GLOSSARY.md`, and only when a `docs/` directory exists. No other file, ever.
+4. **Asks only material questions**, one dependency-ordered round at a time: the whole current frontier, no artificial cap, each question offering 2-4 options with the strongest marked recommended. Non-material unknowns become logged assumptions, not questions.
 5. **Gathers test-relevant detail.** A later step will write the feature's tests directly from this spec, so every behavioral requirement must be specific enough to become a test case: expected outcomes, edge cases, error conditions, state transitions, integration points.
 6. **Hands off via an explicit plan-exit at the end.** Never implements or tests the spec itself; that belongs entirely to the next stage.
 7. No special characters (em dashes, arrows) in output; plain punctuation only.
@@ -35,21 +35,50 @@ Before asking questions, ground in current reality. In an opted-in repo, read `d
 
 ### Phase 2: Question Rounds
 
-Grouped by theme, run as many rounds as needed. Each round capped (e.g. 4 questions), always 2-4 mutually exclusive options with a recommended one when there's a clear preference, options specific enough to decide from the text alone. If an answer reveals a wrong model assumption, pause and run a quick verification recon dispatch before locking the next question; never push forward on a wrong premise.
+The design tree holds every decision the feature needs, each branching into the decisions hanging off it; the frontier is every decision whose prerequisites are already settled. Work one round at a time.
 
-### Phase 3: Write The Spec
+- Ask the whole frontier in a single numbered round (`Q1`, `Q2`, ...), each question carrying a `Recommended:` answer.
+- Wait for the user's answers before the next round, then recompute the frontier.
+- A question whose answer depends on another still-open question belongs to a later round, never the current one. There is no per-round question cap.
+- Materiality filter: only a question whose answer changes a requirement, interface, behavior, or test earns a slot. Everything else is logged as an explicit assumption the user can veto at sign-off, not asked.
+- Answer-by-default escape hatch: the user may reply "use your recommendations" or skip low-impact questions; record those recommended answers as assumptions.
+- Facts are the agent's job; decisions are the user's. When a frontier question needs an environmental fact, dispatch recon as Phase 1 does instead of asking the user, and do not block non-dependent questions on it; put each decision to the user and wait for the answer.
+- Live domain modeling: challenge immediately any term that conflicts with the existing glossary, sharpen fuzzy or overloaded terms to one canonical term, stress-test relationships with concrete edge-case scenarios, and cross-reference user claims against the code to surface contradictions.
+- If an answer reveals a wrong model assumption, pause and run a quick verification recon dispatch before locking the next question; never push forward on a wrong premise.
 
-Required section structure (order matters): title/branch context (preserved from the draft) -> context & motivation -> glossary of overloaded/ambiguous terms -> current state (every claim anchored to a `file:line`, with soft conventions and caching/state-machine/audit-gem presence called out) -> goals -> non-goals -> prerequisites -> design principles -> backend requirements (schema, resolution logic, API surface, creation-time captures, caller refactors with exact line numbers, backfill, audit trail, concurrency/locking) -> frontend/UI requirements (every screen touched, backend enum values mapped to human-friendly labels) -> production risks & mitigations -> rollout plan -> test plan (exact cases per test file: happy path, error conditions, edge cases, state transitions, permission checks) -> summary of changes (the user's sign-off checklist) -> verification steps -> open questions (empty if fully resolved).
+### Phase 3: Test Seams
 
-**Specificity bar**: every instruction precise enough that another agent executes it without thinking: exact file paths, exact identifiers (methods, columns, API fields), explicit types/nullability/defaults/indexes, exact line numbers for refactors, exact test cases (not "add tests"), enum-to-label tables. Anything tedious to re-find during implementation gets written into the spec so the next stage never repeats the search.
+Sketch the seams where the feature will be tested: prefer existing seams, use the highest seam possible, and keep the count to the fewest, ideally one. Confirm the chosen seams with the user in a question round before writing the spec.
 
-### Phase 4: Sign-Off
+### Phase 4: Write The Spec
 
-Writes the summary-of-changes checklist, asks the user to confirm it captures everything needed for the feature to be functionally complete, updates and re-asks if gaps are found. Only proceeds once approved.
+Required section structure (order matters): title/branch context (preserved from the draft) -> context & motivation -> glossary (link `docs/GLOSSARY.md` when it exists but still inline every definition the spec's requirements depend on so the spec stands alone for the implementer, otherwise an in-spec glossary of overloaded/ambiguous terms) -> current state (every claim anchored to a `file:line`, with soft conventions and caching/state-machine/audit-gem presence called out) -> goals -> user stories (a long, exhaustive, numbered list of `As a <actor>, I want <feature>, so that <benefit>`, covering all aspects of the feature) -> non-goals -> prerequisites -> design principles -> backend requirements (schema, resolution logic, API surface, creation-time captures, caller refactors with exact line numbers, backfill, audit trail, concurrency/locking) -> frontend/UI requirements (every screen touched, backend enum values mapped to human-friendly labels) -> production risks & mitigations -> rollout plan -> test plan (exact cases per test file: happy path, error conditions, edge cases, state transitions, permission checks) -> summary of changes (the user's sign-off checklist) -> verification steps -> open questions (empty if fully resolved).
 
-### Phase 5: Hand Off
+**Specificity bar**: every instruction precise enough that another agent executes it without thinking: exact file paths, exact identifiers (methods, columns, API fields), explicit types/nullability/defaults/indexes, exact line numbers for refactors, exact test cases (not "add tests"), enum-to-label tables. Prose plus exact `file:line` anchors is the default; a trimmed, decision-rich snippet (state machine, reducer, schema, type shape) is allowed only when prose cannot encode the decision, and it is noted as prototype-sourced with its as-of context. Anything tedious to re-find during implementation gets written into the spec so the next stage never repeats the search.
 
-Confirms with the user the spec captures everything wanted, then exits plan mode. The next stage (`implement`) picks up without re-exploring.
+### Phase 5: Sign-Off
+
+Completion is done when the frontier is empty and nothing is silently assumed. Then write the summary-of-changes checklist and ask the user to confirm it captures everything needed for the feature to be functionally complete; update and re-ask if gaps are found. Only proceed once approved, then stop and hand off, never implementing or testing.
+
+### Phase 6: Hand Off
+
+Confirms with the user the spec captures everything wanted, then exits plan mode. Names the spec's load-bearing decisions so the operator can optionally index them as `[decision]` entries in `docs/discovery/DISCOVERY.md` pointing at the spec; specify itself never writes the discovery index. The next stage (`implement`) picks up without re-exploring; this skill never implements or tests.
+
+## Glossary (Docs-Gated)
+
+Written only when the repo has a `docs/` directory. Otherwise term discipline still runs during the rounds, but no persistent glossary is created.
+
+`docs/GLOSSARY.md` uses a minimal format: a bold term, then one or two sentences defining what the concept IS (not what it does), then an `_Avoid_` list of rejected synonyms.
+
+```markdown
+**Widget**
+
+A tenant-scoped unit of work. _Avoid_: job, task.
+```
+
+It holds project-specific domain terms only, never general programming concepts or implementation details. Create it lazily on the first resolved term, and update it inline as terms resolve, never batched. When a term already exists with a different meaning, surface the conflict and ask which sense is canonical; never silently overwrite a definition.
+
+Durable decisions are not recorded here. The committed spec is their rationale, and the operator may index a spec's load-bearing decisions as `[decision]` entries in `docs/discovery/DISCOVERY.md` pointing at the spec; `capture` holds a linked detail file when a decision needs more than a line.
 
 ## Things To Always Check For (Mental Checklist Before Each Question Round)
 
