@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Markdown style lint for the agent plugin tree.
 
-Enforces the "Markdown style" section of AGENTS.md:
+Enforces the "Markdown Style" section of AGENTS.md:
 
   1. No em dashes, en dashes, arrows, ellipsis, or smart/curly quotes in
      prose. Inline code spans, fenced code blocks, and blockquote lines
@@ -12,7 +12,11 @@ Enforces the "Markdown style" section of AGENTS.md:
      line is a wrapped sentence.
   4. No banned LLM-artifact phrases ("delve", "furthermore", ...) in
      prose. Inline code spans, fenced code blocks, and YAML frontmatter
-     are exempt, matching rule 1.
+      are exempt, matching rule 1.
+
+Rule 5 of AGENTS.md (title case for titles and headings) is
+review-enforced and is not checked here, because proper nouns and
+acronyms are hard to detect automatically.
 
 Exit code 0 = clean, 1 = violations found.
 """

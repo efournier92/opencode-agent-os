@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 ---
 
-# handoff
+# Handoff
 
 User-invocable, inline (runs in the current agent, not a subagent).
 

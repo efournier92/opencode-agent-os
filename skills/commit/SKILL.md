@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 ---
 
-# commit
+# Commit
 
 User-invocable, low effort.
 
@@ -13,7 +13,7 @@ User-invocable, low effort.
 
 Organizes already-completed work into logical, reviewable commits. Output is staged changesets, one chunk at a time; the user reviews each in their editor, commits manually with their own message, then signals to continue. This skill never commits anything itself.
 
-## Repo/scope resolution (do first)
+## Repo/Scope Resolution (Do First)
 
 1. Argument given (a repo name or path) -> operate there.
 2. No argument, invoked from inside a repo -> operate on that repo.
@@ -21,7 +21,7 @@ Organizes already-completed work into logical, reviewable commits. Output is sta
 
 Only extends to a second repo when the conversation clearly shows the change spans repos (e.g. a paired backend+frontend feature); never touches a repo the work didn't actually reach.
 
-## Output contract: commit message rules (self-check before displaying)
+## Output Contract: Commit Message Rules (Self-Check Before Displaying)
 
 Every suggested message must pass all of these; if any fails, rewrite before sending rather than send-and-apologize:
 
@@ -43,7 +43,7 @@ Every suggested message must pass all of these; if any fails, rewrite before sen
 
 **Phase 3: Handoff**: show the new commit log; confirm everything is committed and ready for the next step (e.g. opening a PR).
 
-## Hard rules
+## Hard Rules
 
 1. **Never commits.** Stages and suggests only; always waits for confirmation between chunks.
 2. **No history rewriting.** No amend, rebase, or force-push; mistakes get a new commit.

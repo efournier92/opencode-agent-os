@@ -12,15 +12,15 @@ license: MIT
 compatibility: opencode
 ---
 
-# minimalist
+# Minimalist
 
 You are lazy senior developer. Lazy means efficient, not careless. Best code is code never written.
 
-## When to use
+## When To Use
 
 Load this skill on any coding task (writing, adding, refactoring, fixing, reviewing, designing code, choosing libraries/dependencies) when you want smallest working solution. `terse` skill compresses prose; this skill compresses solutions.
 
-## How to use
+## How To Use
 
 1. Load this skill (`skill minimalist`).
 2. Tell agent intensity:
@@ -31,7 +31,7 @@ Load this skill on any coding task (writing, adding, refactoring, fixing, review
 
 To persist minimalist mode across sessions, copy instruction block below into `AGENTS.md` or add `minimalist.md` file to `instructions` array in `opencode.json`.
 
-## The ladder
+## The Ladder
 
 Before writing code, stop at first rung that holds:
 

@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 ---
 
-# capture
+# Capture
 
 User-invocable, low effort. Runs inline: it synthesizes the live session's context, which a subagent cannot see.
 
@@ -19,7 +19,7 @@ Distinct from `handoff`:
 - `capture` answers "what do we now know": findings, decisions, traps, evidence, open questions. Durable knowledge, one file per topic, new files accumulate over time.
 - If both are wanted, write them separately and cross-link them; never merge into one file.
 
-## When to use
+## When To Use
 
 Trigger phrases are in the frontmatter description. Good moments to invoke:
 
@@ -29,7 +29,7 @@ Trigger phrases are in the frontmatter description. Good moments to invoke:
 - Wrapping a long exploration.
 - Before context gets compacted.
 
-## Hard rules
+## Hard Rules
 
 These come first because they decide whether a file should exist at all.
 
@@ -39,9 +39,9 @@ These come first because they decide whether a file should exist at all.
 4. **Never invent facts.** Capture only what the session actually established. Unknown stays unknown; list it under open questions.
 5. **One topic per file.** Split rather than bloat; cross-link related captures.
 6. **Decide, do not ask, when reversible.** Folder, date, and label are decide-and-log. Ask only when the destination is genuinely ambiguous (no convention found and a new set) or the choice is irreversible.
-7. **Style.** Follow the Markdown style rules in `AGENTS.md`: no em dashes, en dashes, arrows, ellipsis, or smart quotes; a blank line after every heading; no sentence split across lines.
+7. **Style.** Follow the Markdown style rules in `AGENTS.md`: no em dashes, en dashes, arrows, ellipsis, or smart quotes; a blank line after every heading; title-cased titles and headings (capitalize every word); no sentence split across lines.
 
-## Output location and naming
+## Output Location And Naming
 
 Resolve the folder in order and stop at the first that applies:
 
@@ -86,7 +86,7 @@ Update versus create:
 - Same topic but a new date or a new event: create a new dated file. This is what keeps date-ordering meaningful.
 - Before minting, search the target folder for an existing file matching the `Project_Label` and `Topic` segments, ignoring the date.
 
-## Content contract
+## Content Contract
 
 Include only what a reader cannot cheaply re-derive. Required sections; drop any that would be empty, and never pad to fill one.
 
@@ -115,7 +115,7 @@ Length: no hard cap, but a topic set can legitimately run long (a full rollout o
 
 ## Verify
 
-Run the Markdown linter from the plugin checkout (the plugin repo, not the installed config dir), for example `python3 <plugin-checkout>/scripts/lint-markdown.py <file>`, and fix every violation. If the checkout is not present, self-check the four style rules manually.
+Run the Markdown linter from the plugin checkout (the plugin repo, not the installed config dir), for example `python3 <plugin-checkout>/scripts/lint-markdown.py <file>`, and fix every violation. If the checkout is not present, self-check the style rules manually, including the review-enforced title-case rule.
 
 Content done-check before reporting:
 

@@ -1,4 +1,4 @@
-# Dual-Chief Architecture: Chief-DS and Chief-GLM With Per-Profile Rosters
+# Dual-Chief Architecture: Chief-DS And Chief-GLM With Per-Profile Rosters
 
 Branch context: `main`. Working tree already carries uncommitted GLM work (`configs/opencode.jsonc.glm` untracked; `models.yaml`, `opencode.json.sample`, `README.md`, `AGENTS.md`, `configs/*`, `agents/photo-generator.md` modified). This spec builds on that state, not on `HEAD`.
 
@@ -70,7 +70,7 @@ Branch context: `main`. Working tree already carries uncommitted GLM work (`conf
 
 This project has no database or service API. "Backend" here is the generator, the config, and the file layout.
 
-### 1. `models.yaml` schema
+### 1. `models.yaml` Schema
 
 Replace the top-level `tiers:` block with `profiles:`, keep `agent_tiers`, and add `default_profile`.
 
@@ -126,7 +126,7 @@ Validation rules, all failing loud with a named error:
 - Every key in `agent_tiers` must have an `agents/roles/<key>.md` file.
 - Profile ids must be unique (a YAML map enforces this; a duplicate key is a parse error).
 
-### 2. Role file layout
+### 2. Role File Layout
 
 - Move the current hand-authored files from `agents/<role>.md` to `agents/roles/<role>.md`.
 - Role files keep description, mode, and permission frontmatter, and keep the body.
@@ -140,7 +140,7 @@ Validation rules, all failing loud with a named error:
 | `context-curator`, `visual-critic`, `visual-builder`, `scout`, `investigator` | `low` |
 | `photo-generator` | (unset) |
 
-### 3. Generated agent files
+### 3. Generated Agent Files
 
 - Generator output path: `agents/generated/<role>-<prefix>.md`.
 - The generated file is the role file with these changes:
@@ -152,7 +152,7 @@ Validation rules, all failing loud with a named error:
 - The generator asserts no `{{` remains in any generated file and raises if one does.
 - Mode is taken from the role file, so `chief` stays `mode: primary` and every other role stays `mode: subagent`.
 
-### 4. `opencode.json.sample` contents
+### 4. `opencode.json.sample` Contents
 
 The JSON no longer carries per-agent model pins; those live in the generated agent files. The sample contains:
 
@@ -179,7 +179,7 @@ The JSON no longer carries per-agent model pins; those live in the generated age
 - `agent.scout.disable` prevents OpenCode's built-in `scout` from reappearing once our role is namespaced.
 - No `provider` block is emitted: the GLM profile uses the dedicated `zai-coding-plan` provider, whose endpoint is the coding plan by definition. This replaces the earlier `provider.zai.options.baseURL` workaround.
 
-### 5. `scripts/apply-models.py` changes
+### 5. `scripts/apply-models.py` Changes
 
 - Constants (`:30-34`): add `ROLES_DIR = ROOT / "agents" / "roles"` and `GENERATED_DIR = ROOT / "agents" / "generated"`; stop treating `ROOT / "agents"` as the agent source.
 - `load_models` (`:42-49`): load `profiles`, `agent_tiers`, `default_profile`; drop the top-level `tiers` key.
@@ -190,18 +190,18 @@ The JSON no longer carries per-agent model pins; those live in the generated age
 - New `generate_agents(profiles, agent_tiers)`: write section 3 output; skip writes whose content is byte-identical; return the count of changed files.
 - `main` (`:165-189`): run validation, strip roles, generate agents, render and verify the sample, print counts, and re-verify on-disk sample equality as it does today.
 
-### 6. Install and upgrade changes
+### 6. Install And Upgrade Changes
 
 - Global install copies generated agents, not role sources: `cp -n agents/generated/*.md ~/.config/opencode/agents/` (replaces `INSTALL.md:30-31` and `README.md:24-29`).
 - Upgrade must clear stale bare agents first, extending the existing warning at `INSTALL.md:136-150`: `rm -rf ~/.config/opencode/agents` then re-copy.
 - `models.yaml` copy behavior (preserve-if-present) is unchanged.
 
-### 7. Retire the vendor-swap configs
+### 7. Retire The Vendor-Swap Configs
 
 - Delete `configs/opencode.jsonc.deepseek`, `configs/opencode.jsonc.minimax`, `configs/opencode.jsonc.glm`, and `configs/opencode.jsonc.2026-09-mixed`, and rewrite `configs/README.md` to point at the unified config and `models.yaml` profiles.
 - Rationale: the swap workflow and the profile system are two competing mechanisms for the same job; keeping both invites drift.
 
-### 8. Documentation and skill ripple
+### 8. Documentation And Skill Ripple
 
 - `AGENTS.md:25-41` (model tiers) and `AGENTS.md:171-` (roster): describe profiles, the `<role>-<prefix>` naming, and that each profile supplies its own tier map; state that the two primaries are `chief-ds` and `chief-glm`.
 - `agents/roles/chief.md`: keep the H1 and routing table on bare role names; add one line stating the task tool lists only the chief's own crew.

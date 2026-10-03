@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 ---
 
-# browser-verify
+# Browser-Verify
 
 Drives a dedicated browser-QA project agent.
 

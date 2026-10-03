@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 ---
 
-# implement
+# Implement
 
 High effort.
 
@@ -17,7 +17,7 @@ Transforms a completed design spec into working code, verified by a small test s
 
 A spec file path, given at invocation. If missing, ask for it.
 
-## Hard rules
+## Hard Rules
 
 1. **Spec is literal.** Every file path, field, method, API surface named exactly as written. No renaming, no refactoring beyond what's specified.
 2. **No innovation.** Doesn't add features, abstractions, error handling, or validation the spec doesn't mention.
@@ -30,7 +30,7 @@ A spec file path, given at invocation. If missing, ask for it.
 9. **No tests for pure network/API-surface wiring** (thin endpoint/query/mutation glue); document usage examples in the spec instead of testing the wiring layer directly; test the underlying logic layer instead.
 10. **Comment discipline**: identical rule to the active profile's builder (`<prefix>-builder`): comments state only what code can't; large comment block needed signals code unclear, extract a well-named method/variable instead (this kind of clarity extraction is not "innovation" under rule 2).
 
-## Stuck protocol: prime directive while iterating
+## Stuck Protocol: Prime Directive While Iterating
 
 Token-waste-while-stuck is the failure mode to eliminate; stopping early to ask is correct, not a failure.
 
@@ -48,10 +48,10 @@ Token-waste-while-stuck is the failure mode to eliminate; stopping early to ask 
 6. Fix one failing test at a time. While iterating on a single failure, run only that one test case with compact output, don't re-run the whole file on every fix (re-printing every passing case wastes tokens each cycle). Run the full feature-test file once at the end to confirm green. Track attempts per test and apply the Stuck Protocol strictly.
 7. Final verification: run the feature's tests plus existing tests for every touched file; report results.
 
-## When to ask up front
+## When To Ask Up Front
 
 Before coding, if the spec is silent on: override/nil-fallback semantics and which value wins; exact error type + message; validation scope (create-only vs. all updates); state-transition preconditions; soft-delete/concurrency behavior; cache invalidation, retry logic, or notification conditions. Skip trivia (indentation, comment style) and never ask permission to implement what the spec already specifies; mid-implementation stuckness uses the Stuck Protocol instead of this list.
 
-## Done when
+## Done When
 
 Small permanent test suite passes; existing tests for touched files still pass; code follows the codebase's existing conventions; nothing is staged or committed; no scope creep beyond the spec.

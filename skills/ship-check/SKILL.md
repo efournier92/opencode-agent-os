@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 ---
 
-# ship-check
+# Ship-Check
 
 Runs entirely in the current agent for scoping, then fans out read-only reviewer agents in parallel.
 

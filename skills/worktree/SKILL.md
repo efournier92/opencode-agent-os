@@ -5,7 +5,7 @@ license: MIT
 compatibility: opencode
 ---
 
-# worktree
+# Worktree
 
 User-invocable.
 

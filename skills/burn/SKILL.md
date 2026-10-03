@@ -5,22 +5,22 @@ license: MIT
 compatibility: opencode
 ---
 
-# burn
+# Burn
 
 User-invocable. Deletes the current session, but only after you quit OpenCode.
 
-## When to use
+## When To Use
 
 Trigger phrases: "burn this session", "burn it", "delete this session", "purge this session", "forget this session".
 
 Scope is the **current session only**. Never another session, never all sessions, never the database file, never `auth.json`.
 
-## What it does and does not
+## What It Does And Does Not
 
 - Deletes the session row from `opencode.db`; its messages and parts cascade away with it.
 - Leaves `opencode.log`, `tool-output/`, shell history, and every other session untouched.
 
-## Why deletion is deferred
+## Why Deletion Is Deferred
 
 Deleting a live session breaks the running client: it throws `UnknownError` and a failed `insert into "part"` on its next write. So the skill never deletes in place. It arms a watcher that fires the moment the OpenCode process exits.
 
@@ -50,7 +50,7 @@ Deleting a live session breaks the running client: it throws `UnknownError` and 
 
 5. **Tell the user to quit.** The session is purged the moment they exit OpenCode. Offer the escape hatch: `sh ~/.config/opencode/skills/burn/scripts/burn.sh --cancel`.
 
-## Hard rules
+## Hard Rules
 
 1. Current session only. No targeting other sessions, no bulk delete.
 2. Never delete in place. Always defer to process exit.

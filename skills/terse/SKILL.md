@@ -5,15 +5,15 @@ license: MIT
 compatibility: opencode
 ---
 
-# terse
+# Terse
 
 Same brain. Smaller mouth.
 
-## When to use
+## When To Use
 
-The chief agents (`chief-ds`, `chief-glm`) default to terse output. Load this skill to change intensity, apply to another agent, or temporarily turn off.
+The chief agents (`chief-ds`, `chief-glm`, `chief-ds+glm`) default to terse output. Load this skill to change intensity, apply to another agent, or temporarily turn off.
 
-## How to use
+## How To Use
 
 1. Load this skill (`skill terse`).
 2. Tell agent intensity and scope:
@@ -24,7 +24,7 @@ The chief agents (`chief-ds`, `chief-glm`) default to terse output. Load this sk
 
 To persist terse mode across sessions, copy instruction block below into `AGENTS.md` or add `terse.md` file to `instructions` array in `opencode.json`.
 
-## Output rules
+## Output Rules
 
 Respond terse. Cut filler, keep technical substance.
 
