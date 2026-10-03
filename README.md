@@ -6,7 +6,7 @@
 
 ## Features
 
-- Centralized model-tier config for frequent provider swapping in ever-changing world in which we're living
+- Centralized per-role model config: each profile pins a concrete model per seat
   - *See `models.yaml`.*
 
 ## Installation
@@ -33,7 +33,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 ### Verify
 
 1. **Run `/agents` in the OpenCode TUI**
-    - Expect both primaries and their crews: `chief-ds`, `chief-glm`, and each `<role>-<prefix>` subagent *(`builder-ds`, `qa-glm`, etc).*
+    - Expect all primaries and their crews: `chief-ds`, `chief-glm`, `chief-ds+glm`, and each `<role>-<profile>` subagent *(`builder-ds`, `qa-ds+glm`, etc).*
 2. The `skill` tool description should list all 12 skills *(`specify`, `implement`, etc).*
 
 ## Contents
@@ -51,8 +51,8 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### `models.yaml`
 
-- Single source of truth for profiles, per-profile model tiers, and role-to-tier mapping.
-  - *Supports (`top`, `mid`, `low`, `language-high`, `vision-high`, `vision-low`, `image-generation`).*
+- Single source of truth for profiles and the concrete model each one pins per role.
+  - *One `roles:` map per profile; no tier indirection.*
 
 ### `scripts/apply-models.py`
 
@@ -71,33 +71,33 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### `opencode.json.sample`
 
-- Sample global config: `chief-ds` as default agent, the default model, and the built-in `build` and `scout` agents disabled.
+- Sample global config: `chief-ds+glm` as default agent, the default model, and the built-in `build` and `scout` agents disabled.
 
 ### `agents/`
 
 - Role sources live in `agents/roles/` *(markdown + YAML frontmatter)*.
 - `scripts/apply-models.py` renders each role into one generated agent per profile under `agents/generated/`, named `<role>-<prefix>` (for example `builder-ds`).
 
-| Role | Mode | Tier | Description |
-|---|---|---|---|
-| `chief` | primary | mid | Operator agent that decides, decomposes, routes work to specialists, verifies output, and writes handoffs. |
-| `builder` | subagent | mid | Bounded implementation worker for a well-specified task with a clear done-check. |
-| `qa` | subagent | top | PASS/FAIL verification agent that proves claims by executing commands; read-only on code. |
-| `critic` | subagent | top | Red-team reviewer that attacks handoffs, plans, diffs, and claims for fake progress before they are trusted. |
-| `system-fixer` | subagent | mid | Repairs the agent system itself (configs, hooks, instruction docs) and runs improvement mode for recurring failures. |
-| `context-curator` | subagent | mid | Hygiene agent for instruction docs, memory index, and handoffs; keeps context lean and claims true. |
-| `scout` | subagent | low | Low-tier external-research agent for docs, versions, APIs, and changelogs outside the codebase. |
-| `investigator` | subagent | low | Low-tier read-only in-repo code locator that finds where symbols are defined and what calls them, with compressed deterministic output. |
-| `compliance-officer` | subagent | top | Pre-filters specs, branches, and PRs for regulatory/legal/fiduciary/privacy questions worth a human compliance officer's time. |
-| `product-manager` | subagent | mid | Harsh product/UX critique of specs, branches, and PRs from the user's perspective. |
-| `photo-generator` | subagent | image-generation | Local AI photo-generation specialist: sets up a ComfyUI/SDXL rig, downloads models, produces identity-consistent artistic images via scripted runners. |
-| `wordsmith` | subagent | language-high | Communicative-language specialist: formal writing, messages, speeches, talking points in an American Millennial voice. |
-| `visual-critic` | subagent | vision-high | Holistic visual design sweep of print, PDF, and HTML deliverables. |
-| `visual-builder` | subagent | vision-low | Applies visual fixes from `visual-critic` findings. |
+| Role | Mode | Description |
+|---|---|---|
+| `chief` | primary | Operator agent that decides, decomposes, routes work to specialists, verifies output, and writes handoffs. |
+| `builder` | subagent | Bounded implementation worker for a well-specified task with a clear done-check. |
+| `qa` | subagent | PASS/FAIL verification agent that proves claims by executing commands; read-only on code. |
+| `critic` | subagent | Red-team reviewer that attacks handoffs, plans, diffs, and claims for fake progress before they are trusted. |
+| `system-fixer` | subagent | Repairs the agent system itself (configs, hooks, instruction docs) and runs improvement mode for recurring failures. |
+| `context-curator` | subagent | Hygiene agent for instruction docs, memory index, and handoffs; keeps context lean and claims true. |
+| `scout` | subagent | Cheap external-research agent for docs, versions, APIs, and changelogs outside the codebase. |
+| `investigator` | subagent | Cheap read-only in-repo code locator that finds where symbols are defined and what calls them, with compressed deterministic output. |
+| `compliance-officer` | subagent | Pre-filters specs, branches, and PRs for regulatory/legal/fiduciary/privacy questions worth a human compliance officer's time. |
+| `product-manager` | subagent | Harsh product/UX critique of specs, branches, and PRs from the user's perspective. |
+| `photo-generator` | subagent | Local AI photo-generation specialist: sets up a ComfyUI/SDXL rig, downloads models, produces identity-consistent artistic images via scripted runners. |
+| `wordsmith` | subagent | Communicative-language specialist: formal writing, messages, speeches, talking points in an American Millennial voice. |
+| `visual-critic` | subagent | Holistic visual design sweep of print, PDF, and HTML deliverables. |
+| `visual-builder` | subagent | Applies visual fixes from `visual-critic` findings. |
 
-*Mode and tier ship with each role. Each profile injects a concrete model per tier from `models.yaml` (see Model Tiers); the two primaries are `chief-ds` and `chief-glm`.*
+*Mode ships with each role. Each profile injects a concrete model per role from `models.yaml` (see Model Profiles); the primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm`.*
 
-### `skills/` (12 skills)
+### `skills/` (12 Skills)
 
 - 1 directory per skill, each with with a `SKILL.md` inside.
 
@@ -124,57 +124,50 @@ Releases are marked with a date tag, `YYYY-MM-DD` (for example `2026-10-01`).
 - It tags the current `HEAD` and pushes the branch and the tag.
 - One release per day: running it again the same day moves that day's tag to the new `HEAD`, replacing the earlier tag locally and on `origin`. Tags for other dates are never touched.
 
-## Model Tiers
+## Model Profiles
 
 ### Configure
 
 All model assignments are driven by `models.yaml`.
-The file holds `profiles:` (a per-profile tier-to-model map), a global `agent_tiers:` (role to tier), and `default_profile:`.
+The file holds `profiles:` (each with a `roles:` map of role name to concrete model id) and `default_profile:`.
 The generator renders that file into one agent per profile under `agents/generated/` and into `opencode.json.sample`, which is the JSON config OpenCode actually reads at runtime.
 Role sources under `agents/roles/` and skill `.md` files never declare a `model:` line; doing so would shadow the generated config and break this single-source-of-truth architecture.
 
 ```yaml
-default_profile: ds
-
-agent_tiers:
-  chief: mid
-  builder: mid
-  qa: top
-  critic: top
-  scout: low
-  investigator: low
-  ...
+default_profile: ds+glm
 
 profiles:
   ds:
     label: DeepSeek
-    provider: deepseek
-    tiers:
-      top: deepseek/deepseek-v4-pro
-      mid: deepseek/deepseek-flash
-      low: deepseek/deepseek-flash
-      language-high: deepseek/deepseek-flash
-      vision-high: deepseek/deepseek-flash
-      vision-low: deepseek/deepseek-flash
-      image-generation: google/gemini-3-pro-image
+    roles:
+      chief: deepseek/deepseek-flash
+      qa: deepseek/deepseek-v4-pro
+      critic: deepseek/deepseek-v4-pro
+      ...
   glm:
     label: GLM
-    provider: zai-coding-plan
-    tiers:
-      top: zai-coding-plan/glm-5.3
-      mid: zai-coding-plan/glm-5.3
-      low: zai-coding-plan/glm-5.3-flash
-      language-high: zai-coding-plan/glm-5.3
-      vision-high: zai-coding-plan/glm-5.3-flash
-      vision-low: zai-coding-plan/glm-5.3-flash
-      image-generation: openrouter/google/gemini-2.5-flash-image
+    roles:
+      chief: zai-coding-plan/glm-5.3
+      scout: zai-coding-plan/glm-5.3-flash
+      ...
+  ds+glm:
+    label: DeepSeek + GLM hybrid
+    roles:
+      chief: deepseek/deepseek-flash
+      critic: zai-coding-plan/glm-5.3
+      qa: zai-coding-plan/glm-5.3
+      compliance-officer: zai-coding-plan/glm-5.3
+      product-manager: zai-coding-plan/glm-5.3
+      wordsmith: zai-coding-plan/glm-5.3
+      builder: deepseek/deepseek-flash
+      ...
 ```
 
-*The shipped default is the DeepSeek profile; the two primaries are `chief-ds` and `chief-glm`.*
+*The shipped default profile is `ds+glm` (chief agent `chief-ds+glm`, prettified to Chief-Ds+Glm in the TUI): DeepSeek carries the many-turn seats on pay-as-you-go pricing, GLM 5.3 is kept for the low-volume, high-stakes gates. The primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm`.*
 
 ### Update
 
-To change model IDs, add a profile, or move a role between tiers, edit `models.yaml` and run:
+To change model IDs, add a profile, or move a role to a different model, edit `models.yaml` and run:
 
 ```bash
 python3 scripts/apply-models.py
