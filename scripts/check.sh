@@ -21,5 +21,8 @@ python3 -m unittest discover -s scripts -p 'test_*.py'
 echo "== markdown lint =="
 python3 scripts/lint-markdown.py .
 
+echo "== discovery index =="
+python3 scripts/check_discovery.py
+
 echo
 echo "all checks passed"
