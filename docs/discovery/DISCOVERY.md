@@ -5,6 +5,8 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/commands, plugin/commit
 
 ## Entries
 
+- 2026-10-04 | [decision] | plugin/agents | Added the loop-readiness triage (repeat-worthy, auto done-check, cheap discard) to `chief.md` for deciding when to wire a loop | agents/roles/chief.md
+- 2026-10-04 | [decision] | plugin/commands | Shipped `fix-bug` as an explicit-only command encoding the red-green loop (reproduce, fix via `builder`, prove via `verifier`) | commands/fix-bug.md
 - 2026-10-04 | [assumption] | plugin/discovery | Specs stay historical; the spec's "never rewrite history" now conflicts with the skill's delete-superseded rule | docs/specs/2026-10-03-progressive-discovery.md
 - 2026-10-04 | [decision] | plugin/discovery | Index token-capped (entry<=240, file<=8KB), evidence-liveness checked; full-read hatch dropped; superseded deleted at reconcile | skills/log-discoveries/SKILL.md scripts/check_discovery.py
 - 2026-10-04 | [decision] | plugin/skills | `ship-changes` has `review` (default: per-chunk message gate) and `auto` (explicit cue: one pre-flight plan) modes; a bare "commit" is always `review` | skills/ship-changes/SKILL.md:12
