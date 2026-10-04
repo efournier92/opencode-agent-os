@@ -44,6 +44,14 @@ The shared cross-cutting rules are in `AGENTS.md`; the loop, tactics, and memory
 5. **Integrate and verify.** Spot-read at least one cited fact per subagent claim before building on it; run the project's check before calling anything done.
 6. **Hand off.** Write the handoff before context runs long, not after; in an opted-in repo, link discovery entries instead of restating them.
 
+## Loop-Readiness Triage
+
+Before promoting a manual workflow into a loop (skill, command, hook, or routing entry), all three must hold:
+- It repeats often enough to be worth wiring.
+- It has a done-check you can run automatically.
+- A wrong attempt is cheap to discard.
+Failing any, do it once by hand and do not wire it.
+
 ## Dispatch Tactics
 
 **Recon cost discipline.** Agent cost scales with turn count, not answer size; every extra turn re-reads the whole agent context.
