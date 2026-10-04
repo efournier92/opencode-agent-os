@@ -6,7 +6,7 @@ Install this plugin into OpenCode so the multi-agent system is available in ever
 
 - Generated per-profile agents in `agents/generated/` to `<config-dir>/agents/`
 - **12 skills** in `skills/` to `<config-dir>/skills/`
-- **1 command** in `commands/` to `<config-dir>/commands/`
+- **2 commands** in `commands/` to `<config-dir>/commands/`
 - **Shared rulebook** `AGENTS.md` to `~/.config/opencode/AGENTS.md` (global) or `<project-root>/AGENTS.md` (per-project)
 - **Rulebook references** `docs/rulebook/` to `<config-dir>/docs/rulebook/`, linked from `AGENTS.md` and read on demand
 - **OpenCode config** `opencode.json.sample`: seeded on a fresh install, or its plugin-managed keys merged into an existing `~/.config/opencode/opencode.json` or `opencode.jsonc` (see Managed Config Keys).
@@ -110,7 +110,7 @@ To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/a
 6. Verify:
    - Run `/agents` in the TUI; expect `chief-ds`, `chief-glm`, `chief-ds+glm`, plus all installed subagents.
    - Check the `skill` tool description; it should list all 12 skills.
-   - Type `/` in the TUI; expect the `engineer-prompt` command.
+   - Type `/` in the TUI; expect the `engineer-prompt` and `fix-bug` commands.
    - Start a new session; it should begin as `chief-ds+glm`; press Tab to cycle to `chief-ds` and `chief-glm`.
 
 ## Per-Project Install
@@ -180,11 +180,13 @@ Before upgrading, clear the agent and skill dirs so no stale bare agent survives
 # global
 rm -rf ~/.config/opencode/agents ~/.config/opencode/skills
 rm -f ~/.config/opencode/commands/engineer-prompt.md
+rm -f ~/.config/opencode/commands/fix-bug.md
 # then re-run the copy commands from the global install section
 
 # per-project
 rm -rf .opencode/agents .opencode/skills
 rm -f .opencode/commands/engineer-prompt.md
+rm -f .opencode/commands/fix-bug.md
 # then re-run the copy commands from the per-project section
 ```
 
@@ -209,6 +211,7 @@ Remove the files you copied:
 rm -rf ~/.config/opencode/agents
 rm -rf ~/.config/opencode/skills
 rm -f ~/.config/opencode/commands/engineer-prompt.md
+rm -f ~/.config/opencode/commands/fix-bug.md
 rm ~/.config/opencode/AGENTS.md
 # edit ~/.config/opencode/opencode.jsonc (or opencode.json) to remove the plugin keys
 
@@ -216,6 +219,7 @@ rm ~/.config/opencode/AGENTS.md
 rm -rf .opencode/agents
 rm -rf .opencode/skills
 rm -f .opencode/commands/engineer-prompt.md
+rm -f .opencode/commands/fix-bug.md
 rm AGENTS.md
 # edit .opencode/opencode.jsonc (or opencode.json) to remove the plugin keys
 ```

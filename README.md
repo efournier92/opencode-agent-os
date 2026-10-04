@@ -144,13 +144,14 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `polish-ui` | Sleek, distinctive frontend design guidance: typography, palette, layout, and anti-AI-slop checks. |
 | `burn-session` | Delete the current session from local history once you quit, after confirming. Session-only. |
 
-### `commands/` (1 Command)
+### `commands/` (2 Commands)
 
 - User-invoked slash commands. Unlike a skill, a command adds no model context until you type it.
 
 | Command | Description |
 |---|---|
 | `/engineer-prompt` | Turn a messy idea into a destination-shaped, grounded, verifiable prompt. |
+| `/fix-bug` | Reproduce a bug, fix it red-green, and prove the fix. |
 
 ## Releases
 
