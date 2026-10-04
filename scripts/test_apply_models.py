@@ -157,7 +157,7 @@ class TestApplyModels(unittest.TestCase):
         missing_role["ds"] = {
             "label": "DeepSeek",
             "roles": {k: v for k, v in profiles["ds"]["roles"].items()
-                      if k != "qa"},
+                      if k != "verifier"},
         }
         with self.assertRaises(SystemExit):
             apply_models.validate_models(missing_role, default_profile, ROLES_DIR)

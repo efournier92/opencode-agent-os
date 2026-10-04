@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Install the agent-team plugin into an OpenCode config directory.
+# Install the opencode-agent-os plugin into an OpenCode config directory.
 #
 # Usage:
 #   scripts/install.sh [--config-dir DIR]
@@ -8,9 +8,9 @@
 # Defaults to ~/.config/opencode, or $OPENCODE_CONFIG_DIR when set.
 # Backs up anything it replaces and is safe to re-run.
 #
-# It installs generated agents, skills, the rulebook, seeds models.yaml on a
-# fresh machine, seeds the sample config only when none exists, and merges the
-# TUI keybinds that move agent switching to shift+tab.
+# It installs generated agents, skills, commands, the rulebook, seeds models.yaml
+# on a fresh machine, seeds the sample config only when none exists, and merges
+# the TUI keybinds that move agent switching to shift+tab.
 
 set -euo pipefail
 
@@ -43,7 +43,7 @@ echo "config: $CFG"
 echo "backup: $bak"
 
 # 1. Back up anything we replace.
-for item in agents skills AGENTS.md models.yaml opencode.jsonc opencode.json tui.json; do
+for item in agents skills commands AGENTS.md models.yaml opencode.jsonc opencode.json tui.json; do
   if [ -e "$CFG/$item" ]; then
     cp -R "$CFG/$item" "$bak/$item"
   fi
@@ -55,7 +55,14 @@ mkdir -p "$CFG/agents" "$CFG/skills"
 cp -n "$REPO"/agents/generated/*.md "$CFG/agents/"
 cp -Rn "$REPO"/skills/* "$CFG/skills/"
 
-# 2b. On-demand rulebook references linked from AGENTS.md.
+# 2b. Commands (overwrite the plugin's own files, preserve any user command
+#     files). Commands are user-invoked and add no model context until run.
+if [ -d "$REPO/commands" ]; then
+  mkdir -p "$CFG/commands"
+  cp -R "$REPO"/commands/. "$CFG/commands/"
+fi
+
+# 2c. On-demand rulebook references linked from AGENTS.md.
 if [ -e "$CFG/docs/rulebook" ]; then
   mkdir -p "$bak/docs"
   cp -R "$CFG/docs/rulebook" "$bak/docs/rulebook"
@@ -124,4 +131,7 @@ fi
 
 echo "agents: $(ls "$CFG/agents" | wc -l | tr -d ' ')"
 echo "skills: $(ls "$CFG/skills" | wc -l | tr -d ' ')"
+if [ -d "$CFG/commands" ]; then
+  echo "commands: $(ls "$CFG/commands" | wc -l | tr -d ' ')"
+fi
 echo "done; restart OpenCode to load the new config"

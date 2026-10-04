@@ -38,7 +38,11 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(
                 len(list((root / "agents").glob("*.md"))), expected_agent_count()
             )
-            self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 13)
+            self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 12)
+            self.assertEqual(
+                (root / "commands" / "engineer-prompt.md").read_bytes(),
+                (REPO / "commands" / "engineer-prompt.md").read_bytes(),
+            )
             self.assertTrue((root / "AGENTS.md").is_file())
             self.assertTrue((root / "docs" / "rulebook" / "roster.md").is_file())
             self.assertTrue((root / "opencode.jsonc").is_file())
@@ -57,6 +61,8 @@ class TestInstall(unittest.TestCase):
             )
             (root / "opencode.jsonc").write_text('{"model": "custom/x"}')
             (root / "models.yaml").write_text("# custom\n")
+            (root / "commands").mkdir()
+            (root / "commands" / "mine.md").write_text("# mine\n")
 
             result = run_install(root)
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -67,6 +73,8 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(keybinds["agent_cycle_reverse"], "none")
             self.assertIn("custom/x", (root / "opencode.jsonc").read_text())
             self.assertIn("# custom", (root / "models.yaml").read_text())
+            self.assertIn("# mine", (root / "commands" / "mine.md").read_text())
+            self.assertTrue((root / "commands" / "engineer-prompt.md").is_file())
             self.assertTrue(list(root.glob("backup-*")), "no backup dir written")
 
     def test_merge_updates_managed_preserves_provider(self):

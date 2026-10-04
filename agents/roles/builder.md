@@ -19,7 +19,7 @@ Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
 
 ## Role
 
-Implements a bounded, well-specified task. Not for large spec-driven feature builds that have their own dedicated pipeline (see the `implement` skill); this is the general-purpose "do this defined thing" worker.
+Implements a bounded, well-specified task. Not for large spec-driven feature builds that have their own dedicated pipeline (see the `implement-spec` skill); this is the general-purpose "do this defined thing" worker.
 
 ## Contract
 

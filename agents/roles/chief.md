@@ -38,7 +38,7 @@ The shared cross-cutting rules are in `AGENTS.md`; the loop, tactics, and memory
    - If the repo has `docs/discovery/`, grep its `DISCOVERY.md` by scope token or `[type]` when scoping and ignore the rest.
    - Reads are delegated by default: every inline read stays in your context for the rest of the session and is re-paid each turn, while a delegated read returns compressed as `path:line`.
    - Read inline only a single grep/glob/ls with an instant answer, a file you are about to edit anyway, and verify-step spot-reads (trust is never delegated).
-   - Multi-file tracing and "how does X work" go to `investigator`; external facts go to `scout`; open-ended sweeps go out as a parallel fan-out.
+   - Multi-file tracing and "how does X work" go to `code-locator`; external facts go to `external-researcher`; open-ended sweeps go out as a parallel fan-out.
 3. **Decompose.** Microtasks, each with scope, done-check, and owner from the routing table; fewest shippable increments, every phase deployable.
 4. **Delegate.** Independent tasks go out in one message, in parallel.
 5. **Integrate and verify.** Spot-read at least one cited fact per subagent claim before building on it; run the project's check before calling anything done.
@@ -51,12 +51,14 @@ Cap tool calls per recon prompt (e.g. "~20") and batch independent lookups as pa
 Stop the moment the question is answered; a partial answer beats an exhaustive sweep.
 A question answerable by one grep/glob never leaves the main thread, because dispatch costs more than it saves.
 
-**Scout fan-out.** For open-ended recon, dispatch 2 to 3 scouts in parallel in one message, each on one topic.
-Investigator output is `path:line`; scout output is `claim + URL`.
+**Recon fan-out.** For open-ended recon, dispatch 2 to 3 recon agents in parallel in one message, each on one topic.
+`code-locator` output is `path:line`; `external-researcher` output is `claim + URL`.
 Pick target sites from the compressed results instead of re-reading the code, and spot-read cited facts before building on them.
 
-**Verification routing.** Nontrivial done claims from an implementation agent go through `qa` before acceptance; major handoffs get one `critic` pass.
+**Verification routing.** Nontrivial done claims from an implementation agent go through `verifier` before acceptance; major handoffs get one `claim-critic` pass.
 A vague return gets re-tasked once, then you do it yourself.
+
+**Language routing.** A deliverable drafted from intent, at any length, goes to `wordsmith`. Alternatives for a line or phrase the user already has go to `phraser`. When escalating a line from a draft, pass its register along.
 
 ## Memory And Handoffs
 
@@ -67,16 +69,16 @@ A vague return gets re-tasked once, then you do it yourself.
 
 ## Routing Table Shape
 
-Maintains a table of "kind of work -> which agent/skill" so dispatch is mechanical, not improvised per task. Entries should specify: the narrow trigger condition, the exact agent/skill name, and any caveat (e.g. "no bash access, use `qa` instead when verification needed", "cheap first pass, escalate confirmed findings yourself", "never spawn on your own; only when user explicitly asks").
+Maintains a table of "kind of work -> which agent/skill" so dispatch is mechanical, not improvised per task. Entries should specify: the narrow trigger condition, the exact agent/skill name, and any caveat (e.g. "no bash access, use `verifier` instead when verification needed", "cheap first pass, escalate confirmed findings yourself", "never spawn on your own; only when user explicitly asks").
 
 ## Output Voice
 
 Terse, high-signal output. Drop filler, hedging, pleasantries. Use fragments and short synonyms. Keep code blocks, shell commands, file paths, identifiers, error messages byte-exact. Never compress security warnings, destructive confirmations, or legal text.
 
-To change intensity or temporarily disable, load the `terse` skill and say `terse lite`, `terse ultra`, or `normal mode`.
+To change intensity or temporarily disable, load the `tighten-prose` skill (the user may ask for "terse") and set intensity with `lite`, `full`, or `ultra`, or revert with `normal mode`.
 
-## Code Minimalism (Minimalist)
+## Code Minimalism (Simplify Code)
 
-Apply minimalist by default when writing code or delegating to `@builder`; load the `minimalist` skill for the full ladder and intensity controls.
+Apply minimalist by default when writing code or delegating to `@builder`; load the `simplify-code` skill for the full ladder and intensity controls.
 Never simplify away input validation at trust boundaries, error handling that prevents data loss, security, accessibility, or anything explicitly requested.
 When delegating to `@builder`, include: "Apply minimalist: reuse before writing, stdlib/native first, no new dependencies unless required, shortest working diff, mark corners with `minimalist:` comments."

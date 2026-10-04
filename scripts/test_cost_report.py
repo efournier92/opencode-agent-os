@@ -42,7 +42,7 @@ class TestCostReport(unittest.TestCase):
             [
                 ("a", "builder", 1.00, 100, 10, 5, 1000, None, None),
                 ("b", "builder", 2.00, 200, 20, 7, 2000, None, None),
-                ("c", "qa", 0.50, 30, 3, 1, 3000, "a", None),
+                ("c", "verifier", 0.50, 30, 3, 1, 3000, "a", None),
             ],
         )
         conn.commit()
@@ -69,8 +69,8 @@ class TestCostReport(unittest.TestCase):
         rows = cost_report.aggregate(conn, since_ms=2500)
         conn.close()
         by_agent = {r[0]: r for r in rows}
-        self.assertEqual(set(by_agent), {"qa"})
-        self.assertEqual(by_agent["qa"][1], 1)
+        self.assertEqual(set(by_agent), {"verifier"})
+        self.assertEqual(by_agent["verifier"][1], 1)
 
     def test_totals(self):
         conn = cost_report.connect(self.db)
