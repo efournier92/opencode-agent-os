@@ -19,8 +19,8 @@ Prefer a specific pinned agent over a generic catch-all whenever one fits the la
 
 Decide and log; do not ask when the action is reversible and in scope.
 Ask the user only for destructive or irreversible operations, scope changes, deploy-affecting choices, and any change touching a cross-system contract such as a shared schema.
-Never invoke the commit-organizing skill unprompted.
-When implementation is verified, report done and stop; staging commits is the user's call.
+Never invoke `ship-changes` unprompted.
+When implementation is verified, report done and stop; committing and pushing are the user's call via `ship-changes` (never unprompted).
 
 ## Verify Before "Done"
 
@@ -29,13 +29,13 @@ Long convergence loops (a suite to green, a gate to clean) go to the user as a s
 
 ## Memory And Handoffs
 
-Durable decisions and preferences go to the auto-memory index; session handoffs use the `handoff` skill.
+Durable decisions and preferences go to the auto-memory index; session handoffs use the `write-handoff` skill.
 The operator format for both lives in `agents/roles/chief.md`.
 
 ## Progressive Discovery
 
 Opt-in per repository: active only where a git working tree contains `docs/discovery/`; otherwise create nothing and read nothing.
-In an opted-in repo, load the `progressive-discovery` skill and grep `docs/discovery/DISCOVERY.md` by scope token when scoping; the operator appends at checkpoints and subagents return candidates, never write.
+In an opted-in repo, load the `log-discoveries` skill and grep `docs/discovery/DISCOVERY.md` by scope token when scoping; the operator appends at checkpoints and subagents return candidates, never write.
 
 ## Markdown Style (Every Agent, Every File)
 

@@ -28,14 +28,15 @@ From the plugin checkout:
 scripts/install.sh
 ```
 
-It backs up what it replaces, installs the generated agents, skills, and rulebook, seeds `models.yaml` and the config on a fresh machine, and sets the TUI keybinds so agent switching is on `shift+tab` (only when those keys are unset).
+It backs up what it replaces, installs the generated agents, skills, commands, and rulebook, seeds `models.yaml` and the config on a fresh machine, and sets the TUI keybinds so agent switching is on `shift+tab` (only when those keys are unset).
 See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### Verify
 
 1. **Run `/agents` in the OpenCode TUI**
-    - Expect all primaries and their crews: `chief-ds`, `chief-glm`, `chief-ds+glm`, and each `<role>-<profile>` subagent *(`builder-ds`, `qa-ds+glm`, etc).*
-2. The `skill` tool description should list all 13 skills *(`specify`, `implement`, etc).*
+    - Expect all primaries and their crews: `chief-ds`, `chief-glm`, `chief-ds+glm`, and each `<role>-<profile>` subagent *(`builder-ds`, `verifier-ds+glm`, etc).*
+2. The `skill` tool description should list all 12 skills *(`create-spec`, `implement-spec`, etc).*
+3. Typing `/engineer-prompt` in the TUI autocompletes the command.
 
 ## Contents
 
@@ -56,7 +57,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 - Opt-in per repository: a repo enables discovery by containing this directory, and only inside a git working tree.
 - The index `docs/discovery/DISCOVERY.md` holds one line per finding, decision, assumption, trap, question, or outcome, each with evidence.
 - Grep it by scope token or `[type]` when scoping a task; open a linked detail file only when an entry is load-bearing.
-- The operator appends at checkpoints; the commit skill reconciles and stages it. Without the directory, the practice is skipped and nothing is created or read. See Progressive Discovery in `AGENTS.md`.
+- The operator appends at checkpoints; the ship-changes skill reconciles and commits it. Without the directory, the practice is skipped and nothing is created or read. See Progressive Discovery in `AGENTS.md`.
 
 ### `docs/rulebook/`
 
@@ -76,8 +77,8 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### `scripts/install.sh`
 
-- Installs generated agents, skills, the rulebook, and the TUI keybinds into the OpenCode config dir, with a timestamped backup.
-- Overwrites plugin-owned agents, skills, and rulebook; keeps an existing `models.yaml`.
+- Installs generated agents, skills, commands, the rulebook, and the TUI keybinds into the OpenCode config dir, with a timestamped backup.
+- Overwrites plugin-owned agents, skills, commands, and rulebook; keeps an existing `models.yaml` and any user command files.
 - Merges only the plugin-managed config keys into an existing `opencode.json`/`opencode.jsonc`, overriding those and preserving every other key; seeds the sample on a fresh install; sets keybinds only when unset.
 
 ### `scripts/release.sh`
@@ -108,40 +109,48 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 |---|---|---|
 | `chief` | primary | Operator agent that decides, decomposes, routes work to specialists, verifies output, and writes handoffs. |
 | `builder` | subagent | Bounded implementation worker for a well-specified task with a clear done-check. |
-| `qa` | subagent | PASS/FAIL verification agent that proves claims by executing commands; read-only on code. |
-| `critic` | subagent | Red-team reviewer that attacks handoffs, plans, diffs, and claims for fake progress before they are trusted. |
+| `verifier` | subagent | PASS/FAIL verification agent that proves claims by executing commands; read-only on code. |
+| `claim-critic` | subagent | Red-team reviewer that attacks handoffs, plans, diffs, and claims for fake progress before they are trusted. |
 | `system-fixer` | subagent | Repairs the agent system itself (configs, hooks, instruction docs) and runs improvement mode for recurring failures. |
 | `context-curator` | subagent | Hygiene agent for instruction docs, memory index, handoffs, and the discovery index; keeps context lean and claims true. |
-| `scout` | subagent | Cheap external-research agent for docs, versions, APIs, and changelogs outside the codebase. |
-| `investigator` | subagent | Cheap read-only in-repo code locator that finds where symbols are defined and what calls them, with compressed deterministic output. |
+| `external-researcher` | subagent | Cheap external-research agent for docs, versions, APIs, and changelogs outside the codebase. |
+| `code-locator` | subagent | Cheap read-only in-repo code locator that finds where symbols are defined and what calls them, with compressed deterministic output. |
 | `compliance-officer` | subagent | Pre-filters specs, branches, and PRs for regulatory/legal/fiduciary/privacy questions worth a human compliance officer's time. |
-| `product-manager` | subagent | Harsh product/UX critique of specs, branches, and PRs from the user's perspective. |
+| `product-critic` | subagent | Harsh product/UX critique of specs, branches, and PRs from the user's perspective. |
 | `photo-generator` | subagent | Local AI photo-generation specialist: sets up a ComfyUI/SDXL rig, downloads models, produces identity-consistent artistic images via scripted runners. |
 | `wordsmith` | subagent | Communicative-language specialist: formal writing, messages, speeches, talking points in an American Millennial voice. |
+| `phraser` | subagent | Riffing partner: returns distinct, ranked ways to say a phrase, sentiment, or sentence, with the top pick flagged. |
 | `visual-critic` | subagent | Holistic visual design sweep of print, PDF, and HTML deliverables. |
 | `visual-builder` | subagent | Applies visual fixes from `visual-critic` findings. |
 
 *Mode ships with each role. Each profile injects a concrete model per role from `models.yaml` (see Model Profiles); the primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm`.*
 
-### `skills/` (13 Skills)
+### `skills/` (12 Skills)
 
 - 1 directory per skill, each with a `SKILL.md` inside, capped at 200 lines; detail moves to sibling files.
 
 | Skill | Description |
 |---|---|
-| `specify` | Turn a rough design sketch into an implementation-ready spec document. |
-| `implement` | Build exactly what a finished design spec says and iterate to a green test suite. |
-| `commit` | Organize already-completed work into logical commits: stages chunks and suggests messages, never commits. |
-| `handoff` | Write a structured session handoff so a fresh session resumes without re-exploring. |
-| `capture` | Distill session learnings into a terse, standalone knowledge file for a human or future agent. |
-| `progressive-discovery` | Maintain the opted-in `docs/discovery/DISCOVERY.md` index of durable findings, decisions, traps, and outcomes. |
-| `browser-verify` | Prove a feature works end-to-end in a real browser against the local dev stack only. |
-| `ship-check` | Run a parallel pre-ship quality gate on a feature branch with read-only reviewers. |
-| `worktree` | Create, list, or remove grouped git worktrees across repos, each with isolated ports and its own database. |
-| `terse` | Toggle terse, high-signal output: cut filler while keeping technical facts exact. |
-| `minimalist` | Force the laziest, minimal solution that works: cut over-engineering, reuse existing code, ship the smallest diff. |
-| `ui-craft` | Sleek, distinctive frontend design guidance: typography, palette, layout, and anti-AI-slop checks. |
-| `burn` | Delete the current session from local history once you quit, after confirming. Session-only. |
+| `create-spec` | Turn a rough design sketch into an implementation-ready spec document. |
+| `implement-spec` | Build exactly what a finished design spec says and iterate to a green test suite. |
+| `ship-changes` | Chunk unstaged work into logical commits and push; per-commit review by default, one pre-flight approval then unattended on an explicit autonomy cue. |
+| `write-handoff` | Write a structured session handoff so a fresh session resumes without re-exploring. |
+| `capture-session` | Distill session learnings into a terse, standalone knowledge file for a human or future agent. |
+| `log-discoveries` | Maintain the opted-in `docs/discovery/DISCOVERY.md` index of durable findings, decisions, traps, and outcomes. |
+| `verify-in-browser` | Prove a feature works end-to-end in a real browser against the local dev stack only. |
+| `manage-worktrees` | Create, list, or remove grouped git worktrees across repos, each with isolated ports and its own database. |
+| `tighten-prose` | Toggle terse, high-signal output (loads on "terse"): cut filler while keeping technical facts exact. |
+| `simplify-code` | Force the laziest, minimal solution that works: cut over-engineering, reuse existing code, ship the smallest diff. |
+| `polish-ui` | Sleek, distinctive frontend design guidance: typography, palette, layout, and anti-AI-slop checks. |
+| `burn-session` | Delete the current session from local history once you quit, after confirming. Session-only. |
+
+### `commands/` (1 Command)
+
+- User-invoked slash commands. Unlike a skill, a command adds no model context until you type it.
+
+| Command | Description |
+|---|---|
+| `/engineer-prompt` | Turn a messy idea into a destination-shaped, grounded, verifiable prompt. |
 
 ## Releases
 
@@ -168,24 +177,25 @@ profiles:
     label: DeepSeek
     roles:
       chief: deepseek/deepseek-flash
-      qa: deepseek/deepseek-v4-pro
-      critic: deepseek/deepseek-v4-pro
+      verifier: deepseek/deepseek-v4-pro
+      claim-critic: deepseek/deepseek-v4-pro
       ...
   glm:
     label: GLM
     roles:
       chief: zai-coding-plan/glm-5.3
-      scout: zai-coding-plan/glm-5.3-flash
+      external-researcher: zai-coding-plan/glm-5.3-flash
       ...
   ds+glm:
     label: DeepSeek + GLM hybrid
     roles:
       chief: deepseek/deepseek-flash
-      critic: zai-coding-plan/glm-5.3
-      qa: zai-coding-plan/glm-5.3
+      claim-critic: zai-coding-plan/glm-5.3
+      verifier: zai-coding-plan/glm-5.3
       compliance-officer: zai-coding-plan/glm-5.3
-      product-manager: zai-coding-plan/glm-5.3
+      product-critic: zai-coding-plan/glm-5.3
       wordsmith: zai-coding-plan/glm-5.3
+      phraser: zai-coding-plan/glm-5.3
       builder: deepseek/deepseek-flash
       ...
 ```

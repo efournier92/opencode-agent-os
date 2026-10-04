@@ -5,7 +5,8 @@ Install this plugin into OpenCode so the multi-agent system is available in ever
 ## What Gets Installed
 
 - Generated per-profile agents in `agents/generated/` to `<config-dir>/agents/`
-- **13 skills** in `skills/` to `<config-dir>/skills/`
+- **12 skills** in `skills/` to `<config-dir>/skills/`
+- **1 command** in `commands/` to `<config-dir>/commands/`
 - **Shared rulebook** `AGENTS.md` to `~/.config/opencode/AGENTS.md` (global) or `<project-root>/AGENTS.md` (per-project)
 - **Rulebook references** `docs/rulebook/` to `<config-dir>/docs/rulebook/`, linked from `AGENTS.md` and read on demand
 - **OpenCode config** `opencode.json.sample`: seeded on a fresh install, or its plugin-managed keys merged into an existing `~/.config/opencode/opencode.json` or `opencode.jsonc` (see Managed Config Keys).
@@ -25,7 +26,7 @@ scripts/install.sh
 
 - Writes to `~/.config/opencode` by default; override with `--config-dir DIR` or `OPENCODE_CONFIG_DIR`.
 - Backs up whatever it replaces into `backup-<timestamp>` before touching it, so it is safe to re-run.
-- Overwrites `agents/`, `skills/`, `AGENTS.md`, and `docs/rulebook/`; these are plugin-owned. Local additions in `agents/` and `skills/` are removed, so keep machine-specific agents and skills outside `~/.config/opencode/agents` and `~/.config/opencode/skills`.
+- Overwrites `agents/`, `skills/`, `commands/`, `AGENTS.md`, and `docs/rulebook/`; these are plugin-owned. Local additions in `agents/` and `skills/` are removed, so keep machine-specific agents and skills outside `~/.config/opencode/agents` and `~/.config/opencode/skills`. Your own command files in `~/.config/opencode/commands/` are preserved; only the plugin's own command filenames are overwritten.
 - Keeps an existing `models.yaml` and `opencode.json`/`opencode.jsonc`. When a config exists, the installer overrides only the plugin-managed keys (see Managed Config Keys); every other key, including providers, MCP servers, permissions, and custom agents, is preserved. A config that is not strict JSON, such as one with JSONC comments, is skipped with a warning and needs a hand merge.
 - In `tui.json`, sets the agent-switch keybinds only when unset, leaving your keybinds alone.
 
@@ -108,7 +109,8 @@ To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/a
 
 6. Verify:
    - Run `/agents` in the TUI; expect `chief-ds`, `chief-glm`, `chief-ds+glm`, plus all installed subagents.
-   - Check the `skill` tool description; it should list all 13 skills.
+   - Check the `skill` tool description; it should list all 12 skills.
+   - Type `/` in the TUI; expect the `engineer-prompt` command.
    - Start a new session; it should begin as `chief-ds+glm`; press Tab to cycle to `chief-ds` and `chief-glm`.
 
 ## Per-Project Install
@@ -117,7 +119,7 @@ Use when the plugin should travel with a specific repo.
 
 1. Open a terminal in the project root.
 
-2. Copy agents and skills into `.opencode/`:
+2. Copy agents, skills, and commands into `.opencode/`:
 
 ```bash
 mkdir -p .opencode/agents
@@ -125,6 +127,9 @@ cp -n agents/generated/*.md .opencode/agents/
 
 mkdir -p .opencode/skills
 cp -Rn skills/* .opencode/skills/
+
+mkdir -p .opencode/commands
+cp -Rn commands/* .opencode/commands/
 ```
 
 3. Copy the shared rulebook to the project root (not inside `.opencode/`), plus its on-demand references:
@@ -168,16 +173,18 @@ OpenCode merges config and rules from all discovered locations; later sources ov
 ## Reinstalling / Upgrading
 
 `cp -n` and `cp -Rn` only add files; they never remove renamed or deleted ones.
-Reinstalling over an older version therefore leaves stale entries behind; in particular the older bare agents (`builder`, `qa`, and the rest) coexist with the per-profile agents that replace them (`builder-ds`, `builder-glm`, and so on).
+Reinstalling over an older version therefore leaves stale entries behind; in particular the older bare agents (`builder`, `verifier`, and the rest) coexist with the per-profile agents that replace them (`builder-ds`, `builder-glm`, and so on).
 Before upgrading, clear the agent and skill dirs so no stale bare agent survives, then reinstall fresh:
 
 ```bash
 # global
 rm -rf ~/.config/opencode/agents ~/.config/opencode/skills
+rm -f ~/.config/opencode/commands/engineer-prompt.md
 # then re-run the copy commands from the global install section
 
 # per-project
 rm -rf .opencode/agents .opencode/skills
+rm -f .opencode/commands/engineer-prompt.md
 # then re-run the copy commands from the per-project section
 ```
 
@@ -201,12 +208,14 @@ Remove the files you copied:
 # global
 rm -rf ~/.config/opencode/agents
 rm -rf ~/.config/opencode/skills
+rm -f ~/.config/opencode/commands/engineer-prompt.md
 rm ~/.config/opencode/AGENTS.md
 # edit ~/.config/opencode/opencode.jsonc (or opencode.json) to remove the plugin keys
 
 # per-project
 rm -rf .opencode/agents
 rm -rf .opencode/skills
+rm -f .opencode/commands/engineer-prompt.md
 rm AGENTS.md
 # edit .opencode/opencode.jsonc (or opencode.json) to remove the plugin keys
 ```
