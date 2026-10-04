@@ -21,7 +21,7 @@ Maintains a committed, per-repo discovery index so a future agent can find the r
 
 ## Index Format
 
-One line per entry, newest first by date (within a day, order is not significant), kept under roughly 100 lines:
+One line per entry, newest first by date (within a day, order is not significant), each entry <= 240 characters and the whole file <= 8 KB (roughly 2K tokens); when one line cannot carry it, link a capture-session file (`skills/capture-session` is the current name) rather than growing a line:
 
 ```markdown
 # Discovery
@@ -53,19 +53,19 @@ Append when a finding passes the decision test: would this change what a future 
 
 ## Read Contract
 
-- Grep the index by scope token or `[type]` when scoping a task; do not load the whole file unless it is small (under roughly 60 lines) or an entry is load-bearing.
+- Grep the index by scope token or `[type]` when scoping a task; do not load the whole file unless an entry is load-bearing. Grep is the default at any size.
 - Open a linked detail file or `capture-session` file only when an entry is load-bearing. Ignoring irrelevant entries is the point.
 
 ## Write Contract
 
-- The operator owns appends; subagents return candidates (finding + evidence) and never write. The context-curator is the only other agent allowed to touch the file, and only to prune, archive, or annotate `superseded`.
-- Never rewrite an entry's meaning; the only in-place change is annotating `superseded YYYY-MM-DD` alongside the replacement.
+- The operator owns appends; subagents return candidates (finding + evidence) and never write. The context-curator is the only other agent allowed to touch the file, and only to prune, archive, or delete superseded lines.
+- Never rewrite an entry's meaning. Supersede by appending a replacement; at reconcile, delete the superseded line; `git log -p -- docs/discovery/DISCOVERY.md` is the history.
 - Evidence is required for `find`, `decision`, `trap`, and `outcome`; otherwise the entry is an `assumption`.
-- Past roughly 100 lines, the curator archives settled entries into a linked detail file or drops re-derivable ones.
+- Past the 8 KB cap, the curator archives settled entries into a linked detail file or drops re-derivable ones.
 
 ## Commit Reconcile
 
-In an opted-in repo, before staging, the ship-changes skill reconciles the index of the repository it commits and pushes: flush unsaved findings, verify evidence (downgrade unproven to `assumption`), dedupe and supersede rather than duplicate, keep newest first, and stage `docs/discovery/DISCOVERY.md` with the related chunk.
+In an opted-in repo, before staging, the ship-changes skill reconciles the index of the repository it commits and pushes: flush unsaved findings, verify each evidence path resolves and downgrade unproven entries to `assumption`, dedupe and delete superseded lines rather than duplicate, enforce the 240-character and 8 KB caps, keep newest first, and stage `docs/discovery/DISCOVERY.md` with the related chunk.
 
 ## Relationship To Other Records
 
@@ -76,6 +76,7 @@ In an opted-in repo, before staging, the ship-changes skill reconciles the index
 ## Verify
 
 - Any change to `docs/discovery/DISCOVERY.md` passes `scripts/lint-markdown.py` from the plugin checkout.
+- `scripts/check_discovery.py` passes: every entry is <= 240 characters, the whole file is <= 8 KB, and every evidence path resolves with any `:line` in range.
 - Every `find`, `decision`, `trap`, and `outcome` entry carries evidence.
 
 Rationale, threats, and worked examples live in `docs/specs/2026-10-03-progressive-discovery.md`.
