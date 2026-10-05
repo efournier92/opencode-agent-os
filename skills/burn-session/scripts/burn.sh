@@ -2,8 +2,9 @@
 # burn.sh - purge the current OpenCode session once OpenCode exits.
 #
 # Session-only: deletes the session row from opencode.db; its messages and
-# parts cascade. Never touches other sessions, logs, tool-output, shell
-# history, or the database file itself.
+# parts cascade. The delete event also revokes the session's public share link
+# (opencode's share service deletes the remote copy). Never touches other
+# sessions, logs, tool-output, shell history, or the database file itself.
 #
 #   burn.sh            resolve the current session and print a summary (dry run)
 #   burn.sh --yes      arm deletion on OpenCode exit
@@ -61,12 +62,20 @@ title=$(sqlite3 -readonly "$DB" "SELECT title FROM session WHERE id='$SID';")
 dir=$(sqlite3 -readonly "$DB" "SELECT directory FROM session WHERE id='$SID';")
 msgs=$(sqlite3 -readonly "$DB" "SELECT count(*) FROM message WHERE session_id='$SID';")
 parts=$(sqlite3 -readonly "$DB" "SELECT count(*) FROM part WHERE session_id='$SID';")
+share=$(sqlite3 -readonly "$DB" "SELECT coalesce((SELECT url FROM session_share WHERE session_id='$SID'),'');" 2>/dev/null || true)
 
 echo "session : $SID"
 echo "title   : $title"
 echo "dir     : $dir"
 echo "content : $msgs messages, $parts parts"
+echo "share   : ${share:-none}"
 echo "cwd     : $PWD"
+if [ -n "$share" ]; then
+  case "${OPENCODE_DISABLE_SHARE:-}" in
+    true|1) echo "          (OPENCODE_DISABLE_SHARE is set: this link will NOT be revoked; run /unshare first)" ;;
+    *) echo "          (burning also revokes this public link)" ;;
+  esac
+fi
 
 if [ "$MODE" = summary ]; then
   echo

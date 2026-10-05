@@ -18,12 +18,32 @@ SCRIPT = REPO / "scripts" / "release.sh"
 TAG = datetime.date.today().isoformat()
 
 
+GIT_ENV_KEYS = (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_COMMON_DIR",
+    "GIT_PREFIX",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+)
+
+
+def clean_env(**extra):
+    # A pre-commit hook exports these; leaking them into the throwaway repo
+    # would stage test files into the real index.
+    env = {k: v for k, v in os.environ.items() if k not in GIT_ENV_KEYS}
+    env.update(extra)
+    return env
+
+
 def git(args, cwd):
     return subprocess.run(
         ["git", "-C", str(cwd), *args],
         capture_output=True,
         text=True,
         check=True,
+        env=clean_env(),
     ).stdout.strip()
 
 
@@ -33,8 +53,8 @@ class TestRelease(unittest.TestCase):
         base = Path(self.tmp.name)
         self.origin = base / "origin.git"
         self.work = base / "work"
-        subprocess.run(["git", "init", "-q", "--bare", str(self.origin)], check=True)
-        subprocess.run(["git", "init", "-q", str(self.work)], check=True)
+        subprocess.run(["git", "init", "-q", "--bare", str(self.origin)], check=True, env=clean_env())
+        subprocess.run(["git", "init", "-q", str(self.work)], check=True, env=clean_env())
         git(["config", "user.email", "t@example.com"], self.work)
         git(["config", "user.name", "t"], self.work)
         (self.work / "f.txt").write_text("1\n")
@@ -42,7 +62,7 @@ class TestRelease(unittest.TestCase):
         git(["commit", "-qm", "one"], self.work)
         git(["branch", "-M", "main"], self.work)
         git(["remote", "add", "origin", str(self.origin)], self.work)
-        self.env = dict(os.environ, RELEASE_REPO=str(self.work))
+        self.env = clean_env(RELEASE_REPO=str(self.work))
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -65,6 +85,7 @@ class TestRelease(unittest.TestCase):
             ["git", "-C", str(cwd), "rev-parse", f"refs/tags/{TAG}^{{}}"],
             capture_output=True,
             text=True,
+            env=clean_env(),
         )
         return result.stdout.strip() if result.returncode == 0 else None
 

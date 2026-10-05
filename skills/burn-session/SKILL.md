@@ -18,6 +18,8 @@ Scope is the **current session only**. Never another session, never all sessions
 ## What It Does And Does Not
 
 - Deletes the session row from `opencode.db`; its messages and parts cascade away with it.
+- Also revokes any public share link: the delete event reaches OpenCode's share service, which deletes the remote shared copy and drops the share row, so a burned session does not leave a live `opncd.ai` URL behind. Manual `/unshare` is not separately needed.
+- Caveat: if `OPENCODE_DISABLE_SHARE` is truthy the share service is inert, so a previously shared session would keep its public link; run `/unshare` before burning in that case.
 - Leaves `opencode.log`, `tool-output/`, shell history, and every other session untouched.
 
 ## Why Deletion Is Deferred
@@ -34,11 +36,11 @@ Deleting a live session breaks the running client: it throws `UnknownError` and 
 
    Use the script that sits beside this file at `scripts/burn.sh`; the global install path is shown above, a per-project install keeps it under `.opencode/skills/burn-session/scripts/burn.sh`.
 
-   It prints the resolved session `id`, `title`, `dir`, and message/part counts. The resolved session is the newest row in the DB, which is the live one.
+   It prints the resolved session `id`, `title`, `dir`, message/part counts, and `share` (the public link, or none). The resolved session is the newest row in the DB, which is the live one.
 
 2. **Verify it matches.** Confirm the printed `title` and `dir` describe the session you are actually in. If they do not, stop and ask. Never arm on a mismatch.
 
-3. **Confirm every time.** Show the `id`, `title`, and counts, and wait for an explicit yes. This is irreversible and has no undo. Use the `question` tool; do not proceed on a soft "ok".
+3. **Confirm every time.** Show the `id`, `title`, counts, and any share link that will be revoked, and wait for an explicit yes. This is irreversible and has no undo. Use the `question` tool; do not proceed on a soft "ok".
 
 4. **Arm on yes.**
 

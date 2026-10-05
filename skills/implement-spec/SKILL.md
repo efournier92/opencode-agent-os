@@ -29,6 +29,7 @@ A spec file path, given at invocation. If missing, ask for it.
 8. **No special characters** (em dashes, arrows); plain punctuation, shorter sentences instead.
 9. **No tests for pure network/API-surface wiring** (thin endpoint/query/mutation glue); document usage examples in the spec instead of testing the wiring layer directly; test the underlying logic layer instead.
 10. **Comment discipline**: identical rule to the active profile's builder (`<prefix>-builder`): comments state only what code can't; large comment block needed signals code unclear, extract a well-named method/variable instead (this kind of clarity extraction is not "innovation" under rule 2).
+11. **Cut the feature branch first.** Before reading or changing code, create and switch to a branch named for the feature in kebab case (lowercase, hyphen-separated): use the spec's branch context when it names one, else derive it from the spec title (title "Add Export Button" -> `add-export-button`). Follow the repo's existing branch convention when it has one (e.g. a `feat/` prefix); if the branch already exists, report it before switching so a stale same-named branch is visible. If the working tree is dirty, stop and ask instead of stashing or forcing a switch; an untracked or modified spec file at the path passed in is the input, not dirt to stop on.
 
 ## Stuck Protocol: Prime Directive While Iterating
 
@@ -40,13 +41,14 @@ Token-waste-while-stuck is the failure mode to eliminate; stopping early to ask 
 
 ## Workflow
 
-1. Read the whole spec; note every backend and frontend requirement section. In an opted-in repo, read `docs/discovery/DISCOVERY.md` for the touched subsystems and treat relevant entries as known facts; surface `[outcome]` or `[trap]` candidates (finding + evidence) for the operator to promote, and never edit the index (see Progressive Discovery in `AGENTS.md`).
-2. Work only from spec-named files; the spec is the map, don't re-explore the codebase.
-3. Ask up-front clarifications (see below) before coding, not mid-failure.
-4. Implement in dependency order (schema/data model first, then logic layer, then service layer, then API surface, then backfill, then caller refactors, then UI if applicable).
-5. Write a small permanent test suite alongside: service/model/logic-layer focus, not UI-wiring tests (see hard rule 9).
-6. Fix one failing test at a time. While iterating on a single failure, run only that one test case with compact output, don't re-run the whole file on every fix (re-printing every passing case wastes tokens each cycle). Run the full feature-test file once at the end to confirm green. Track attempts per test and apply the Stuck Protocol strictly.
-7. Final verification: run the feature's tests plus existing tests for every touched file; report results.
+1. Read the spec's title and branch-context line first (the branch name comes from them), then cut the feature branch before any other work: name it for the feature in kebab case and create or switch to it (hard rule 11).
+2. Read the whole spec; note every backend and frontend requirement section. In an opted-in repo, read `docs/discovery/DISCOVERY.md` for the touched subsystems and treat relevant entries as known facts; surface `[outcome]` or `[trap]` candidates (finding + evidence) for the operator to promote, and never edit the index (see Progressive Discovery in `AGENTS.md`).
+3. Work only from spec-named files; the spec is the map, don't re-explore the codebase.
+4. Ask up-front clarifications (see below) before coding, not mid-failure.
+5. Implement in dependency order (schema/data model first, then logic layer, then service layer, then API surface, then backfill, then caller refactors, then UI if applicable).
+6. Write a small permanent test suite alongside: service/model/logic-layer focus, not UI-wiring tests (see hard rule 9).
+7. Fix one failing test at a time. While iterating on a single failure, run only that one test case with compact output, don't re-run the whole file on every fix (re-printing every passing case wastes tokens each cycle). Run the full feature-test file once at the end to confirm green. Track attempts per test and apply the Stuck Protocol strictly.
+8. Final verification: run the feature's tests plus existing tests for every touched file; report results.
 
 ## When To Ask Up Front
 
