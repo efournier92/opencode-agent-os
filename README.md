@@ -68,7 +68,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 ### `models.yaml`
 
 - Single source of truth for profiles and the concrete model each one pins per role.
-  - *One `roles:` map per profile; no tier indirection.*
+  - *One `roles:` map per profile; each role maps directly to a concrete model id.*
 
 ### `scripts/apply-models.py`
 
@@ -117,7 +117,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `code-locator` | subagent | Cheap read-only in-repo code locator that finds where symbols are defined and what calls them, with compressed deterministic output. |
 | `compliance-officer` | subagent | Pre-filters specs, branches, and PRs for regulatory/legal/fiduciary/privacy questions worth a human compliance officer's time. |
 | `product-critic` | subagent | Harsh product/UX critique of specs, branches, and PRs from the user's perspective. |
-| `photo-generator` | subagent | Local AI photo-generation specialist: sets up a ComfyUI/SDXL rig, downloads models, produces identity-consistent artistic images via scripted runners. |
+| `photo-generator` | subagent | AI photo-generation specialist: sets up a ComfyUI/SDXL rig or a hosted image API, downloads models, produces identity-consistent artistic images via scripted runners. |
 | `wordsmith` | subagent | Communicative-language specialist: formal writing, messages, speeches, talking points in an American Millennial voice. |
 | `phraser` | subagent | Riffing partner: returns distinct, ranked ways to say a phrase, sentiment, or sentence, with the top pick flagged. |
 | `visual-critic` | subagent | Holistic visual design sweep of print, PDF, and HTML deliverables. |
@@ -178,8 +178,8 @@ profiles:
     label: DeepSeek
     roles:
       chief: deepseek/deepseek-flash
-      verifier: deepseek/deepseek-v4-pro
-      claim-critic: deepseek/deepseek-v4-pro
+      verifier: deepseek/deepseek-flash
+      claim-critic: deepseek/deepseek-flash
       ...
   glm:
     label: GLM

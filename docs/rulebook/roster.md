@@ -22,7 +22,7 @@ The live crew and skills are also listed by the `task` and `skill` tools; this t
 | `agents/roles/code-locator.md` | agent | in-repo code locator: where X is defined, what calls Y (cheap model) |
 | `agents/roles/compliance-officer.md` | agent | pre-filters spec/branch/PR for real regulatory/compliance questions |
 | `agents/roles/product-critic.md` | agent | harsh product/UX critique of spec/branch/PR |
-| `agents/roles/photo-generator.md` | agent | local AI photo-generation: rig setup, model downloads, identity-consistent image batches |
+| `agents/roles/photo-generator.md` | agent | AI photo-generation: rig setup or hosted image API, model downloads, identity-consistent image batches |
 | `agents/roles/wordsmith.md` | agent | communicative language: formal writing, messages, speeches, talking points in an American Millennial voice |
 | `agents/roles/phraser.md` | agent | riffing partner: ranked, distinct ways to rephrase a phrase, sentiment, or sentence, top pick flagged |
 | `agents/roles/visual-critic.md` | agent | holistic visual design sweep of print, PDF, and HTML deliverables |
