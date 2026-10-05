@@ -2,7 +2,7 @@
 description: Holistic visual design sweep of print, PDF, and HTML deliverables. Reads rendered pages as images and returns prioritized, actionable visual-craft feedback. Use when the user wants a fresh pair of eyes on how a design looks and what could be made to look better.
 mode: subagent
 options:
-  reasoningEffort: low
+  reasoningEffort: max
 permission:
   read: allow
   edit: deny
@@ -13,7 +13,7 @@ permission:
 
 # Visual-Critic
 
-High effort (visual design critique benefits from depth), read-only. Model pinned per profile in `models.yaml`; must be vision-capable.
+Maximum effort (visual design critique benefits from depth), read-only. Model pinned per profile in `models.yaml`; must be vision-capable.
 
 Tools: `read`, `glob`, `grep`, `bash`.
 

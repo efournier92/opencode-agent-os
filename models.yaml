@@ -35,11 +35,12 @@ profiles:
   ds:
     label: DeepSeek
     roles:
+      # All-flash: DeepSeek is phasing out v4-pro; flash is ahead on performance and 3.3x-7.3x cheaper.
       chief: deepseek/deepseek-flash
-      verifier: deepseek/deepseek-v4-pro
-      claim-critic: deepseek/deepseek-v4-pro
-      compliance-officer: deepseek/deepseek-v4-pro
-      product-critic: deepseek/deepseek-v4-pro
+      verifier: deepseek/deepseek-flash
+      claim-critic: deepseek/deepseek-flash
+      compliance-officer: deepseek/deepseek-flash
+      product-critic: deepseek/deepseek-flash
       builder: deepseek/deepseek-flash
       system-fixer: deepseek/deepseek-flash
       external-researcher: deepseek/deepseek-flash
@@ -49,7 +50,7 @@ profiles:
       phraser: deepseek/deepseek-flash
       visual-critic: deepseek/deepseek-flash
       visual-builder: deepseek/deepseek-flash
-      photo-generator: google/gemini-3-pro-image
+      photo-generator: deepseek/deepseek-flash
   glm:
     label: GLM
     roles:
@@ -67,7 +68,7 @@ profiles:
       phraser: zai-coding-plan/glm-5.3
       visual-critic: zai/glm-4.6v
       visual-builder: zai/glm-4.6v-flash
-      photo-generator: openrouter/google/gemini-2.5-flash-image
+      photo-generator: zai-coding-plan/glm-5.3
   ds+glm:
     label: DeepSeek + GLM hybrid
     # Agent ids are lowercase `<role>-ds+glm` (chief-ds+glm, verifier-ds+glm, ...);
@@ -94,4 +95,4 @@ profiles:
       # deepseek-flash is vision-capable; avoids a zai pay-go dependency.
       visual-critic: deepseek/deepseek-flash
       visual-builder: deepseek/deepseek-flash
-      photo-generator: google/gemini-3-pro-image
+      photo-generator: deepseek/deepseek-flash

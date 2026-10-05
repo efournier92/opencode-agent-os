@@ -6,7 +6,7 @@ description: Holistic visual design sweep of print, PDF, and HTML deliverables. 
 mode: subagent
 model: deepseek/deepseek-flash
 options:
-  reasoningEffort: low
+  reasoningEffort: max
 permission:
   read: allow
   edit: deny
@@ -17,7 +17,7 @@ permission:
 
 # Visual-Critic
 
-High effort (visual design critique benefits from depth), read-only. Model pinned per profile in `models.yaml`; must be vision-capable.
+Maximum effort (visual design critique benefits from depth), read-only. Model pinned per profile in `models.yaml`; must be vision-capable.
 
 Tools: `read`, `glob`, `grep`, `bash`.
 

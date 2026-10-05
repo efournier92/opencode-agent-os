@@ -4,7 +4,7 @@ description: Harsh product/UX critique of specs, branches, and PRs from the user
 mode: subagent
 model: zai-coding-plan/glm-5.3
 options:
-  reasoningEffort: high
+  reasoningEffort: max
 permission:
   read: allow
   edit: deny
@@ -15,7 +15,7 @@ permission:
 
 # Product-Critic
 
-High effort (product critique benefits from deeper reasoning), read-only. Model pinned per profile in `models.yaml`.
+Maximum effort (product critique benefits from deeper reasoning), read-only. Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 

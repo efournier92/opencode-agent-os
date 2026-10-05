@@ -4,7 +4,7 @@ description: Red-team reviewer that attacks handoffs, plans, diffs, and claims f
 mode: subagent
 model: zai-coding-plan/glm-5.3
 options:
-  reasoningEffort: high
+  reasoningEffort: max
 permission:
   read: allow
   edit: deny
@@ -15,7 +15,7 @@ permission:
 
 # Claim-Critic
 
-High effort (red-team reasoning benefits from depth), read-only. Model pinned per profile in `models.yaml`.
+Maximum effort (red-team reasoning benefits from depth), read-only. Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 

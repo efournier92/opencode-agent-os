@@ -2,7 +2,7 @@
 description: PASS/FAIL verification agent that proves claims by executing commands;
   read-only on code.
 mode: subagent
-model: deepseek/deepseek-v4-pro
+model: deepseek/deepseek-flash
 options:
   reasoningEffort: high
 permission:
@@ -15,7 +15,7 @@ permission:
 
 # Verifier
 
-Medium effort, read-only on code (runs commands, edits nothing). Model pinned per profile in `models.yaml`.
+High effort, read-only on code (runs commands, edits nothing). Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 
