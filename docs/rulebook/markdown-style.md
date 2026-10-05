@@ -1,6 +1,6 @@
 # Markdown Style (Every Agent, Every File)
 
-Applies to every Markdown file an agent writes or edits: specs, handoffs, memory entries, docs, skill content, and pasted text blocks.
+Applies to every Markdown file an agent writes or edits: specs, handoffs, memory entries, docs, skill content, and pasted text blocks, plus any Markdown an agent posts, such as a PR or issue body.
 The instruction docs themselves comply with these rules, except that headings predating rule 5 are corrected when each file is next edited.
 
 1. **No em dashes, en dashes, or typographic special characters.**
@@ -12,8 +12,8 @@ The instruction docs themselves comply with these rules, except that headings pr
    - Avoid the telltale AI phrasing: `delve`, `furthermore`, `moreover`, `it's worth noting`, `in conclusion`, `notably`, `seamless`, `robust`, `leverage` as filler, `as an AI`, `I'd be happy to`.
    - Write like a careful human: short sentences, concrete words, edit once.
 3. **Blank line after every heading.**
-   - Every level `#` through `######` is followed by an empty line before the first body line.
-   - Never put text on the line directly after a heading.
+   - Always. Every heading, `#` through `######`, is followed by one empty line before the first body line, no exceptions.
+   - Never put text on the line directly after a heading, in any Markdown an agent produces.
 4. **Never split a sentence across lines.**
    - A sentence stays on one line in the source; no line breaks mid-sentence for width.
    - Favor point form: each bullet is a short, full sentence ending in a period.

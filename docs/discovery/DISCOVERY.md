@@ -5,6 +5,7 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/commands, plugin/commit
 
 ## Entries
 
+- 2026-10-05 | [decision] | plugin/architecture | Markdown style now covers posted PR/issue bodies and makes the blank line after every heading unconditional; ship-changes lints a drafted PR body first | docs/rulebook/markdown-style.md:14
 - 2026-10-05 | [decision] | plugin/skills | create-spec always copies a ready-to-paste implement-spec handoff prompt to the clipboard on completion, printing it instead if the clipboard command fails | skills/create-spec/SKILL.md:68
 - 2026-10-05 | [decision] | plugin/skills | create-spec always opens question rounds in the `question` tool (free-text kept, no fallback); sign-off adds `Add details` so typed additions fold in | skills/create-spec/SKILL.md:23
 - 2026-10-05 | [find] | plugin/skills | OpenCode delete unshares via the ShareNext Deleted-event subscriber, so a burn revokes the public link | https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/share/share-next.ts

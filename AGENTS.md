@@ -39,7 +39,7 @@ In an opted-in repo, load the `log-discoveries` skill and grep `docs/discovery/D
 
 ## Markdown Style (Every Agent, Every File)
 
-Applies to every Markdown file an agent writes or edits; full rules and examples live in `docs/rulebook/markdown-style.md`.
+Applies to every Markdown file an agent writes or edits, and any Markdown it posts (PR and issue bodies, comments); full rules and examples live in `docs/rulebook/markdown-style.md`.
 `scripts/lint-markdown.py` enforces rules 1 to 4 (no banned glyphs or smart quotes, no LLM-artifact phrases, a blank line after every heading, no sentence split across lines); run it on any Markdown deliverable before PASS.
 Rule 5 is review-enforced: Capitalize Every Word In Titles And Headings.
 
