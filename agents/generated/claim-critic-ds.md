@@ -2,9 +2,9 @@
 description: Red-team reviewer that attacks handoffs, plans, diffs, and claims for
   fake progress before they are trusted.
 mode: subagent
-model: deepseek/deepseek-v4-pro
+model: deepseek/deepseek-flash
 options:
-  reasoningEffort: high
+  reasoningEffort: max
 permission:
   read: allow
   edit: deny
@@ -15,7 +15,7 @@ permission:
 
 # Claim-Critic
 
-High effort (red-team reasoning benefits from depth), read-only. Model pinned per profile in `models.yaml`.
+Maximum effort (red-team reasoning benefits from depth), read-only. Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 

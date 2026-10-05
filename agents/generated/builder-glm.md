@@ -15,7 +15,7 @@ permission:
 
 # Builder
 
-Medium effort. Model pinned per profile in `models.yaml`.
+High effort (implementation edge cases benefit from deeper reasoning). Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
 

@@ -5,6 +5,19 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/commands, plugin/commit
 
 ## Entries
 
+- 2026-10-05 | [decision] | plugin/agents | Hardened photo-generator: consent/refusal/provenance/retention gates, identity done-check, hosted cost gate, node/model pinning | agents/roles/photo-generator.md:25
+- 2026-10-05 | [decision] | plugin/architecture | photo-generator re-pointed to a tool-capable text brain (deepseek-flash ds/ds+glm, glm-5.3 glm); seedream moves to a scripted API lane in the role body | models.yaml:53
+- 2026-10-05 | [decision] | plugin/architecture | Reverted seedream pin: image-output-only and absent from the chat catalog, so it cannot drive a tool-using agent | openrouter.ai/api/v1/images/models
+- 2026-10-05 | [outcome] | plugin/architecture | seedream-5-0-pro smoke test green: OpenRouter returned a 1024x1024 image at exactly $0.045, matching the pin's listed price | openrouter.ai/api/v1/images
+- 2026-10-05 | [find] | plugin/architecture | DeepSeek API cannot generate images (text-output only); Janus-Pro is DeepSeek's 384px open-weights model, self-host or Replicate only | https://huggingface.co/deepseek-ai/Janus-Pro-7B
+- 2026-10-05 | [decision] | plugin/architecture | User raised visual-critic low->max; the visual critique gate now matches the other critique seats | agents/roles/visual-critic.md:5
+- 2026-10-05 | [decision] | plugin/architecture | User set builder and visual-builder to high: builder max->high, visual-builder low->high; high is the DeepSeek default | agents/roles/visual-builder.md:5
+- 2026-10-05 | [decision] | plugin/architecture | Critique gate set to max: compliance-officer and product-critic raised high->max at ~$0; chief/builder/language seats held | agents/roles/compliance-officer.md:5
+- 2026-10-05 | [trap] | plugin/architecture | high->max reasoning-effort is high-variance on deepseek-flash (max/high 1.35x/0.41x/1.74x); treat max raises as cheap bets | `opencode run --variant max`
+- 2026-10-05 | [outcome] | plugin/architecture | effort is live: identical prompt on opencode->deepseek-flash gave reasoning low 73/229 vs max 332/323 at equal input+cache; direct API low 128 vs max 182 | opencode run --variant max
+- 2026-10-05 | [decision] | plugin/architecture | Effort map final: max for the four critic/gate seats; low for code-locator, context-curator, external-researcher; the rest high (DeepSeek default) | agents/roles/claim-critic.md:5
+- 2026-10-05 | [decision] | plugin/architecture | Retired deepseek-v4-pro: `ds` profile's four gate seats now all-flash; v4-pro is phasing out, 3.3x-7.3x costlier, V4.1-Flash leads on performance | models.yaml:38
+- 2026-10-05 | [decision] | plugin/architecture | Dropped model-tier language from live docs; one hop role->model id; 2026-10-01 spec keeps history under a superseded banner | docs/rulebook/model-profiles.md:5
 - 2026-10-05 | [decision] | plugin/architecture | Markdown style now covers posted PR/issue bodies and makes the blank line after every heading unconditional; ship-changes lints a drafted PR body first | docs/rulebook/markdown-style.md:14
 - 2026-10-05 | [decision] | plugin/skills | create-spec always copies a ready-to-paste implement-spec handoff prompt to the clipboard on completion, printing it instead if the clipboard command fails | skills/create-spec/SKILL.md:68
 - 2026-10-05 | [decision] | plugin/skills | create-spec always opens question rounds in the `question` tool (free-text kept, no fallback); sign-off adds `Add details` so typed additions fold in | skills/create-spec/SKILL.md:23
@@ -25,17 +38,5 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/commands, plugin/commit
 - 2026-10-04 | [decision] | plugin/architecture | Swarms/fleets need no new concept: fleet is the profile crew, swarm is operator fan-out; only a general reduce step and `worktree` isolation remain unwired | agents/roles/chief.md:54
 - 2026-10-04 | [decision] | plugin/agents | Renamed the `qa` role to `verifier` (full-word role noun); generated agents go `qa-<profile>` -> `verifier-<profile>` on the next `apply-models.py` run | agents/roles/verifier.md
 - 2026-10-04 | [decision] | plugin/skills | Renamed the `ui-craft` skill to `frontend-design`, a full-word topic noun; `ui-craft` kept as a legacy trigger alias | skills/polish-ui/SKILL.md:2
-- 2026-10-03 | [outcome] | plugin/commands | `critic` pass on `engineer-prompt`: 10 findings all addressed (undefined "cheapest tier" dropped, smoke-test consent, empty-arg fix, install test, uninstall parity); green | scripts/check.sh
-- 2026-10-03 | [decision] | plugin/commands | Shipped `engineer-prompt` as a command, not a skill: skills advertise their description every turn, commands cost nothing until invoked | commands/engineer-prompt.md
-- 2026-10-03 | [decision] | plugin/naming | Renamed the repo `opencode-agent-team` to `opencode-agent-os`, scoped to agents; rejected `opencode-operating-system` as overclaiming | https://github.com/efournier92/opencode-agent-os
-- 2026-10-03 | [decision] | plugin/skills | `specify` names its spec `docs/specs/YYYY-MM-DD_TopicName.md` (date, underscore, PascalCase topic); existing kebab-case specs are not renamed | skills/create-spec/SKILL.md:56
-- 2026-10-03 | [decision] | plugin/skills | Glossary writes are gated on presence of a `docs/` directory (single gate, no extra confirmation); the earlier `docs/discovery/` tightening is reverted | skills/create-spec/SKILL.md:71
-- 2026-10-03 | [decision] | plugin/skills | `specify` adopts dependency-ordered frontier rounds (whole frontier per round, materiality filter), user stories, a test-seam round, and a prototype exception | skills/create-spec/SKILL.md:37
-- 2026-10-03 | [decision] | plugin/skills | `specify` writes one `docs/`-gated artifact, `docs/GLOSSARY.md`; durable decisions fold into the committed spec, so ADRs are not adopted | skills/create-spec/SKILL.md:71
-- 2026-10-03 | [outcome] | plugin/skills | `specify` rewrite verified green: markdown lint clean, doc budget clean, 29 tests pass | `bash scripts/check.sh`
-- 2026-10-03 | [decision] | plugin/discovery | Moved the full convention into the on-demand log-discoveries skill; AGENTS keeps a short opt-in gate, lowering the always-loaded rulebook tax | skills/log-discoveries/SKILL.md
-- 2026-10-03 | [decision] | plugin/discovery | Renamed the practice from continuous discovery to Progressive Discovery; the external Teresa Torres framework name is unchanged | AGENTS.md:35
-- 2026-10-03 | [decision] | plugin/discovery | Opt-in gate: discovery runs only where a repo has `docs/discovery/`; index moves under it; never auto-create | docs/specs/2026-10-03-progressive-discovery.md
-- 2026-10-03 | [outcome] | plugin/discovery | Practice implemented and committed; markdown lint clean; 26 plugin tests pass | scripts/lint-markdown.py
-- 2026-10-03 | [decision] | plugin/discovery | Adopted a committed per-repo discovery index, one line per entry, operator-written, commit-reconciled | docs/specs/2026-10-03-progressive-discovery.md
-- 2026-10-03 | [trap] | plugin/commit | The ship-changes skill never runs unless the user invokes it, so findings must be appended at checkpoints, not deferred to commit | skills/ship-changes/SKILL.md:16
+
+Older settled entries (2026-10-03 and earlier): see [ARCHIVE.md](ARCHIVE.md).

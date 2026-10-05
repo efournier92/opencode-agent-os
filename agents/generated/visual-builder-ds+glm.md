@@ -4,7 +4,7 @@ description: Visual design builder that applies fixes to HTML/CSS based on visua
 mode: subagent
 model: deepseek/deepseek-flash
 options:
-  reasoningEffort: low
+  reasoningEffort: high
 permission:
   read: allow
   edit: allow
@@ -16,7 +16,7 @@ permission:
 
 # Visual-Builder
 
-Low effort (fast vision model). Model pinned per profile in `models.yaml`.
+High effort (applying visual fixes benefits from deeper reasoning). Model pinned per profile in `models.yaml`.
 
 **Requires a vision-capable model** to verify changes against PDF/screenshot references. Fix the pin in `models.yaml` if your current default lacks vision.
 

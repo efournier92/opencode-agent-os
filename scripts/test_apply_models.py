@@ -98,8 +98,6 @@ class TestApplyModels(unittest.TestCase):
         known = {"deepseek", "zai-coding-plan", "zai", "google", "openrouter"}
         for prefix, profile in self.profiles.items():
             for role, model in profile["roles"].items():
-                if role == "photo-generator":
-                    continue
                 self.assertIn(
                     model.split("/", 1)[0],
                     known,

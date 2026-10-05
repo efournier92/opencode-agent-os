@@ -13,7 +13,7 @@ permission:
 
 # Verifier
 
-Medium effort, read-only on code (runs commands, edits nothing). Model pinned per profile in `models.yaml`.
+High effort, read-only on code (runs commands, edits nothing). Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 

@@ -2,7 +2,7 @@
 description: Harsh product/UX critique of specs, branches, and PRs from the user's perspective.
 mode: subagent
 options:
-  reasoningEffort: high
+  reasoningEffort: max
 permission:
   read: allow
   edit: deny
@@ -13,7 +13,7 @@ permission:
 
 # Product-Critic
 
-High effort (product critique benefits from deeper reasoning), read-only. Model pinned per profile in `models.yaml`.
+Maximum effort (product critique benefits from deeper reasoning), read-only. Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 

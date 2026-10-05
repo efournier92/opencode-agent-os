@@ -2,7 +2,7 @@
 
 Model assignments are centralized in `models.yaml` in this plugin tree.
 The file holds `profiles:` (each with a `roles:` map naming the concrete model for every role) and `default_profile:`.
-No tier indirection: one hop from role to model id.
+Each role maps directly to one concrete model id: a single hop from role to model.
 Single-vendor profiles pin one vendor; `ds+glm` (chief agent `chief-ds+glm`) mixes vendors per seat, keeping GLM 5.3 on the low-turn, high-stakes gates (`claim-critic`, `verifier`, `compliance-officer`, `product-critic`) and the language-quality seats (`wordsmith`, `phraser`), with DeepSeek on every many-turn seat.
 Run `scripts/apply-models.py` after editing `models.yaml`; the script generates one resolved agent per profile and role under `agents/generated/`, named `<role>-<profile>` (for example `builder-ds`), and renders `opencode.json.sample`.
 Role bodies are profile-agnostic and name crew by bare role; the profile shows up only in the generated filename, the injected `model:`, and the chief's task scope.

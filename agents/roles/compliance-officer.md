@@ -2,7 +2,7 @@
 description: Pre-filters specs, branches, and PRs for regulatory/legal/fiduciary/privacy questions worth a human compliance officer's time.
 mode: subagent
 options:
-  reasoningEffort: high
+  reasoningEffort: max
 permission:
   read: allow
   edit: deny
@@ -13,7 +13,7 @@ permission:
 
 # Compliance-Officer
 
-Medium effort (regulatory judgment calls, not maximum depth), read-only. Model pinned per profile in `models.yaml`.
+Maximum effort (regulatory judgment calls warrant full depth), read-only. Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `grep`, `glob`, `bash`.
 

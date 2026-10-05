@@ -1,5 +1,7 @@
 # Dual-Chief Architecture: Chief-DS And Chief-GLM With Per-Profile Rosters
 
+> Historical note: this spec proposed a global `tiers:` map plus `agent_tiers:`. The shipped design uses per-profile `roles:` maps instead (one hop from role to model id), so tier references below are superseded. The `ds` profile's four former top-tier seats were later moved to `deepseek-flash` after DeepSeek began phasing out `deepseek-v4-pro` (V4.1-Flash is ahead on performance and 3.3x-7.3x cheaper).
+
 Branch context: `main`. Working tree already carries uncommitted GLM work (`configs/opencode.jsonc.glm` untracked; `models.yaml`, `opencode.json.sample`, `README.md`, `AGENTS.md`, `configs/*`, `agents/photo-generator.md` modified). This spec builds on that state, not on `HEAD`.
 
 ## Context And Motivation
