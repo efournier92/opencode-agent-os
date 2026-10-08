@@ -192,16 +192,17 @@ profiles:
     roles:
       chief: deepseek/deepseek-flash
       claim-critic: zai-coding-plan/glm-5.3
-      verifier: zai-coding-plan/glm-5.3
       compliance-officer: zai-coding-plan/glm-5.3
-      product-critic: zai-coding-plan/glm-5.3
+      verifier: zai-coding-plan/glm-5.3-flash
+      product-critic: deepseek/deepseek-flash
       wordsmith: zai-coding-plan/glm-5.3
-      phraser: zai-coding-plan/glm-5.3
+      phraser: zai-coding-plan/glm-5.3-flash
+      visual-critic: zai-coding-plan/glm-5.3-flash
       builder: deepseek/deepseek-flash
       ...
 ```
 
-*The shipped default profile is `ds+glm` (chief agent `chief-ds+glm`, prettified to Chief-Ds+Glm in the TUI): DeepSeek carries the many-turn seats on pay-as-you-go pricing, GLM 5.3 is kept for the low-volume, high-stakes gates. The primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm`.*
+*The shipped default profile is `ds+glm` (chief agent `chief-ds+glm`, prettified to Chief-Ds+Glm in the TUI): DeepSeek carries the many-turn and coding seats on pay-as-you-go pricing, GLM 5.3 is kept for the low-volume, high-stakes text gates and long-form language, and glm-5.3-flash covers the seats where GLM's independent eyes matter but volume or vision rules out the flagship. The primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm`.*
 
 ### Update
 

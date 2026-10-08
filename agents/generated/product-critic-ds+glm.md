@@ -2,7 +2,7 @@
 description: Harsh product/UX critique of specs, branches, and PRs from the user's
   perspective.
 mode: subagent
-model: zai-coding-plan/glm-5.3
+model: deepseek/deepseek-flash
 options:
   reasoningEffort: max
 permission:
