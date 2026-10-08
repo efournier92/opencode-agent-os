@@ -5,6 +5,9 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/commands, plugin/commit
 
 ## Entries
 
+- 2026-10-08 | [decision] | plugin/architecture | ds+glm retuned: verifier/visual-critic/phraser -> glm-5.3-flash, product-critic -> deepseek-flash; GLM diversity kept where volume or vision rules out the flagship | models.yaml:76
+- 2026-10-08 | [find] | plugin/architecture | glm-5.3-flash: native multimodal, 1M ctx, 3x plan quota, 4.4x smaller KV, ~9x cheaper pay-go than glm-5.3; glm-5.3 is text-only | https://docs.z.ai/guides/vlm/glm-5.3-flash
+- 2026-10-08 | [find] | plugin/architecture | deepseek-flash (V4.1-Flash) cache-hit input $0.003/1M off-peak, $0.006 peak - ~10x cheaper cached reads than glm-5.3-flash | https://api-docs.deepseek.com/quick_start/pricing
 - 2026-10-05 | [decision] | plugin/agents | Hardened photo-generator: consent/refusal/provenance/retention gates, identity done-check, hosted cost gate, node/model pinning | agents/roles/photo-generator.md:25
 - 2026-10-05 | [decision] | plugin/architecture | photo-generator re-pointed to a tool-capable text brain (deepseek-flash ds/ds+glm, glm-5.3 glm); seedream moves to a scripted API lane in the role body | models.yaml:53
 - 2026-10-05 | [decision] | plugin/architecture | Reverted seedream pin: image-output-only and absent from the chat catalog, so it cannot drive a tool-using agent | openrouter.ai/api/v1/images/models
@@ -33,7 +36,6 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/commands, plugin/commit
 - 2026-10-04 | [decision] | plugin/agents | Standardized recon/critique roles to full-word nouns: `investigator`->`code-locator`, `scout`->`external-researcher`, `critic`->`claim-critic` | agents/roles/code-locator.md
 - 2026-10-04 | [decision] | plugin/skills | Standardized skill names to verb-object forms (`progressive-discovery`->`log-discoveries`, `specify`->`create-spec`); removed `ship-check` | docs/rulebook/roster.md:3
 - 2026-10-04 | [outcome] | plugin/agents | `wordsmith`/`phraser` pairing critic pass: 7 findings all fixed (language routing, phraser redirect, list handling, tone/register, GLM seat comment); check green | agents/roles/phraser.md
-- 2026-10-04 | [decision] | plugin/agents | Added the `phraser` subagent for ranked wording riffs and made it sole owner of the options lane; pinned GLM 5.3 under `glm`/`ds+glm`, DeepSeek under `ds` | agents/roles/phraser.md
 - 2026-10-04 | [decision] | plugin/architecture | Deferred reduce rule: no live trigger, and an always-loaded paragraph taxes every session for a rare case; apply once wide fan-out is live or a bad-merge blowup | agents/roles/chief.md:54
 - 2026-10-04 | [decision] | plugin/architecture | Swarms/fleets need no new concept: fleet is the profile crew, swarm is operator fan-out; only a general reduce step and `worktree` isolation remain unwired | agents/roles/chief.md:54
 - 2026-10-04 | [decision] | plugin/agents | Renamed the `qa` role to `verifier` (full-word role noun); generated agents go `qa-<profile>` -> `verifier-<profile>` on the next `apply-models.py` run | agents/roles/verifier.md

@@ -8,12 +8,16 @@
 # quota. Measured 2026-10: an operator on glm-5.3 burned ~75% of a week's
 # credits in 351 steps, almost entirely cached input; DeepSeek carried
 # ~80% of all steps for single-digit dollars pay-as-you-go. So GLM 5.3
-# stays only on low-volume, high-stakes seats; every many-turn seat runs
-# on pay-as-you-go DeepSeek.
+# stays only on low-volume, high-stakes text seats plus language quality;
+# every many-turn seat runs on pay-as-you-go DeepSeek. Where GLM's
+# independent failure modes are worth keeping but volume or vision rules
+# out the flagship, glm-5.3-flash carries the seat: 3x plan quota, native
+# multimodal input, and a 4.4x smaller KV cache, at a modest coding drop.
 #
-# glm-5.3 and glm-5.3-flash are text-only. visual-critic/visual-builder
-# need the zai glm-4.6v line (pay-as-you-go, needs a Z.ai API key) or a
-# vision-capable DeepSeek model.
+# glm-5.3 is text-only; glm-5.3-flash is native multimodal
+# (image/video/file). visual-critic runs on glm-5.3-flash and
+# visual-builder on vision-capable deepseek-flash, so the two use
+# different vendors.
 #
 # Operator context is the cost center, not subagent count. Measured 2026-10
 # over 988 sessions on this machine: chief operator sessions cost ~$65.53
@@ -76,23 +80,29 @@ profiles:
     roles:
       # Operator re-reads full session context every turn; pay-go beats plan credits.
       chief: deepseek/deepseek-flash
-      # GLM research strength on the low-turn, high-stakes gates.
-      verifier: zai-coding-plan/glm-5.3
+      # GLM research strength on the highest-stakes, lowest-turn text gates; the
+      # vendor split also keeps the review layer independent of the DeepSeek
+      # operator and builder.
       claim-critic: zai-coding-plan/glm-5.3
       compliance-officer: zai-coding-plan/glm-5.3
-      product-critic: zai-coding-plan/glm-5.3
+      # verifier is the one high-turn GLM gate (prove loops, suites); glm-5.3-flash
+      # holds GLM's independent eyes at 3x plan quota and a 4.4x smaller KV cache.
+      verifier: zai-coding-plan/glm-5.3-flash
+      # product-critic flips to DeepSeek so the gates are not a one-vendor
+      # monoculture; compliance-officer keeps GLM for regulatory precision.
+      product-critic: deepseek/deepseek-flash
+      # wordsmith keeps flagship prose: long-form wording is the seat's whole point.
       wordsmith: zai-coding-plan/glm-5.3
-      # Language seats bought for wording quality. phraser is low-turn and interactive.
-      # wordsmith is interactive and bounded by one question round plus revisions, not a
-      # batch seat, so neither carries the many-turn cached-read volume the rule targets.
-      phraser: zai-coding-plan/glm-5.3
-      # Many-turn volume seats; deepseek-flash cache-hit input ~$0.006/1M.
+      # phraser is short, interactive riffing; glm-5.3-flash suffices and is cheaper.
+      phraser: zai-coding-plan/glm-5.3-flash
+      # Many-turn volume seats; deepseek-flash cache-hit input ~$0.003/1M off-peak.
       builder: deepseek/deepseek-flash
       system-fixer: deepseek/deepseek-flash
       external-researcher: deepseek/deepseek-flash
       code-locator: deepseek/deepseek-flash
       context-curator: deepseek/deepseek-flash
-      # deepseek-flash is vision-capable; avoids a zai pay-go dependency.
-      visual-critic: deepseek/deepseek-flash
+      # visual-critic on GLM's native multimodal lane, visual-builder on
+      # vision-capable DeepSeek: critic and builder see with different eyes.
+      visual-critic: zai-coding-plan/glm-5.3-flash
       visual-builder: deepseek/deepseek-flash
       photo-generator: deepseek/deepseek-flash

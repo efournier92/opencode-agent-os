@@ -2,7 +2,7 @@
 description: Riffing partner that returns distinct, ranked ways to say a phrase, sentiment,
   or sentence, with the top pick flagged.
 mode: subagent
-model: zai-coding-plan/glm-5.3
+model: zai-coding-plan/glm-5.3-flash
 options:
   reasoningEffort: high
 permission:
