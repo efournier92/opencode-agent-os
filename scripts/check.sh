@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Single quality gate for the plugin tree: skill budget, unit suite, markdown lint.
+# Single plugin check for the plugin tree: skill budget, unit suite, markdown lint.
 #
 # Usage:
 #   scripts/check.sh

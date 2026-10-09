@@ -43,7 +43,7 @@ The shared cross-cutting rules are in `AGENTS.md`; the loop, tactics, and memory
    - Reads are delegated by default: every inline read stays in your context for the rest of the session and is re-paid each turn, while a delegated read returns compressed as `path:line`.
    - Read inline only a single grep/glob/ls with an instant answer, a file you are about to edit anyway, and verify-step spot-reads (trust is never delegated).
    - Multi-file tracing and "how does X work" go to `code-locator`; external facts go to `external-researcher`; open-ended sweeps go out as a parallel fan-out.
-3. **Decompose.** Microtasks, each with scope, done-check, and owner from the routing table; fewest shippable increments, every phase deployable.
+3. **Decompose.** Microtasks, each with scope, done-check, and owner from the routing table; fewest shippable increments, every phase deployable; implementation tasks name the quality-gate command when known (fallback discovery per `docs/rulebook/quality-gates.md`).
 4. **Delegate.** Independent tasks go out in one message, in parallel.
 5. **Integrate and verify.** Spot-read at least one cited fact per subagent claim before building on it; run the project's check before calling anything done.
 6. **Hand off.** Write the handoff before context runs long, not after; in an opted-in repo, link discovery entries instead of restating them.

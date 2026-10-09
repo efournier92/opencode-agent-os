@@ -10,7 +10,7 @@ Turn `$ARGUMENTS` into a verified fix. This command is explicit-invocation only,
 
 - Reproduce before fixing: a failing check must exist before any source edit.
 - One bug per run: no refactors, no drive-by edits.
-- The project's check is the gate; never claim green without running it this session.
+- The project's check is the verification command; never claim green without running it this session.
 - Keep maker and checker separate: `builder` always makes the fix, `verifier` always proves it; there is no self-granted trivial exemption.
 - Freeze the red check: the fix diff must not touch it.
 - Never commit, push, or merge; report done and stop.
@@ -27,11 +27,11 @@ Locate the path via one `code-locator` recon dispatch; do not read broadly. In a
 
 ## Step 3: Fix (Green)
 
-Dispatch `builder` with the frozen check path marked forbidden in the diff; minimalist: reuse, stdlib, no new deps, smallest change. Run the targeted check, then the project's full check. Loop at most two `builder` re-dispatches, matching `builder`'s own stuck rule; on the third failure, abort: report the re-dispatch count and the last error, and revert the partial fix per `docs/rulebook/stash-discipline.md` so the tree is clean or the residue is named.
+Dispatch `builder` with the frozen check path marked forbidden in the diff; minimalist: reuse, stdlib, no new deps, smallest change. Run the targeted check, then the project's full check. Loop at most two `builder` re-dispatches, matching `builder`'s own stuck rule; on the third failure, abort: report the re-dispatch count and the last error, and revert the partial fix with the /tmp backup, restore, and status check defined in `docs/rulebook/quality-gates.md` so the tree is clean or the residue is named.
 
 ## Step 4: Mutation Proof
 
-Revert the source fix only (stash per `docs/rulebook/stash-discipline.md`), rerun the frozen check, and require red; then re-apply the fix. A check that stays green proves it never caught the bug. Run the project's full check and diff its failing set against the Step 2 baseline; the only permitted change is the bug's failure disappearing.
+Revert the source fix only (per-invocation /tmp backup, `git checkout --`, restore, and post-status check per `docs/rulebook/quality-gates.md`), rerun the frozen check, and require red; then re-apply the fix. A check that stays green proves it never caught the bug. Run the project's full check and diff its failing set against the Step 2 baseline; the only permitted change is the bug's failure disappearing.
 
 ## Step 5: Independent Proof
 

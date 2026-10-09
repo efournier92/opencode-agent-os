@@ -27,9 +27,9 @@ A spec file path, given at invocation. If missing, ask for it.
 6. **No refactoring outside scope.** Surgical changes only.
 7. **Never commits or stages.** Leaves changes for review; a separate `ship-changes` step chunks, commits, and pushes afterward.
 8. **No special characters** (em dashes, arrows); plain punctuation, shorter sentences instead.
-9. **No tests for pure network/API-surface wiring** (thin endpoint/query/mutation glue); document usage examples in the spec instead of testing the wiring layer directly; test the underlying logic layer instead.
+9. **No tests for pure network/API-surface wiring** (thin endpoint/query/mutation glue); document usage examples in the spec instead of testing the wiring layer directly; test the underlying logic layer instead. Wiring stays test-exempt, but the CRAP check still applies to changed wiring; thin glue at complexity 2 passes at zero coverage.
 10. **Comment discipline**: identical rule to the active profile's builder (`<prefix>-builder`): comments state only what code can't; large comment block needed signals code unclear, extract a well-named method/variable instead (this kind of clarity extraction is not "innovation" under rule 2).
-11. **Cut the feature branch first.** Before reading or changing code, create and switch to a branch named for the feature in kebab case (lowercase, hyphen-separated): use the spec's branch context when it names one, else derive it from the spec title (title "Add Export Button" -> `add-export-button`). Follow the repo's existing branch convention when it has one (e.g. a `feat/` prefix); if the branch already exists, report it before switching so a stale same-named branch is visible. If the working tree is dirty, stop and ask instead of stashing or forcing a switch; an untracked or modified spec file at the path passed in is the input, not dirt to stop on.
+11. **Cut the feature branch first.** Before reading or changing code, create and switch to a branch named for the feature in kebab case (lowercase, hyphen-separated): use the spec's branch context when it names one, else derive it from the spec title (title "Add Export Button" -> `add-export-button`). Follow the repo's existing branch convention when it has one (e.g. a `feat/` prefix); if the branch already exists, report it before switching so a stale same-named branch is visible. If the working tree is dirty, stop and ask instead of stashing or forcing a switch; an untracked or modified spec file at the path passed in is the input, not dirt to stop on. The quality gate's temporary /tmp-backed revert is internal; it is not a dirty-tree stop, and the gate restores the tree before returning.
 
 ## Stuck Protocol: Prime Directive While Iterating
 
@@ -45,8 +45,8 @@ Token-waste-while-stuck is the failure mode to eliminate; stopping early to ask 
 2. Read the whole spec; note every backend and frontend requirement section. In an opted-in repo, read `docs/discovery/DISCOVERY.md` for the touched subsystems and treat relevant entries as known facts; surface `[outcome]` or `[trap]` candidates (finding + evidence) for the operator to promote, and never edit the index (see Progressive Discovery in `AGENTS.md`).
 3. Work only from spec-named files; the spec is the map, don't re-explore the codebase.
 4. Ask up-front clarifications (see below) before coding, not mid-failure.
-5. Implement in dependency order (schema/data model first, then logic layer, then service layer, then API surface, then backfill, then caller refactors, then UI if applicable).
-6. Write a small permanent test suite alongside: service/model/logic-layer focus, not UI-wiring tests (see hard rule 9).
+5. Write the spec's tests first: service, model, and logic-layer focus, one test per behavior in the spec's test plan (hard rule 9 wiring excepted).
+6. Implement in dependency order (schema and data model first, then logic layer, then service layer, then API surface, then backfill, then caller refactors, then UI if applicable) until the tests are green.
 7. Fix one failing test at a time. While iterating on a single failure, run only that one test case with compact output, don't re-run the whole file on every fix (re-printing every passing case wastes tokens each cycle). Run the full feature-test file once at the end to confirm green. Track attempts per test and apply the Stuck Protocol strictly.
 8. Final verification: run the feature's tests plus existing tests for every touched file; report results.
 
@@ -56,4 +56,4 @@ Before coding, if the spec is silent on: override/nil-fallback semantics and whi
 
 ## Done When
 
-Small permanent test suite passes; existing tests for touched files still pass; code follows the codebase's existing conventions; nothing is staged or committed; no scope creep beyond the spec.
+Small permanent test suite passes; existing tests for touched files still pass; code follows the codebase's existing conventions; nothing is staged or committed; no scope creep beyond the spec; quality-gate evidence quoted (green, red, CRAP, or `CRAP-UNAVAILABLE`).

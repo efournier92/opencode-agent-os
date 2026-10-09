@@ -5,6 +5,7 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/commands, plugin/commit
 
 ## Entries
 
+- 2026-10-09 | [decision] | plugin/architecture | QualityGates hardened beyond the spec after red-team: green needs executed assertions, new-file red ties to green, CRAP drops uncovered functions | docs/rulebook/quality-gates.md
 - 2026-10-09 | [decision] | plugin/agents | Approved the QualityGates spec: a per-task quality gate (green proof, red proof, CRAP check) makes tests constrain the change; pilot deferred | docs/specs/2026-10-09_QualityGates.md
 - 2026-10-08 | [decision] | plugin/architecture | ds+glm retuned: verifier/visual-critic/phraser -> glm-5.3-flash, product-critic -> deepseek-flash; GLM diversity kept where volume or vision rules out the flagship | models.yaml:76
 - 2026-10-08 | [find] | plugin/architecture | glm-5.3-flash: native multimodal, 1M ctx, 3x plan quota, 4.4x smaller KV, ~9x cheaper pay-go than glm-5.3; glm-5.3 is text-only | https://docs.z.ai/guides/vlm/glm-5.3-flash

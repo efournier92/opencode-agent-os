@@ -88,7 +88,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### `scripts/check.sh`
 
-- Single quality gate: context size budget, the unit suite, and the markdown linter.
+- Single plugin check: context size budget, the unit suite, and the markdown linter.
 - Wired into `.githooks/pre-commit` *(enable with `git config core.hooksPath .githooks`)* and `.github/workflows/check.yml`.
 
 ### `scripts/test_doc_budget.py`
