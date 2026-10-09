@@ -35,7 +35,7 @@ The operator format for both lives in `agents/roles/chief.md`.
 ## Progressive Discovery
 
 Opt-in per repository: active only where a git working tree contains `docs/discovery/`; otherwise create nothing and read nothing.
-In an opted-in repo, load the `log-discoveries` skill and grep `docs/discovery/DISCOVERY.md` by scope token when scoping; the operator appends at checkpoints and subagents return candidates, never write.
+In an opted-in repo, load the `log-discoveries` skill and grep `docs/discovery/` by scope token when scoping; the operator appends at checkpoints and subagents return candidates, never write.
 
 ## Markdown Style (Every Agent, Every File)
 

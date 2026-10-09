@@ -8,7 +8,7 @@
 
 - Centralized per-role model config: each profile pins a concrete model per seat
   - *See `models.yaml`.*
-- Progressive Discovery: an opt-in, per-repo `docs/discovery/` index so a future agent finds relevant findings cheaply and ignores the rest.
+- Progressive Discovery: an opt-in, per-repo `docs/discovery/` index of ID-tagged entries so a future agent finds relevant findings cheaply and ignores the rest.
 
 ## Installation
 
@@ -55,9 +55,13 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 ### `docs/discovery/`
 
 - Opt-in per repository: a repo enables discovery by containing this directory, and only inside a git working tree.
-- The index `docs/discovery/DISCOVERY.md` holds one line per finding, decision, assumption, trap, question, or outcome, each with evidence.
-- Grep it by scope token or `[type]` when scoping a task; open a linked detail file only when an entry is load-bearing.
-- The operator appends at checkpoints; the ship-changes skill reconciles and commits it. Without the directory, the practice is skipped and nothing is created or read. See Progressive Discovery in `AGENTS.md`.
+- The index `docs/discovery/DISCOVERY.md` holds one line per finding, decision, assumption, trap, question, or outcome, each with a stable `D-YYYYMMDD-NN` ID and external evidence.
+- Evidence must resolve outside `docs/discovery/` for a typed entry; a self-citation is permitted detail, never the only proof.
+- Overflow and settled detail live in `docs/discovery/archive/<id>.md`, one file per entry, exempt from the caps.
+- Grep the directory by scope token or `[type]` when scoping a task; open an archive file only when an entry is load-bearing.
+- The operator appends at checkpoints; the ship-changes skill reconciles, regenerates the `Scope tokens:` header, deletes superseded lines, and moves overflow to the archive before committing.
+- A repo with specs or handoffs but no index gets a one-time opt-in proposal at handoff; the directory is never auto-created.
+- Vendored enforcement: `scripts/vendor-discovery-check.sh <repo>` writes a byte-identical `scripts/check_discovery.py` plus its sha256, and `--check <repo>` detects drift; run the vendored `python3 scripts/check_discovery.py` in CI.
 
 ### `docs/rulebook/`
 
@@ -136,7 +140,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `ship-changes` | Chunk unstaged work into logical commits and push; per-commit review by default, one pre-flight approval then unattended on an explicit autonomy cue. |
 | `write-handoff` | Write a structured session handoff so a fresh session resumes without re-exploring. |
 | `capture-session` | Distill session learnings into a terse, standalone knowledge file for a human or future agent. |
-| `log-discoveries` | Maintain the opted-in `docs/discovery/DISCOVERY.md` index of durable findings, decisions, traps, and outcomes. |
+| `log-discoveries` | Maintain the opted-in `docs/discovery/DISCOVERY.md` index of ID-tagged durable findings, decisions, traps, and outcomes. |
 | `verify-in-browser` | Prove a feature works end-to-end in a real browser against the local dev stack only. |
 | `manage-worktrees` | Create, list, or remove grouped git worktrees across repos, each with isolated ports and its own database. |
 | `tighten-prose` | Toggle terse, high-signal output (loads on "terse"): cut filler while keeping technical facts exact. |

@@ -1,5 +1,7 @@
 # Progressive Discovery: A Committed, Indexed Discovery Record For Every Workspace
 
+> Note: this spec's lifecycle, evidence, archive, and read-contract rules are superseded by `docs/specs/2026-10-09_DiscoveryHardening.md`; the rest is historical.
+
 Branch context: `main`. Builds on the current plugin state (dual-chief architecture, 14 roles, 12 skills before this work). This spec adds one opt-in, per-repo artifact, one on-demand skill, and one gate rule. It adds no agent.
 
 ## Context And Motivation

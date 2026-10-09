@@ -283,16 +283,16 @@ Other checks:
 Run from `/Users/e/mnt/bnk/cs/opencode-agent-os`:
 
 ```bash
-python3 scripts/check.sh
+scripts/check.sh
 python3 scripts/check_discovery.py
-python3 scripts/vendor-discovery-check.sh --check .
+scripts/vendor-discovery-check.sh --check .
 ```
 
 Run from `/Users/e/mnt/bnk/cs/Log_Builder` after rollout:
 
 ```bash
 python3 scripts/check_discovery.py
-python3 scripts/vendor-discovery-check.sh --check .   # uses the plugin's copy path when vendored
+/Users/e/mnt/bnk/cs/opencode-agent-os/scripts/vendor-discovery-check.sh --check /Users/e/mnt/bnk/cs/Log_Builder
 ```
 
 - Confirm `python3 scripts/check_discovery.py` exits 1 on a temporary line whose only evidence is `docs/discovery/ARCHIVE.md`.

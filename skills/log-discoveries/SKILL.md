@@ -12,6 +12,7 @@ On demand. Not part of the always-loaded rulebook; load it only in an opted-in r
 ## Role
 
 Maintains a committed, per-repo discovery index so a future agent can find the relevant slice of what the workspace learned and ignore the rest, at the cost of one grep instead of a full read. It borrows the cadence premise of continuous discovery (capture continuously, not only at session end) and the index-versus-content pattern from agent memory.
+A repo with `docs/specs/`, `docs/handoffs/`, or `capture-session` files but no `docs/discovery/` gets one opt-in proposal (one line plus a yes/no); never create the directory unprompted.
 
 ## Opt-In
 
@@ -21,27 +22,30 @@ Maintains a committed, per-repo discovery index so a future agent can find the r
 
 ## Index Format
 
-One line per entry, newest first by date (within a day, order is not significant), each entry <= 240 characters and the whole file <= 8 KB (roughly 2K tokens); when one line cannot carry it, link a capture-session file (`skills/capture-session` is the current name) rather than growing a line:
+One line per entry, newest first by date (within a day, order is not significant), each entry <= 240 characters and the whole file <= 8 KB (roughly 2K tokens). Overflow goes to `docs/discovery/archive/<id>.md`, which is exempt from both caps:
 
 ```markdown
 # Discovery
 
 One line per finding, decision, assumption, trap, question, or outcome. Newest first. Evidence required.
+Scope tokens: <comma-separated, sorted, lowercase list>
 
 ## Entries
 
-- YYYY-MM-DD | [type] | scope | finding | evidence
+- D-YYYYMMDD-NN | YYYY-MM-DD | [type] | scope | finding | evidence
 ```
 
+- `D-YYYYMMDD-NN` is permanent, unique within the repo, and never reused; `NN` is the per-day sequence starting at `01`; the date in the ID matches the entry's date.
 - `type` is one of `find`, `decision`, `assumption`, `trap`, `question`, `outcome`.
 - `scope` is a lowercase slash token naming the subsystem; reuse an existing token when one matches, otherwise prefer the top-level directory name (for example `plugin/skills`, `api/auth`).
-- `evidence` is a `path:line`, a URL, or the exact command. `assumption` and `question` may instead name what would settle them.
-- No `|` inside a field; if a command needs one, link a detail file instead.
-- When one line cannot carry it, write a `capture-session` file and link it from the entry.
+- `evidence` is a URL, an exact command in backticks, or a `path:line`. For `find`, `decision`, `trap`, and `outcome` at least one token must resolve outside `docs/discovery/`; name the artifact that backs the claim. A `docs/discovery/` path is a self-citation: allowed as extra detail, never the only evidence. `assumption` and `question` may instead name what would settle them.
+- No `|` inside a field; if a command needs one, put it in an archive detail file.
+- When one line cannot carry the content within 240 characters, write `docs/discovery/archive/<id>.md`: first line `# <id>`, then the original full entry line verbatim, then prose detail. The index line keeps the load-bearing fact and one external evidence token.
+- The header lists exactly the scopes in the live index; reconcile regenerates it.
 
 ## Checkpoints (When To Append)
 
-Append when a finding passes the decision test: would this change what a future agent does or believes? Skip when it would not, and when one grep/read or the project docs already carry it.
+Append when a finding passes the decision test: would this change what a future agent does or believes? Skip it when it would not, and when `git log`, the README, a spec, or a rulebook already carries it; a `[decision]` names the rationale the committed diff does not, not a restatement of the diff.
 
 - Recon concludes with a non-obvious fact.
 - A durable decision locks.
@@ -53,30 +57,32 @@ Append when a finding passes the decision test: would this change what a future 
 
 ## Read Contract
 
-- Grep the index by scope token or `[type]` when scoping a task; do not load the whole file unless an entry is load-bearing. Grep is the default at any size.
-- Open a linked detail file or `capture-session` file only when an entry is load-bearing. Ignoring irrelevant entries is the point.
+- Grep the `docs/discovery/` directory by scope token or `[type]` when scoping a task; do not load a match unless an entry is load-bearing. Grep is the default at any size and still reaches archived entries.
+- Open `docs/discovery/archive/<id>.md` by deterministic path, or a linked `capture-session` file, only when an entry is load-bearing. Ignoring irrelevant entries is the point.
+- Cite an entry by its ID, not a line number, so the reference survives insertion.
 
 ## Write Contract
 
-- The operator owns appends; subagents return candidates (finding + evidence) and never write. The context-curator is the only other agent allowed to touch the file, and only to prune, archive, or delete superseded lines.
-- Never rewrite an entry's meaning. Supersede by appending a replacement; at reconcile, delete the superseded line; `git log -p -- docs/discovery/DISCOVERY.md` is the history.
-- Evidence is required for `find`, `decision`, `trap`, and `outcome`; otherwise the entry is an `assumption`.
-- Past the 8 KB cap, the curator archives settled entries into a linked detail file or drops re-derivable ones.
+- The operator owns appends; subagents return candidates (finding + evidence) and never write. The context-curator is the only other agent allowed to touch the store, and only to prune, archive, or delete superseded lines.
+- Assign the ID at append: `D-YYYYMMDD-NN` from today's date, the next free per-day sequence.
+- Never rewrite an entry's meaning. Supersede by appending a replacement with a new ID; at reconcile, delete the superseded line; `git log -p -- docs/discovery/DISCOVERY.md` is the history.
+- Evidence is required for `find`, `decision`, `trap`, and `outcome`; otherwise the entry is an `assumption` or `question`.
+- Past the 8 KB cap or the 240-character line cap, move overflow to `docs/discovery/archive/<id>.md`; drop entries `git log` or the project docs already carry.
 
 ## Commit Reconcile
 
-In an opted-in repo, before staging, the ship-changes skill reconciles the index of the repository it commits and pushes: flush unsaved findings, verify each evidence path resolves and downgrade unproven entries to `assumption`, dedupe and delete superseded lines rather than duplicate, enforce the 240-character and 8 KB caps, keep newest first, and stage `docs/discovery/DISCOVERY.md` with the related chunk.
+In an opted-in repo, before staging, the ship-changes skill reconciles the store of the repository it commits and pushes: flush unsaved findings, assign IDs, verify each evidence path resolves outside `docs/discovery/` and downgrade self-cited or unproven entries to `assumption`, dedupe and delete superseded lines rather than duplicate, regenerate the `Scope tokens:` header, move overflow into `docs/discovery/archive/<id>.md`, enforce the 240-character and 8 KB caps, keep newest first, and stage the index and any archive files with the related chunk.
 
 ## Relationship To Other Records
 
-- `write-handoff` resumes one work thread and is overwritten; link relevant entries instead of restating them.
+- `write-handoff` resumes one work thread and is overwritten; link relevant entries by ID instead of restating them.
 - `capture-session` holds long topic detail and appends an index entry linking it.
 - The index outlives both and links to them.
 
 ## Verify
 
-- Any change to `docs/discovery/DISCOVERY.md` passes `scripts/lint-markdown.py` from the plugin checkout.
-- `scripts/check_discovery.py` passes: every entry is <= 240 characters, the whole file is <= 8 KB, and every evidence path resolves with any `:line` in range.
-- Every `find`, `decision`, `trap`, and `outcome` entry carries evidence.
+- Any change under `docs/discovery/` passes `scripts/lint-markdown.py` from the plugin checkout.
+- `scripts/check_discovery.py` passes: IDs are well-formed, unique, and date-matched; entries stay <= 240 characters; the file stays <= 8 KB; every `find`, `decision`, `trap`, and `outcome` carries external evidence outside `docs/discovery/`; the scope header matches the live scopes; and each `archive/<id>.md` heading matches its filename.
+- Every self-citation and evidence path resolves with any `:line` in range.
 
-Rationale, threats, and worked examples live in `docs/specs/2026-10-03-progressive-discovery.md`.
+Rationale, threats, and worked examples live in `docs/specs/2026-10-09_DiscoveryHardening.md`.

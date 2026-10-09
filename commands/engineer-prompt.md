@@ -26,7 +26,7 @@ If no idea followed the command, or the idea is already a finished prompt for on
 
 ## Step 2: Ground The Facts
 
-Dispatch up to two low-tier recon agents via `task`, resolving bare role names against the `task` crew list (for example `code-locator-ds+glm`): `code-locator` for in-repo facts, `external-researcher` for external facts. Cap each at roughly 20 tool calls. Each dispatch carries shell discipline, what NOT to re-report, and a `NEED-INPUT` clause per the Delegation Contract. Require "location plus one-line fact, no prose." In an opted-in repo, grep `docs/discovery/DISCOVERY.md` first and cite matches. Spot-read every cited fact before using it.
+Dispatch up to two low-tier recon agents via `task`, resolving bare role names against the `task` crew list (for example `code-locator-ds+glm`): `code-locator` for in-repo facts, `external-researcher` for external facts. Cap each at roughly 20 tool calls. Each dispatch carries shell discipline, what NOT to re-report, and a `NEED-INPUT` clause per the Delegation Contract. Require "location plus one-line fact, no prose." In an opted-in repo, grep the `docs/discovery/` directory first and cite matches by ID. Spot-read every cited fact before using it.
 
 ## Step 3: Ask Only Material Questions
 
@@ -47,4 +47,4 @@ Run the structural checklist: destination classified, template complete, every l
 
 ## Step 6: Hand Off
 
-Print the prompt. If it is a recurring workflow, suggest routing it to `create-spec` or `customize-opencode`. For cross-session work, suggest the `write-handoff` skill. Name load-bearing decisions for the operator to index; never write the discovery index yourself.
+Print the prompt. If it is a recurring workflow, suggest routing it to `create-spec` or `customize-opencode`. For cross-session work, suggest the `write-handoff` skill. Name load-bearing decisions for the operator to index by ID; never write the `docs/discovery/` index yourself.

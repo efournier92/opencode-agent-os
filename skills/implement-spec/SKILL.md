@@ -42,7 +42,7 @@ Token-waste-while-stuck is the failure mode to eliminate; stopping early to ask 
 ## Workflow
 
 1. Read the spec's title and branch-context line first (the branch name comes from them), then cut the feature branch before any other work: name it for the feature in kebab case and create or switch to it (hard rule 11).
-2. Read the whole spec; note every backend and frontend requirement section. In an opted-in repo, read `docs/discovery/DISCOVERY.md` for the touched subsystems and treat relevant entries as known facts; surface `[outcome]` or `[trap]` candidates (finding + evidence) for the operator to promote, and never edit the index (see Progressive Discovery in `AGENTS.md`).
+2. Read the whole spec; note every backend and frontend requirement section. In an opted-in repo, grep `docs/discovery/` by scope for the touched subsystems and cite relevant entries by ID as known facts; surface `[outcome]` or `[trap]` candidates (finding + evidence) for the operator to promote, and never edit the index (see Progressive Discovery in `AGENTS.md`).
 3. Work only from spec-named files; the spec is the map, don't re-explore the codebase.
 4. Ask up-front clarifications (see below) before coding, not mid-failure.
 5. Write the spec's tests first: service, model, and logic-layer focus, one test per behavior in the spec's test plan (hard rule 9 wiring excepted).

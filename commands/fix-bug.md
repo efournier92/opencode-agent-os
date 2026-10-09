@@ -23,7 +23,7 @@ Restate the bug as input, expected, and actual. If no bug followed the command o
 
 ## Step 2: Reproduce (Red)
 
-Locate the path via one `code-locator` recon dispatch; do not read broadly. In an opted-in repo, grep `docs/discovery/DISCOVERY.md` by scope first. Write the smallest failing check. When a test seam exists, the test must live in the project suite and be run by the project's check, not a scratch file; a scratch repro is a fallback and the hand-off must name the missing permanent guard. Require two independent red runs. If the first run passes, re-run up to five times and once from a clean state before concluding the repro is wrong, because a flaky bug is not a disproved one. Snapshot the project's full-check baseline, the exact failing set, before changing source. The check text is now frozen: the fix diff must not touch it.
+Locate the path via one `code-locator` recon dispatch; do not read broadly. In an opted-in repo, grep the `docs/discovery/` directory by scope and cite matches by ID first. Write the smallest failing check. When a test seam exists, the test must live in the project suite and be run by the project's check, not a scratch file; a scratch repro is a fallback and the hand-off must name the missing permanent guard. Require two independent red runs. If the first run passes, re-run up to five times and once from a clean state before concluding the repro is wrong, because a flaky bug is not a disproved one. Snapshot the project's full-check baseline, the exact failing set, before changing source. The check text is now frozen: the fix diff must not touch it.
 
 ## Step 3: Fix (Green)
 
@@ -39,4 +39,4 @@ Per the `chief.md` verification routing, dispatch `verifier` to certify three cl
 
 ## Step 6: Hand Off
 
-Report the same decisive command's red line and green line byte-exact, the root cause, the diff summary, the baseline versus final failure sets, and the verifier's verdict. Return a discovery candidate for any trap or non-obvious cause; never write the index. Never commit; offer `ship-changes`.
+Report the same decisive command's red line and green line byte-exact, the root cause, the diff summary, the baseline versus final failure sets, and the verifier's verdict. Return a discovery candidate for any trap or non-obvious cause; never write the `docs/discovery/` index. Never commit; offer `ship-changes`.
