@@ -4,6 +4,8 @@ Settled entries moved out of the index to hold its size cap. Same line format an
 
 ## Entries
 
+- 2026-10-04 | [decision] | plugin/agents | Renamed the `qa` role to `verifier` (full-word role noun); generated agents go `qa-<profile>` -> `verifier-<profile>` on the next `apply-models.py` run | agents/roles/verifier.md
+- 2026-10-04 | [decision] | plugin/skills | Renamed the `ui-craft` skill to `frontend-design`, a full-word topic noun; `ui-craft` kept as a legacy trigger alias | skills/polish-ui/SKILL.md:2
 - 2026-10-03 | [outcome] | plugin/commands | `critic` pass on `engineer-prompt`: 10 findings all addressed (undefined "cheapest tier" dropped, smoke-test consent, empty-arg fix, install test, uninstall parity); green | scripts/check.sh
 - 2026-10-03 | [decision] | plugin/commands | Shipped `engineer-prompt` as a command, not a skill: skills advertise their description every turn, commands cost nothing until invoked | commands/engineer-prompt.md
 - 2026-10-03 | [decision] | plugin/naming | Renamed the repo `opencode-agent-team` to `opencode-agent-os`, scoped to agents; rejected `opencode-operating-system` as overclaiming | https://github.com/efournier92/opencode-agent-os
