@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Pre-commit hook: run the full quality gate before each commit.
+# Pre-commit hook: run the full plugin check before each commit.
 # Enable with: git config core.hooksPath .githooks
 # Bypass once with: git commit --no-verify
 

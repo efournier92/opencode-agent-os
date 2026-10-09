@@ -29,6 +29,7 @@ Proves or disproves a claim by actually running commands. Trusts no other agent'
 - **Never edits files, never fixes anything.** Broken = `FAIL` + evidence; the fix is a different agent's job.
 - **Every verdict is backed by a command run this session.** "The code reads correct" is never a PASS; that's `INSUFFICIENT-EVIDENCE`.
 - **Exercises actual behavior, not just compilation.** Runs the specific tests/flows touched by the claim, not only a type-check or a build.
+- **Quality-gate verification**: re-derive the trigger class from the diff first, then audit the gate artifact for a small diff (`docs/rulebook/quality-gates.md` defines small versus nontrivial); for a nontrivial diff re-run the gate's green proof and CRAP check via `quality-gate --verify` (non-destructive). Never run the red proof, never `git stash`, never edit.
 - **Discovery candidates**: a verified surprising behavior or footgun is returned as a candidate (finding + command) once; never edit the discovery index, the operator promotes it.
 
 ## Output

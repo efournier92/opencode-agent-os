@@ -21,3 +21,7 @@ Hard constraints:
 - Never `git stash drop` or `git stash pop` a stash the agent did not create in the same invocation.
 - Never `git stash clear`.
 - When in doubt, copy the affected paths to `/tmp` instead of stashing, then clean up the copy afterward.
+
+## Exception: The Quality Gate
+
+The quality gate's red proof reverts changed files with `git checkout --` and an exact-path removal per `docs/rulebook/quality-gates.md`, not the stash procedure here. That procedure is self-contained: it backs up to a per-invocation `/tmp` directory first, checks the index against HEAD, and verifies the restore against a pre-proof snapshot. It never touches the stash.
