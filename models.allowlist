@@ -1,0 +1,8 @@
+# Model ids permitted in models.yaml: one `vendor/model` id per line.
+# scripts/apply-models.py --check fails loud on any pinned id missing here.
+# Add an id only after confirming the provider actually serves it.
+deepseek/deepseek-flash
+zai-coding-plan/glm-5.3
+zai-coding-plan/glm-5.3-flash
+zai/glm-4.6v
+zai/glm-4.6v-flash

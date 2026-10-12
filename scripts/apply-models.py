@@ -19,6 +19,7 @@ loud rather than silent.
 Run from the plugin root directory:
 
     python3 scripts/apply-models.py
+    python3 scripts/apply-models.py --check   # report drift, write nothing
 """
 
 import json
@@ -30,12 +31,14 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 MODELS_YAML = ROOT / "models.yaml"
+MODELS_ALLOWLIST = ROOT / "models.allowlist"
 ROLES_DIR = ROOT / "agents" / "roles"
 GENERATED_DIR = ROOT / "agents" / "generated"
 SKILLS_DIR = ROOT / "skills"
 SAMPLE_CONFIG = ROOT / "opencode.json.sample"
 
 PROFILE_ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_+-]*$")
+MODEL_ID_RE = re.compile(r"^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$")
 
 # Matches a single `model:` line. Used only against the frontmatter
 # slice of a file (extracted by strip_frontmatter_model_line), never
@@ -52,7 +55,40 @@ def load_models(path=MODELS_YAML):
     return data["profiles"], data["default_profile"]
 
 
-def validate_models(profiles, default_profile, roles_dir=ROLES_DIR):
+def load_allowlist(path=MODELS_ALLOWLIST):
+    """Return the set of permitted model ids; `#` starts a comment."""
+    if not path.exists():
+        raise SystemExit(f"missing model allowlist: {path}")
+    allowed = set()
+    for line in path.read_text().splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            allowed.add(line)
+    return allowed
+
+
+def validate_model_ids(profiles, allowlist_path=MODELS_ALLOWLIST):
+    """Every pinned model id must be `vendor/model` shaped and allowlisted."""
+    allowed = load_allowlist(allowlist_path)
+    offenders = []
+    for pid, profile in profiles.items():
+        for role, model in (profile.get("roles") or {}).items():
+            if not isinstance(model, str) or not MODEL_ID_RE.match(model):
+                offenders.append(f"{pid}.{role}: {model!r} (bad shape)")
+            elif model not in allowed:
+                offenders.append(f"{pid}.{role}: {model} (not in allowlist)")
+    if offenders:
+        for entry in offenders:
+            print(f"error: invalid model id {entry}", file=sys.stderr)
+        raise SystemExit(
+            f"models.yaml has {len(offenders)} invalid model id(s); "
+            f"fix them or add the ids to {allowlist_path.name}"
+        )
+
+
+def validate_models(
+    profiles, default_profile, roles_dir=ROLES_DIR, allowlist_path=MODELS_ALLOWLIST
+):
     """Fail loud on inconsistent models.yaml before touching any file."""
     if default_profile not in profiles:
         raise SystemExit(
@@ -79,6 +115,7 @@ def validate_models(profiles, default_profile, roles_dir=ROLES_DIR):
                 f"profile '{pid}' pins unknown role(s): {unknown}; "
                 f"known roles: {sorted(role_files)}"
             )
+    validate_model_ids(profiles, allowlist_path)
 
 
 def strip_frontmatter_model_line(content):
@@ -184,24 +221,28 @@ def resolved_name(prefix, role):
     return f"{role}-{prefix}"
 
 
-def generate_agents(profiles, roles_dir=ROLES_DIR, generated_dir=GENERATED_DIR):
-    """Write agents/generated/<resolved_name>.md; return count changed."""
-    generated_dir.mkdir(parents=True, exist_ok=True)
-    changed = 0
+def render_agents(profiles, roles_dir=ROLES_DIR):
+    """Return {filename: content} for every expected generated agent."""
+    expected = {}
     for prefix, profile in profiles.items():
         for role, model in profile["roles"].items():
             role_content = (roles_dir / f"{role}.md").read_text()
             content = generate_agent(role_content, model, prefix, role == "chief")
-            path = generated_dir / f"{resolved_name(prefix, role)}.md"
-            existing = path.read_text() if path.exists() else None
-            if existing != content:
-                path.write_text(content)
-                changed += 1
-    expected = {
-        f"{resolved_name(prefix, role)}.md"
-        for prefix, profile in profiles.items()
-        for role in profile["roles"]
-    }
+            expected[f"{resolved_name(prefix, role)}.md"] = content
+    return expected
+
+
+def generate_agents(profiles, roles_dir=ROLES_DIR, generated_dir=GENERATED_DIR):
+    """Write agents/generated/<resolved_name>.md; return count changed."""
+    generated_dir.mkdir(parents=True, exist_ok=True)
+    expected = render_agents(profiles, roles_dir)
+    changed = 0
+    for name, content in expected.items():
+        path = generated_dir / name
+        existing = path.read_text() if path.exists() else None
+        if existing != content:
+            path.write_text(content)
+            changed += 1
     expected_lower = {name.lower(): name for name in expected}
     for path in generated_dir.glob("*.md"):
         if path.name in expected:
@@ -219,6 +260,23 @@ def generate_agents(profiles, roles_dir=ROLES_DIR, generated_dir=GENERATED_DIR):
         path.unlink()
         changed += 1
     return changed
+
+
+def check_agents(profiles, roles_dir=ROLES_DIR, generated_dir=GENERATED_DIR):
+    """Return drift problems between sources and generated files; empty = fresh."""
+    expected = render_agents(profiles, roles_dir)
+    problems = []
+    for name, content in expected.items():
+        path = generated_dir / name
+        if not path.exists():
+            problems.append(f"missing generated agent: {path}")
+        elif path.read_text() != content:
+            problems.append(f"stale generated agent: {path}")
+    if generated_dir.is_dir():
+        for path in sorted(generated_dir.glob("*.md")):
+            if path.name not in expected:
+                problems.append(f"stray generated agent: {path}")
+    return problems
 
 
 def render_sample_config(profiles, default_profile):
@@ -242,13 +300,17 @@ def render_sample_config(profiles, default_profile):
     }
 
 
+def render_sample_text(config):
+    return json.dumps(config, indent=2) + "\n"
+
+
 def write_sample_config(config, path=SAMPLE_CONFIG):
     """Serialize the rendered config to disk. Returns (rendered_text, changed).
 
     Skip the write when the rendered text already matches the file on disk,
     so re-running with no changes leaves the mtime untouched.
     """
-    rendered = json.dumps(config, indent=2) + "\n"
+    rendered = render_sample_text(config)
     existing = path.read_text() if path.exists() else None
     if existing == rendered:
         return rendered, False
@@ -268,7 +330,7 @@ def run(root=ROOT):
     print(f"Profiles: {sorted(profiles)}")
     print(f"Default profile: {default_profile}")
 
-    validate_models(profiles, default_profile, roles_dir)
+    validate_models(profiles, default_profile, roles_dir, root / "models.allowlist")
     assert_no_skill_model_lines(skills_dir)
     stripped = strip_agent_model_lines(roles_dir)
     generated = generate_agents(profiles, roles_dir, generated_dir)
@@ -281,12 +343,6 @@ def run(root=ROOT):
     else:
         print(f"{sample_config.name} already up to date")
 
-    on_disk = sample_config.read_text()
-    if on_disk != rendered:
-        raise SystemExit(
-            "internal: opencode.json.sample on disk does not match in-memory render"
-        )
-
     if stripped:
         print(f"Stripped {stripped} stale role model: line(s).")
     print(f"Generated {generated} agent file(s) changed.")
@@ -294,7 +350,40 @@ def run(root=ROOT):
     return stripped, generated, sample_changed
 
 
+def run_check(root=ROOT):
+    """Report drift between sources and generated files; write nothing."""
+    models_yaml = root / "models.yaml"
+    roles_dir = root / "agents" / "roles"
+    generated_dir = root / "agents" / "generated"
+    sample_config = root / "opencode.json.sample"
+    profiles, default_profile = load_models(models_yaml)
+    validate_models(profiles, default_profile, roles_dir, root / "models.allowlist")
+    problems = check_agents(profiles, roles_dir, generated_dir)
+
+    # Render the sample in memory and compare; a stale sample is drift too.
+    expected_sample = render_sample_text(
+        render_sample_config(profiles, default_profile)
+    )
+    existing_sample = sample_config.read_text() if sample_config.exists() else None
+    if existing_sample != expected_sample:
+        problems.append(f"stale sample config: {sample_config}")
+
+    if problems:
+        for problem in problems:
+            print(problem, file=sys.stderr)
+        print(
+            f"generated agents stale ({len(problems)} problem(s)); "
+            "run scripts/apply-models.py",
+            file=sys.stderr,
+        )
+        return 1
+    print("generated agents fresh")
+    return 0
+
+
 def main():
+    if "--check" in sys.argv[1:]:
+        sys.exit(run_check(ROOT))
     run(ROOT)
 
 
