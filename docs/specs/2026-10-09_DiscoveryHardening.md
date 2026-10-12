@@ -138,10 +138,10 @@ Replace the existence-only check at `scripts/check_discovery.py:32-52` with a cl
 
 - Location: `docs/discovery/archive/<entry-id>.md`, flat and ID-named.
 - Contents: the first non-blank line is the heading `# <id>`; the next non-blank line is the original full entry line, verbatim, even past 240 characters; then prose detail. No size or line cap.
-- The matching index entry keeps a short line of at most 240 characters that carries the load-bearing fact and at least one external evidence token. The archive file holds the overflow and is reached by the deterministic path; no link is required in the index line.
+- An archive file is authoritative content, created for either an overflow (the index may keep a short line of at most 240 characters carrying the load-bearing fact) or a settled entry removed from the index. No matching index line is required; the archive's verbatim entry line stays reachable by grepping the directory.
 - When detail lives in a `capture-session` file outside `docs/discovery/`, the entry links it in `<evidence>`; that link is a normal path token and counts as external evidence, and it is the one permitted cross-record link.
 - Retire the single-file archive. `Log_Builder/docs/discovery/ARCHIVE.md` and `opencode-agent-os/docs/discovery/ARCHIVE.md` are migrated (Rollout Plan step 5) and deleted.
-- Validator archive checks (new): for each `docs/discovery/archive/*.md`, the filename stem must equal the `# <id>` heading, else fail `archive header mismatch: <file>`. An archive file with no live or known-deleted index entry prints `orphan archive: <file>` as a warning and does not fail the run. Index entries keep all type and cap checks; archive files are exempt from them.
+- Validator archive checks: for each `docs/discovery/archive/*.md`, the filename stem must equal the `# <id>` heading, else fail `archive header mismatch: <file>`. Index entries keep all type and cap checks; archive files are exempt from them, and none requires a matching index line.
 
 ### 4. Scope Tokens And The Header
 
@@ -161,7 +161,7 @@ Replace the existence-only check at `scripts/check_discovery.py:32-52` with a cl
 
 - Keep `python3 scripts/check_discovery.py [path]`; the default target stays `docs/discovery/DISCOVERY.md` resolved against the repo containing the script (`scripts/check_discovery.py:14-15,69-77`), which is correct for a vendored copy at `<repo>/scripts/check_discovery.py`.
 - Add a companion default for the archive directory: `docs/discovery/archive`. A single run validates the index and the archive directory together, so one command covers the whole store.
-- Exit 0 when clean, 1 on any violation. Warnings (orphan archive) print to stdout and do not change the exit code.
+- Exit 0 when clean, 1 on any violation.
 
 ### 7. Vendored Enforcement
 
@@ -185,7 +185,7 @@ Replace the existence-only check at `scripts/check_discovery.py:32-52` with a cl
 - `skills/create-spec/SKILL.md:35`: read `docs/discovery/` by scope; `:68` unchanged (specs are cited by path, not ID).
 - `commands/engineer-prompt.md:29,50` and `commands/fix-bug.md:26,42`: grep the `docs/discovery/` directory and cite by ID.
 - `agents/roles/chief.md:31,38,45`: grep the directory; reference entries by ID; keep the opt-in proposal in the handoff step.
-- `agents/roles/context-curator.md:31`: run the vendored `--check`, patrol ID uniqueness, self-citations, archive orphans, header truth, and growth past the caps; move settled entries into archive detail files and delete re-derivable ones.
+- `agents/roles/context-curator.md:31`: run the vendored `--check`, patrol ID uniqueness, self-citations, header truth, and growth past the caps; move settled entries into archive detail files and delete re-derivable ones.
 - `AGENTS.md:37-38`: keep the two-line opt-in gate; change the read rule from "grep DISCOVERY.md" to "grep `docs/discovery/`".
 - `README.md:11,55-60,139`: document the ID format, the archive directory, the vendored check, and the opt-in proposal.
 - `docs/specs/2026-10-03-progressive-discovery.md`: add a one-line note under the title that its lifecycle, evidence, archive, and read-contract rules are superseded by this spec, leaving the rest historical.
@@ -217,7 +217,7 @@ None. There is no TUI, web, or rendered surface. The deliverable is committed Ma
 - Hooks are inert without `core.hooksPath`. Mitigation: the rollout runs `git config core.hooksPath .githooks` per clone and treats CI as the real gate.
 - Longer lines after adding IDs. Mitigation: the ID costs 14 to 16 characters; overflow moves to the archive rather than expanding the cap.
 - A larger archive raises read cost. Mitigation: the read contract opens `archive/<id>.md` only for a load-bearing hit; the index stays the scan surface.
-- Archive orphans accrete. Mitigation: the validator warns on orphans and the curator deletes detail files whose entry is gone and shipped.
+- Archive files never require a matching index line, so settling or superseding an entry cannot strand its detail file; the filename-to-heading check is the only archive invariant.
 - Concurrent sessions on one index still conflict (the v1 open risk at `docs/specs/2026-10-03-progressive-discovery.md:201`). Mitigation: unchanged; append-only lines, IDs reduce ambiguity, the curator resolves. Remains an open risk.
 - Command evidence cannot be verified. Accepted; it is documented intent, not proof of execution.
 
@@ -254,7 +254,6 @@ Update the shared fixture at `scripts/test_check_discovery.py:17` to the six-fie
 - `test_header_extra_scope_flagged`: the header lists `plugin/gone` with no entry; fails.
 - `test_archive_header_mismatch_flagged`: `archive/D-20261009-01.md` starts `# D-20261009-02`; fails.
 - `test_archive_oversize_allowed`: a 12 KB `archive/<id>.md` with a matching header exits 0.
-- `test_orphan_archive_warns`: an archive file with no entry exits 0 and prints `orphan archive`.
 - Keep and update: `test_missing_evidence_path_flagged`, `test_line_out_of_range_flagged`, `test_long_entry_flagged`, `test_oversized_file_flagged`, `test_url_and_command_tokens_ignored` (rename to external-evidence), `test_glob_token_ignored`, `test_evidence_resolves_against_target_repo_root`, `test_missing_evidence_in_target_repo_flagged`, `test_default_target_resolved_from_repo`, `test_missing_cli_path_flagged`.
 
 Other checks:
@@ -303,7 +302,7 @@ python3 scripts/check_discovery.py
 ## Open Questions
 
 - Command evidence cannot be proven to have run; accepted for now, revisit if false command evidence appears.
-- Orphan archive files warn rather than fail; revisit if they accumulate.
+- Archive files need no matching index line; the retired orphan warning is not reintroduced unless a repeated need to detect a stranded file appears.
 - Concurrent sessions on one index still conflict (v1 open risk); unaffected by this spec.
 - A generated, non-committed query index (JSON or SQLite) over the markdown remains deferred; trigger is a repeated cross-repo query need that grep does not satisfy.
 - An out-of-repo usage-telemetry store remains deferred; trigger is a decision to measure reads, appends, and session value.

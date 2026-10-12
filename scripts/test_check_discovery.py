@@ -23,13 +23,6 @@ def run_quiet(argv):
         return cd.main(argv)
 
 
-def run_output(argv):
-    out = io.StringIO()
-    with contextlib.redirect_stdout(out):
-        code = cd.main(argv)
-    return code, out.getvalue()
-
-
 class TestCheckDiscovery(unittest.TestCase):
     def setUp(self):
         self._repo = cd.REPO
@@ -48,9 +41,6 @@ class TestCheckDiscovery(unittest.TestCase):
 
     def run_check(self, name):
         return run_quiet([str(cd.REPO / name)])
-
-    def run_output_check(self, name):
-        return run_output([str(cd.REPO / name)])
 
     def test_valid_file_passes(self):
         self.write("foo.md", "line one\n")
@@ -137,15 +127,6 @@ class TestCheckDiscovery(unittest.TestCase):
         self.write("archive/D-20261009-01.md", "# D-20261009-01\n\n" + "x" * 12000 + "\n")
         self.write("DISCOVERY.md", HEADER + entry)
         self.assertEqual(self.run_check("DISCOVERY.md"), 0)
-
-    def test_orphan_archive_warns(self):
-        entry = "- D-20261009-01 | 2026-10-09 | [find] | plugin | a finding | foo.md:1\n"
-        self.write("foo.md", "line one\n")
-        self.write("archive/D-20261009-99.md", "# D-20261009-99\n\noriginal entry\n")
-        self.write("DISCOVERY.md", HEADER + entry)
-        code, output = self.run_output_check("DISCOVERY.md")
-        self.assertEqual(code, 0)
-        self.assertIn("orphan archive", output)
 
     def test_missing_evidence_path_flagged(self):
         self.write("DISCOVERY.md", VALID.replace("foo.md", "gone.md"))

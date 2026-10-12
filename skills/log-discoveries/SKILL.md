@@ -68,6 +68,7 @@ Append when a finding passes the decision test: would this change what a future 
 - Never rewrite an entry's meaning. Supersede by appending a replacement with a new ID; at reconcile, delete the superseded line; `git log -p -- docs/discovery/DISCOVERY.md` is the history.
 - Evidence is required for `find`, `decision`, `trap`, and `outcome`; otherwise the entry is an `assumption` or `question`.
 - Past the 8 KB cap or the 240-character line cap, move overflow to `docs/discovery/archive/<id>.md`; drop entries `git log` or the project docs already carry.
+- Create an archive file only for an overflow (the index may keep a short line) or a settle/supersede; never create one for an entry that stays in the index. An archive file needs no matching index line.
 
 ## Commit Reconcile
 
