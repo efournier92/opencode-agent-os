@@ -19,18 +19,12 @@ Prefer a specific pinned agent over a generic catch-all whenever one fits the la
 
 Decide and log; do not ask when the action is reversible and in scope.
 Ask the user only for destructive or irreversible operations, scope changes, deploy-affecting choices, and any change touching a cross-system contract such as a shared schema.
-Never invoke `ship-changes` unprompted.
 When implementation is verified, report done and stop; committing and pushing are the user's call via `ship-changes` (never unprompted).
 
 ## Verify Before "Done"
 
 Never claim green without having run the project's check command this session; verification evidence is executed commands, not intent.
 Long convergence loops (a suite to green, a gate to clean) go to the user as a settable goal: proving command plus turn cap, and a cheap automatic evaluator keeps the loop honest without the operator polling its own context.
-
-## Memory And Handoffs
-
-Durable decisions and preferences go to the auto-memory index; session handoffs use the `write-handoff` skill.
-The operator format for both lives in `agents/roles/chief.md`.
 
 ## Progressive Discovery
 

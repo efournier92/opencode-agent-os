@@ -3,11 +3,9 @@ name: simplify-code
 description: >
   Forces the laziest, minimal solution that actually works. Use on coding tasks
   when you want to cut over-engineering, avoid new dependencies, reuse existing
-  code, and ship the smallest diff. Supports intensity levels: lite, full
-  (default), ultra. Activates on phrases like "simplify", "minimalist", "be lazy", "lazy mode",
+  code, and ship the smallest diff. Activates on phrases like "simplify", "minimalist", "be lazy", "lazy mode",
   "simplest solution", "minimal solution", "YAGNI", "do less", or complaints about
-  bloat/boilerplate/unnecessary dependencies. Pair with the tighten-prose skill for
-  terse prose. Do NOT use for non-coding prose, summaries, or translation.
+  bloat/boilerplate/unnecessary dependencies. Do NOT use for non-coding prose, summaries, or translation.
 license: MIT
 compatibility: opencode
 ---
