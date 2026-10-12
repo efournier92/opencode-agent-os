@@ -1,0 +1,74 @@
+# Critique Ledger: Plugin Runtime Cost
+
+- Goal: Audit the opencode-agent-os plugin's runtime cost, real model spend first then always-loaded context and turn overhead, and its runtime behavior across agents, skills, commands, config, scripts/install, docs, and the installed global layout. Converge on evidence and apply only clearly-earned removals.
+- Started: 2026-10-11
+- Branch: grill-skill
+
+## Findings
+
+- C-20261011-01 | 2026-10-11 | cost | high | high | rejected | Chief seat runs off-design models: $59.62 of chief-ds spend is on minimax-m3/v4-pro/kimi, not the pinned deepseek-flash | `python3 scripts/cost-report.py`
+  - rebuttal | rejected | `git show -s --format=%ad 2468d8d` | All off-pin chief-ds spend ends 2026-09-22, before the 2026-10-03 pin; 64/64 post-pin sessions are deepseek-flash. Legacy residual.
+- C-20261011-02 | 2026-10-11 | cost | high | high | rejected | visual-critic is the number-two seat at $7.98, running 37 sessions on qwen3.8-max at $0.206/session vs $0.009 on minimax-m3 | `python3 scripts/cost-report.py`
+  - rebuttal | rejected | `git show -s --format=%ad db901c6` | qwen3.8-max and minimax-m3 visual-critic spend all ends 2026-09-06; post-pin runs glm-5.3-flash. Legacy residual.
+- C-20261011-03 | 2026-10-11 | cost | medium | high | rejected | No turn or context cap ships; the top-10 chief sessions hold $41 of $67.30 at 323-901 messages on billed pay-go models | `agents/roles/chief.md:43`
+  - rebuttal | rejected | `python3 scripts/cost-report.py` | Top-10 sessions are 2026-07-26 to 09-08; post-pin chief-ds+glm averages ~$0.083/session. No proven live loss.
+- C-20261011-04 | 2026-10-11 | cost | medium | high | rejected | cost-report.py sums session.cost only, so zai plan sessions read as $0 and GLM plan-quota burn is invisible | `scripts/cost-report.py:12`
+  - rebuttal | rejected | `scripts/cost-report.py:16` | The report already prints input/output/cache-read token columns per row; only dollar cost is zero for plan seats, which is correct for quota pricing.
+- C-20261011-05 | 2026-10-11 | cost | medium | high | rejected | Shipped glm profile pins chief/verifier/builder/system-fixer to glm-5.3 flagship, against its own many-turn-on-DeepSeek doctrine | `models.yaml:60`
+  - rebuttal | rejected | `docs/rulebook/model-profiles.md:6` | Single-vendor profiles pin one vendor by design; glm is a deliberate all-GLM option, not a hybrid-default violation.
+- C-20261011-06 | 2026-10-11 | cost | medium | medium | rejected | Chief is pinned at effort high though reasoning tokens run 210% of output on billed pay-go rates and lower effort was never validated | `agents/roles/chief.md:5`
+  - rebuttal | rejected | `docs/discovery/archive/D-20261005-11.md:3` | Effort high on chief is the documented final effort map, not drift; the 210% figure describes a chosen default.
+- C-20261011-07 | 2026-10-11 | cost | low | medium | rejected | The referee seat ships max-effort glm-5.3 flagship yet has zero sessions ever; convergence-judge capacity is speculative | `models.yaml:92`
+  - rebuttal | rejected | `agents/roles/referee.md:5` | Seat added 2026-10-05, six days old; its loop first ran this session, so zero usage is expected and burns no spend.
+- C-20261011-08 | 2026-10-11 | cost | low | high | rejected | Per-seat attribution is unreliable: chief-ds spans 25+ models including v4-flash after v4 was declared phased out | `models.yaml:42`
+  - rebuttal | rejected | `python3 scripts/cost-report.py` | Last v4-flash chief session is 2026-09-22, predating v4 retirement; the 25+ model spread is pre-pin churn and the phase-out clause is false.
+- C-20261011-09 | 2026-10-11 | maintainability | medium | high | addressed | The Memory And Handoffs section is near-verbatim in both always-loaded files, though only the operator writes handoffs | `AGENTS.md:32 agents/roles/chief.md:71`
+  - rebuttal | addressed | `agents/roles/chief.md:68` | Operator-only section removed from the all-agents rulebook; the operator retains it via the generated chief agent. Applied.
+- C-20261011-10 | 2026-10-11 | maintainability | medium | high | rejected | The doc budget caps the unshipped roles/chief.md, not the 89-line generated chief agent OpenCode actually loads | `scripts/test_doc_budget.py:33`
+  - rebuttal | rejected | `agents/generated/chief-ds+glm.md:1` | Capping roles/chief.md is the mechanism that keeps the deployed generated chiefs lean; generated files carry the general 200-line cap. KEEP the cap.
+- C-20261011-11 | 2026-10-11 | maintainability | medium | high | addressed | The /redteam command restates the skill-owned schema, convergence, and caps, and self-admits it adds nothing | `commands/redteam.md:24`
+  - rebuttal | addressed | `commands/redteam.md:11` | Three skill-owned non-negotiables removed and Step 2 de-schema'd; the command is explicit-only, so this was sync cost only. Applied.
+- C-20261011-12 | 2026-10-11 | maintainability | medium | high | addressed | The ship-changes confirm rule is stated twice in consecutive always-loaded lines | `AGENTS.md:22`
+  - rebuttal | addressed | `AGENTS.md:21` | Duplicate ship-changes line removed; the adjacent line states the same rule. Applied.
+- C-20261011-13 | 2026-10-11 | maintainability | low | medium | addressed | The discovery grep-by-scope-token rule ships in both always-loaded files, the same rule paid twice per turn | `AGENTS.md:38`
+  - rebuttal | addressed | `agents/roles/chief.md:34` | Duplicate discovery-grep bullet removed from the operator loop; AGENTS.md:31 owns it. Applied.
+- C-20261011-14 | 2026-10-11 | maintainability | low | medium | addressed | fix-bug restates the red-green/mutation/revert protocol owned by quality-gates, giving it two homes that can drift | `commands/fix-bug.md:26`
+  - rebuttal | addressed | `commands/fix-bug.md:30` | Both quality-gates re-enumerations collapsed to the citation. Applied.
+- C-20261011-15 | 2026-10-11 | maintainability | low | medium | addressed | Thirteen skill descriptions (~660 words) are re-paid every turn; simplify-code's description duplicates its body | `skills/simplify-code/SKILL.md:1`
+  - rebuttal | addressed | `skills/simplify-code/SKILL.md:6` | Two non-trigger clauses removed from the always-listed description; every trigger phrase kept. Applied.
+- C-20261011-16 | 2026-10-11 | maintainability | low | medium | addressed | engineer-prompt re-teaches the always-loaded delegation contract at invocation time | `commands/engineer-prompt.md:29`
+  - rebuttal | addressed | `commands/engineer-prompt.md:39` | Dispatch field list replaced by a pointer to the always-loaded Delegation Contract. Applied.
+- C-20261011-17 | 2026-10-11 | correctness | high | high | addressed | INSTALL.md tells users to edit the installed models.yaml, but apply-models.py reads only the repo copy, a silent no-op | `scripts/apply-models.py:33`
+  - rebuttal | addressed | `INSTALL.md:106` | Human accepted: repo models.yaml is the single source; INSTALL.md rewritten and the installed copy marked inert. Verified.
+- C-20261011-18 | 2026-10-11 | correctness | medium | high | addressed | Installed models.yaml contradicts deployed agents: no referee/redteamer pins but six such agents installed | `diff ~/.config/opencode/models.yaml models.yaml`
+  - rebuttal | addressed | `diff ~/.config/opencode/models.yaml models.yaml` | Installed copy resynced to the repo and now byte-identical; same decision as C-20261011-17. Verified.
+- C-20261011-19 | 2026-10-11 | correctness | medium | high | rejected | INSTALL.md claims 12 skills and 2 commands but the repo and the install deliver 13 skills and 4 commands | `INSTALL.md:8`
+  - rebuttal | rejected | `git ls-files skills/ commands/` | A clean checkout tracks 12 skills and 2 commands; the 13th skill and 2 commands are this session's uncommitted files. Not a doc bug.
+- C-20261011-20 | 2026-10-11 | correctness | medium | medium | addressed | The stale-command drop is a hardcoded single-entry list, not the cross-version mechanism DISCOVERY claims | `scripts/install.sh:64`
+  - rebuttal | addressed | `docs/discovery/DISCOVERY.md:12` | D-20261011-05 wording corrected to an explicit-list mechanism. Applied.
+- C-20261011-21 | 2026-10-11 | correctness | low | high | rejected | The generator strips a stray model line from roles files and exits 0, while only skills fail loud; the invariant is asymmetric | `scripts/apply-models.py:110`
+  - rebuttal | rejected | `scripts/apply-models.py:15` | Strip-and-continue for roles vs fail-loud for skills is documented in the module docstring; a disclosed design choice, not a defect.
+- C-20261011-22 | 2026-10-11 | correctness | low | high | addressed | apply-models.py --check validates only agents/generated and never opencode.json.sample, so a stale sample passes green | `scripts/apply-models.py:319`
+  - rebuttal | addressed | `scripts/apply-models.py:363` | run_check now renders the sample and flags drift without writing; accepted and verified.
+- C-20261011-23 | 2026-10-11 | correctness | low | high | addressed | A run() guard that claims to verify the sample on disk is dead code, always false right after the write it checks | `scripts/apply-models.py:306`
+  - rebuttal | addressed | `scripts/apply-models.py:306` | Inert readback guard removed; the write path already raises on failure. Applied.
+- C-20261011-24 | 2026-10-11 | reliability | high | high | addressed | No layer validates model ids; a typo passes generation, --check, and install, failing only at runtime per agent | `scripts/apply-models.py:56`
+  - rebuttal | addressed | `scripts/apply-models.py:70` | validate_model_ids enforces vendor/model shape plus models.allowlist membership, wired into generation and --check; accepted and verified.
+- C-20261011-25 | 2026-10-11 | reliability | high | high | rejected | check.sh validates only the repo tree and never the installed config dir, so a partial or stale install exits green | `scripts/check.sh:15`
+  - rebuttal | rejected | `scripts/check.sh:3` | check.sh is scoped to the plugin tree by design; install-state verification is a different tool. Re-scoped as an optional install verifier.
+- C-20261011-26 | 2026-10-11 | reliability | high | high | rejected | install deletes agents and skills before copying with no trap or rollback, so a mid-copy failure leaves empty agent dirs | `scripts/install.sh:53`
+  - rebuttal | rejected | `scripts/install.sh:46` | Backup runs before the rm, set -euo pipefail aborts loud, and the installer is documented re-runnable; worst case is a reported state with a full backup.
+- C-20261011-27 | 2026-10-11 | reliability | medium | high | rejected | The stale-command drop covers one past rename; the next rename leaves a ghost command, with no test coverage | `scripts/install.sh:64`
+  - rebuttal | rejected | `scripts/install.sh:64` | Same code point as C-20261011-20; deduped.
+- C-20261011-28 | 2026-10-11 | reliability | medium | high | rejected | Config merge is fail-soft on commented JSONC: a strict parse fails, install exits 0 with a warning, plugin keys never applied | `scripts/merge-config.py:82`
+  - rebuttal | rejected | `scripts/merge-config.py:83` | Deliberate, commented, documented, and test-pinned; the repo ships no .jsonc. Premise does not hold.
+- C-20261011-29 | 2026-10-11 | reliability | medium | high | rejected | Live config writes are truncate-then-write; death mid-write leaves invalid config and nothing auto-restores the backup | `scripts/merge-config.py:100`
+  - rebuttal | rejected | `scripts/merge-config.py:100` | Non-atomic write is real but bounded to one small json.dumps right after a backup; OpenCode fails loud on a truncated config.
+- C-20261011-30 | 2026-10-11 | reliability | medium | high | addressed | Every install makes a full backup with no retention; 21 backup dirs and 6 legacy model backups already accumulate | `scripts/install.sh:37`
+  - rebuttal | addressed | `scripts/install.sh:141` | install.sh keeps the newest 3 backup-* dirs (flag/env, 0 disables) and prints each pruned dir; accepted and verified.
+- C-20261011-31 | 2026-10-11 | reliability | low | medium | rejected | Second-granularity backup timestamps let a same-second rerun nest copies and corrupt the backup layout | `scripts/install.sh:37`
+  - rebuttal | rejected | `scripts/install.sh:37` | Trigger needs two full installs inside one second and nothing consumes backups programmatically; cosmetic.
+- C-20261011-32 | 2026-10-11 | correctness | medium | high | addressed | The handoff claim chief.md was trimmed 97 to 85 is wrong: HEAD baseline is 92 lines, so the real trim is 92 to 85 | `git show HEAD:agents/roles/chief.md`
+  - rebuttal | addressed | `docs/discovery/DISCOVERY.md:10` | D-20261011-03 corrected from 97->85 to the true 92->85. Applied.
+- C-20261011-33 | 2026-10-11 | correctness | low | high | rejected | The rename cleanup missed a live spec still listing compliance-officer as current crew without a historical note | `docs/specs/2026-10-01-dual-chief-architecture.md:141`
+  - rebuttal | rejected | `docs/specs/2026-10-01-dual-chief-architecture.md:4` | The spec self-declares superseded in its opening banner; the "without a historical note" premise is false.
