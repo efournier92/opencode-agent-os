@@ -77,7 +77,7 @@ OpenCode reads both `~/.config/opencode/opencode.json` and `~/.config/opencode/o
 
 ```bash
 if [ -f ~/.config/opencode/models.yaml ]; then
-  echo "Keeping existing ~/.config/opencode/models.yaml (edit it to change model pins)."
+  echo "Keeping existing ~/.config/opencode/models.yaml (inert reference; edit the repo copy to change pins)."
 else
   cp models.yaml ~/.config/opencode/models.yaml
 fi
@@ -103,7 +103,7 @@ The sample sets:
 - `agent.build.disable` and `agent.scout.disable`: hide the built-in `build` primary and the built-in `scout` subagent.
 - `permission`: `edit`/`bash` ask, `skill` allow, and `external_directory` allows `/tmp/*` so scratch files under `/tmp` do not prompt for approval.
 
-To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/apply-models.py` (prerequisite: Python 3 with PyYAML installed; `pip install pyyaml`), then reinstall the regenerated `agents/generated/*.md` and merge the regenerated `opencode.json.sample` back into your `opencode.json` or `opencode.jsonc`. Note: `apply-models.py` reads the **repo** copy, not the installed `<config-dir>/models.yaml`; the installed copy is preserved across reinstalls and documents your chosen model pins.
+To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/apply-models.py` (prerequisite: Python 3 with PyYAML installed; `pip install pyyaml`), then reinstall the regenerated `agents/generated/*.md` and merge the regenerated `opencode.json.sample` back into your `opencode.json` or `opencode.jsonc`. The repo `models.yaml` is the single source of truth: `scripts/apply-models.py` reads only the repo copy, and the installed `<config-dir>/models.yaml` is an inert reference the generator never reads.
 
 5. Restart OpenCode or reload config.
 
@@ -147,7 +147,7 @@ If the repo already has an `AGENTS.md`, merge this plugin's `AGENTS.md` into it.
 ```bash
 mkdir -p .opencode
 if [ -f .opencode/models.yaml ]; then
-  echo "Keeping existing .opencode/models.yaml (edit it to change model pins)."
+  echo "Keeping existing .opencode/models.yaml (inert reference; edit the repo copy to change pins)."
 else
   cp models.yaml .opencode/models.yaml
 fi

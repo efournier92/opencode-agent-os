@@ -3,7 +3,7 @@
 # Install the opencode-agent-os plugin into an OpenCode config directory.
 #
 # Usage:
-#   scripts/install.sh [--config-dir DIR]
+#   scripts/install.sh [--config-dir DIR] [--keep-backups N]
 #
 # Defaults to ~/.config/opencode, or $OPENCODE_CONFIG_DIR when set.
 # Backs up anything it replaces and is safe to re-run.
@@ -20,10 +20,12 @@ CFG="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --config-dir) CFG="${2:-}"; shift 2 ;;
+    --keep-backups) KEEP_BACKUPS="${2:-}"; shift 2 ;;
     -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
+KEEP_BACKUPS="${KEEP_BACKUPS:-${OPENCODE_BACKUPS_KEEP:-3}}"
 
 if [ -z "$CFG" ] || [ "$CFG" = "/" ]; then
   echo "refusing to install into '$CFG'" >&2
@@ -57,8 +59,13 @@ cp -Rn "$REPO"/skills/* "$CFG/skills/"
 
 # 2b. Commands (overwrite the plugin's own files, preserve any user command
 #     files). Commands are user-invoked and add no model context until run.
+#     The directory is not cleared wholesale (user files live here), so drop
+#     plugin commands renamed or removed in this version explicitly.
 if [ -d "$REPO/commands" ]; then
   mkdir -p "$CFG/commands"
+  for stale in grill.md; do
+    rm -f "$CFG/commands/$stale"
+  done
   cp -R "$REPO"/commands/. "$CFG/commands/"
 fi
 
@@ -127,6 +134,21 @@ except Exception as exc:
 PY
 else
   echo "python3 not found; skipped tui.json keybind merge" >&2
+fi
+
+# 7. Prune old backups, keeping the newest N (default 3); N=0 disables pruning.
+#    Timestamped names sort chronologically, so the glob yields oldest-first.
+if [ "$KEEP_BACKUPS" -gt 0 ] 2>/dev/null; then
+  backups=()
+  for d in "$CFG"/backup-*; do
+    [ -d "$d" ] || continue
+    backups+=("$d")
+  done
+  excess=$((${#backups[@]} - KEEP_BACKUPS))
+  for ((i = 0; i < excess; i++)); do
+    rm -rf "${backups[$i]}"
+    echo "pruned backup: ${backups[$i]}"
+  done
 fi
 
 echo "agents: $(ls "$CFG/agents" | wc -l | tr -d ' ')"

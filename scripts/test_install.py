@@ -22,10 +22,10 @@ def expected_agent_count():
     return sum(len(profile["roles"]) for profile in data["profiles"].values())
 
 
-def run_install(cfg):
+def run_install(cfg, *args):
     env = dict(os.environ, OPENCODE_CONFIG_DIR=str(cfg))
     return subprocess.run(
-        ["bash", str(INSTALL)], env=env, capture_output=True, text=True
+        ["bash", str(INSTALL), *args], env=env, capture_output=True, text=True
     )
 
 
@@ -38,7 +38,7 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(
                 len(list((root / "agents").glob("*.md"))), expected_agent_count()
             )
-            self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 12)
+            self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 13)
             for name in ("engineer-prompt.md", "fix-bug.md"):
                 self.assertEqual(
                     (root / "commands" / name).read_bytes(),
@@ -101,6 +101,20 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(
                 cfg["compaction"]["prune"], sample["compaction"]["prune"]
             )
+
+    def test_prunes_old_backups_keep_two(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for day in ("01", "02", "03", "04"):
+                (root / f"backup-2020-01-{day}_000000").mkdir()
+            result = run_install(root, "--keep-backups", "2")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            backups = sorted(p.name for p in root.glob("backup-*"))
+            self.assertEqual(len(backups), 2, backups)
+            self.assertTrue(
+                backups[0].startswith("backup-2020-01-04"), backups
+            )
+            self.assertIn("pruned backup:", result.stdout)
 
     def test_refuses_root(self):
         env = dict(os.environ, OPENCODE_CONFIG_DIR="/")
