@@ -18,6 +18,7 @@ SCRIPT = Path(__file__).resolve().parent / "apply-models.py"
 ROLES_DIR = REPO / "agents" / "roles"
 GENERATED_DIR = REPO / "agents" / "generated"
 SAMPLE = REPO / "opencode.json.sample"
+ALLOWLIST = REPO / "models.allowlist"
 
 _spec = importlib.util.spec_from_file_location("apply_models", SCRIPT)
 apply_models = importlib.util.module_from_spec(_spec)
@@ -70,6 +71,17 @@ class TestApplyModels(unittest.TestCase):
                 {"*": "deny", f"*-{prefix}": "allow"},
             )
 
+    def test_only_chief_has_task_scope(self):
+        for prefix, profile in self.profiles.items():
+            for role in profile["roles"]:
+                fm = read_frontmatter(
+                    GENERATED_DIR / f"{apply_models.resolved_name(prefix, role)}.md"
+                )
+                has_task = "task" in (fm.get("permission") or {})
+                self.assertEqual(
+                    has_task, role == "chief", f"{prefix}-{role} task scope"
+                )
+
     def test_chief_is_primary(self):
         for prefix, profile in self.profiles.items():
             for role in profile["roles"]:
@@ -104,10 +116,64 @@ class TestApplyModels(unittest.TestCase):
                     f"{prefix} {role} -> {model}",
                 )
 
+    def test_model_ids_allowlisted(self):
+        # The shipped models.yaml must pass shape + allowlist validation.
+        apply_models.validate_models(self.profiles, self.default_profile, ROLES_DIR)
+
+    def test_bad_model_shape_fails(self):
+        bad = {"ds": {"roles": {"chief": "noshape"}}}
+        with self.assertRaises(SystemExit):
+            apply_models.validate_model_ids(bad)
+
+    def test_model_not_in_allowlist_fails(self):
+        bad = {"ds": {"roles": {"chief": "vendor/unlisted-model"}}}
+        with self.assertRaises(SystemExit):
+            apply_models.validate_model_ids(bad)
+
     def test_idempotent(self):
         _, generated, sample = apply_models.run(REPO)
         self.assertEqual(generated, 0)
         self.assertEqual(sample, 0)
+
+    def test_check_reports_clean(self):
+        self.assertEqual(apply_models.run_check(REPO), 0)
+
+    def test_check_detects_missing_generated(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "agents" / "roles").mkdir(parents=True)
+            (root / "agents" / "generated").mkdir(parents=True)
+            shutil.copy(REPO / "models.yaml", root / "models.yaml")
+            shutil.copy(ALLOWLIST, root / "models.allowlist")
+            for path in ROLES_DIR.glob("*.md"):
+                shutil.copy(path, root / "agents" / "roles" / path.name)
+            self.assertNotEqual(apply_models.run_check(root), 0)
+
+    def test_check_clean_after_generate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "agents" / "roles").mkdir(parents=True)
+            (root / "agents" / "generated").mkdir(parents=True)
+            shutil.copy(REPO / "models.yaml", root / "models.yaml")
+            shutil.copy(ALLOWLIST, root / "models.allowlist")
+            for path in ROLES_DIR.glob("*.md"):
+                shutil.copy(path, root / "agents" / "roles" / path.name)
+            apply_models.run(root)
+            self.assertEqual(apply_models.run_check(root), 0)
+
+    def test_check_detects_stale_sample(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "agents" / "roles").mkdir(parents=True)
+            (root / "agents" / "generated").mkdir(parents=True)
+            shutil.copy(REPO / "models.yaml", root / "models.yaml")
+            shutil.copy(ALLOWLIST, root / "models.allowlist")
+            for path in ROLES_DIR.glob("*.md"):
+                shutil.copy(path, root / "agents" / "roles" / path.name)
+            apply_models.run(root)
+            self.assertEqual(apply_models.run_check(root), 0)
+            (root / "opencode.json.sample").write_text("{}\n")
+            self.assertNotEqual(apply_models.run_check(root), 0)
 
     def test_third_profile(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -115,6 +181,7 @@ class TestApplyModels(unittest.TestCase):
             (root / "agents" / "roles").mkdir(parents=True)
             (root / "agents" / "generated").mkdir(parents=True)
             shutil.copy(REPO / "models.yaml", root / "models.yaml")
+            shutil.copy(ALLOWLIST, root / "models.allowlist")
             for path in ROLES_DIR.glob("*.md"):
                 shutil.copy(path, root / "agents" / "roles" / path.name)
 

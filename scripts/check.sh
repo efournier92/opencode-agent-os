@@ -15,6 +15,9 @@ cd "$REPO"
 echo "== doc budget =="
 python3 scripts/test_doc_budget.py
 
+echo "== generated agents =="
+python3 scripts/apply-models.py --check
+
 echo "== unit tests =="
 python3 -m unittest discover -s scripts -p 'test_*.py'
 
@@ -23,6 +26,9 @@ python3 scripts/lint-markdown.py .
 
 echo "== discovery index =="
 python3 scripts/check_discovery.py
+
+echo "== critique ledger =="
+python3 scripts/check_critique.py
 
 echo
 echo "all checks passed"

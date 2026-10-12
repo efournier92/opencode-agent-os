@@ -36,7 +36,7 @@ Facts are the agent's job; decisions are the user's. Open the whole frontier in 
 
 Fill the template for the destination.
 
-- Subagent dispatch: scope/location, goal, exact paths, output shape ("fact plus location, no prose"), what NOT to re-report, shell discipline, and a `NEED-INPUT` clause.
+- Subagent dispatch: the fields defined by the Delegation Contract in `AGENTS.md`.
 - Skill invocation: exact skill name, its argument, and the expected exit claim.
 - Operator plan or handoff: ordered phases, each with a done-check; link existing skills instead of restating them.
 - User-facing prompt: role, task, constraints, output format, and an observable success condition.

@@ -35,7 +35,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 1. **Run `/agents` in the OpenCode TUI**
     - Expect all primaries and their crews: `chief-ds`, `chief-glm`, `chief-ds+glm`, and each `<role>-<profile>` subagent *(`builder-ds`, `verifier-ds+glm`, etc).*
-2. The `skill` tool description should list all 12 skills *(`create-spec`, `implement-spec`, etc).*
+2. The `skill` tool description should list all 13 skills *(`create-spec`, `implement-spec`, etc).*
 3. Typing `/engineer-prompt` in the TUI autocompletes the command.
 
 ## Contents
@@ -66,7 +66,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 ### `docs/rulebook/`
 
 - On-demand reference split out of `AGENTS.md` and `chief.md` to keep the always-loaded pair under the context budget.
-- `roster.md` is the full agent and skill catalog; `model-profiles.md` is the profile and generator contract; `markdown-style.md` is the full Markdown style rules; `stash-discipline.md` is the procedure for destructive git operations.
+- `roster.md` is the full agent and skill catalog; `model-profiles.md` is the profile and generator contract; `markdown-style.md` is the full Markdown style rules; `stash-discipline.md` is the procedure for destructive git operations; `operator-detail.md` is the operator memory format and loop triage; `photo-generator.md` is the explicit-only image pipeline.
 - `scripts/install.sh` ships this directory beside the installed `AGENTS.md`.
 
 ### `models.yaml`
@@ -78,6 +78,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 - Resolves `models.yaml` into one generated agent per profile under `agents/generated/`, named `<role>-<prefix>` (for example `builder-ds`).
 - Renders `opencode.json.sample` and strips any stray `model:` line from role frontmatter; fails loud if a skill file ever grows one.
+- `--check` reports any drift between `models.yaml` plus `agents/roles/` and the generated files without writing; `scripts/check.sh` runs it.
 
 ### `scripts/install.sh`
 
@@ -92,7 +93,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### `scripts/check.sh`
 
-- Single plugin check: context size budget, the unit suite, and the markdown linter.
+- Single plugin check: context size budget, generated-agent freshness, the unit suite, and the markdown linter.
 - Wired into `.githooks/pre-commit` *(enable with `git config core.hooksPath .githooks`)* and `.github/workflows/check.yml`.
 
 ### `scripts/test_doc_budget.py`
@@ -115,13 +116,12 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `builder` | subagent | Bounded implementation worker for a well-specified task with a clear done-check. |
 | `verifier` | subagent | PASS/FAIL verification agent that proves claims by executing commands; read-only on code. |
 | `claim-critic` | subagent | Red-team reviewer that attacks handoffs, plans, diffs, and claims for fake progress before they are trusted. |
+| `redteamer` | subagent | Attacks one candidate solution through one assigned lens; evidence only, no fixes. |
+| `referee` | subagent | Convergence gate: classifies ledger findings settled or human-only, emits the walkthrough agenda. |
 | `system-fixer` | subagent | Repairs the agent system itself (configs, hooks, instruction docs) and runs improvement mode for recurring failures. |
 | `context-curator` | subagent | Hygiene agent for instruction docs, memory index, handoffs, and the discovery index; keeps context lean and claims true. |
 | `external-researcher` | subagent | Cheap external-research agent for docs, versions, APIs, and changelogs outside the codebase. |
 | `code-locator` | subagent | Cheap read-only in-repo code locator that finds where symbols are defined and what calls them, with compressed deterministic output. |
-| `compliance-officer` | subagent | Pre-filters specs, branches, and PRs for regulatory/legal/fiduciary/privacy questions worth a human compliance officer's time. |
-| `product-critic` | subagent | Harsh product/UX critique of specs, branches, and PRs from the user's perspective. |
-| `photo-generator` | subagent | AI photo-generation specialist: sets up a ComfyUI/SDXL rig or a hosted image API, downloads models, produces identity-consistent artistic images via scripted runners. |
 | `wordsmith` | subagent | Communicative-language specialist: formal writing, messages, speeches, talking points in an American Millennial voice. |
 | `phraser` | subagent | Riffing partner: returns distinct, ranked ways to say a phrase, sentiment, or sentence, with the top pick flagged. |
 | `visual-critic` | subagent | Holistic visual design sweep of print, PDF, and HTML deliverables. |
@@ -129,7 +129,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 *Mode ships with each role. Each profile injects a concrete model per role from `models.yaml` (see Model Profiles); the primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm`.*
 
-### `skills/` (12 Skills)
+### `skills/` (13 Skills)
 
 - 1 directory per skill, each with a `SKILL.md` inside, capped at 200 lines; detail moves to sibling files.
 
@@ -141,6 +141,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `write-handoff` | Write a structured session handoff so a fresh session resumes without re-exploring. |
 | `capture-session` | Distill session learnings into a terse, standalone knowledge file for a human or future agent. |
 | `log-discoveries` | Maintain the opted-in `docs/discovery/DISCOVERY.md` index of ID-tagged durable findings, decisions, traps, and outcomes. |
+| `redteam` | Operator-run adversarial loop over a committed critique ledger, converging on evidence. |
 | `verify-in-browser` | Prove a feature works end-to-end in a real browser against the local dev stack only. |
 | `manage-worktrees` | Create, list, or remove grouped git worktrees across repos, each with isolated ports and its own database. |
 | `tighten-prose` | Toggle terse, high-signal output (loads on "terse"): cut filler while keeping technical facts exact. |
@@ -148,7 +149,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `polish-ui` | Sleek, distinctive frontend design guidance: typography, palette, layout, and anti-AI-slop checks. |
 | `burn-session` | Delete the current session from local history once you quit, after confirming. Session-only. |
 
-### `commands/` (2 Commands)
+### `commands/` (4 Commands)
 
 - User-invoked slash commands. Unlike a skill, a command adds no model context until you type it.
 
@@ -156,6 +157,8 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 |---|---|
 | `/engineer-prompt` | Turn a messy idea into a destination-shaped, grounded, verifiable prompt. |
 | `/fix-bug` | Reproduce a bug, fix it red-green, and prove the fix. |
+| `/redteam` | Pressure-test a goal through adversarial lenses, converge on evidence, walk through only human-only decisions. |
+| `/photo-generator` | Set up and run AI image generation (local ComfyUI/SDXL or hosted API) for identity-consistent images. |
 
 ## Releases
 
@@ -196,9 +199,9 @@ profiles:
     roles:
       chief: deepseek/deepseek-flash
       claim-critic: zai-coding-plan/glm-5.3
-      compliance-officer: zai-coding-plan/glm-5.3
       verifier: zai-coding-plan/glm-5.3-flash
-      product-critic: deepseek/deepseek-flash
+      redteamer: zai-coding-plan/glm-5.3-flash
+      referee: zai-coding-plan/glm-5.3
       wordsmith: zai-coding-plan/glm-5.3
       phraser: zai-coding-plan/glm-5.3-flash
       visual-critic: zai-coding-plan/glm-5.3-flash

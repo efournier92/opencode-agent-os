@@ -16,13 +16,12 @@ The live crew and skills are also listed by the `task` and `skill` tools; this t
 | `agents/roles/builder.md` | agent | bounded implementation from an exact scope |
 | `agents/roles/verifier.md` | agent | PASS/FAIL verification, evidence = executed commands only |
 | `agents/roles/claim-critic.md` | agent | attacks handoffs/diffs/claims before they're trusted |
+| `agents/roles/redteamer.md` | agent | attacks one candidate solution through one assigned lens; evidence only, no fixes |
+| `agents/roles/referee.md` | agent | convergence gate: classifies ledger findings settled or human-only, emits the walkthrough agenda |
 | `agents/roles/system-fixer.md` | agent | repairs the agent system itself; improvement mode for recurring failures |
 | `agents/roles/context-curator.md` | agent | keeps instruction docs / memory / handoffs / discovery true and lean |
 | `agents/roles/external-researcher.md` | agent | external facts: docs, versions, APIs (cheap model) |
 | `agents/roles/code-locator.md` | agent | in-repo code locator: where X is defined, what calls Y (cheap model) |
-| `agents/roles/compliance-officer.md` | agent | pre-filters spec/branch/PR for real regulatory/compliance questions |
-| `agents/roles/product-critic.md` | agent | harsh product/UX critique of spec/branch/PR |
-| `agents/roles/photo-generator.md` | agent | AI photo-generation: rig setup or hosted image API, model downloads, identity-consistent image batches |
 | `agents/roles/wordsmith.md` | agent | communicative language: formal writing, messages, speeches, talking points in an American Millennial voice |
 | `agents/roles/phraser.md` | agent | riffing partner: ranked, distinct ways to rephrase a phrase, sentiment, or sentence, top pick flagged |
 | `agents/roles/visual-critic.md` | agent | holistic visual design sweep of print, PDF, and HTML deliverables |
@@ -33,6 +32,7 @@ The live crew and skills are also listed by the `task` and `skill` tools; this t
 | `skills/write-handoff/SKILL.md` | skill | writes a structured session handoff for fresh-session resume |
 | `skills/capture-session/SKILL.md` | skill | distills session learnings into a terse, standalone knowledge file for a human or future agent |
 | `skills/log-discoveries/SKILL.md` | skill | writes and reads the opt-in discovery index (`docs/discovery/DISCOVERY.md`) |
+| `skills/redteam/SKILL.md` | skill | operator-run adversarial loop over a committed critique ledger, converging on evidence |
 | `skills/verify-in-browser/SKILL.md` | skill | proves a feature works end-to-end in a real browser, local stack only |
 | `skills/manage-worktrees/SKILL.md` | skill | manages grouped git worktrees with isolated ports/DBs |
 | `skills/tighten-prose/SKILL.md` | skill | tightens output to terse, high-signal mode to cut output tokens (loads on "terse") |
@@ -41,3 +41,5 @@ The live crew and skills are also listed by the `task` and `skill` tools; this t
 | `skills/burn-session/SKILL.md` | skill | deletes the current session from local history on quit, with confirmation |
 | `commands/engineer-prompt.md` | command | user-invoked prompt engineering; adds no model context until run |
 | `commands/fix-bug.md` | command | red-green bug-fix loop: reproduce, fix via `builder`, prove via `verifier`; explicit-invocation only |
+| `commands/redteam.md` | command | pressure-tests a goal through `redteam`; explicit-invocation only |
+| `commands/photo-generator.md` | command | sets up and runs the image-generation pipeline; explicit-invocation only |

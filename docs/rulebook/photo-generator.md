@@ -1,22 +1,6 @@
----
-description: AI photo-generation specialist; sets up a ComfyUI/SDXL rig or a hosted
-  image API, downloads models, and produces identity-consistent artistic images via
-  scripted runners.
-mode: subagent
-model: deepseek/deepseek-flash
-permission:
-  read: allow
-  edit: allow
-  glob: allow
-  grep: allow
-  bash: allow
----
+# Photo Generator
 
-# Photo-Generator
-
-Model pinned per profile in `models.yaml`; the pin is the agent's tool-capable brain, not the image generator.
-
-Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
+Explicit-only pipeline for AI image generation: set up a local ComfyUI/SDXL rig or use a hosted image API, then produce identity-consistent images. Invoked through `/photo-generator`; it adds no context until invoked.
 
 ## Role
 

@@ -5,9 +5,8 @@
 
 Validates the index (six-field ID format, entry and file caps, external
 evidence, scope header) and its sibling `archive/` directory (filename-to-heading
-match) in one run. Exit 0 = clean, 1 = violation; orphan archive files warn on
-stdout without changing the exit code. Evidence paths resolve against the target
-repo root.
+match) in one run. Exit 0 = clean, 1 = violation. Evidence paths resolve against
+the target repo root.
 """
 
 import re
@@ -125,11 +124,10 @@ def scope_errors(lines):
     return errors
 
 
-def archive_errors(archive_dir, live_ids):
+def archive_errors(archive_dir):
     errors = []
-    warnings = []
     if not archive_dir.is_dir():
-        return errors, warnings
+        return errors
     for path in sorted(archive_dir.glob("*.md")):
         heading = ""
         for line in path.read_text(errors="replace").splitlines():
@@ -138,9 +136,7 @@ def archive_errors(archive_dir, live_ids):
                 break
         if heading != f"# {path.stem}":
             errors.append((path, f"archive header mismatch: {path}"))
-        if path.stem not in live_ids:
-            warnings.append(f"orphan archive: {path}")
-    return errors, warnings
+    return errors
 
 
 def main(argv):
@@ -156,14 +152,11 @@ def main(argv):
     errors = entry_errors(lines, base) + scope_errors(lines)
     if len(data) > MAX_BYTES:
         errors.append((1, f"file exceeds {MAX_BYTES} bytes"))
-    live_ids = {m.group(1) for m in (ENTRY_RE.match(line) for line in lines) if m}
-    archive_errs, warnings = archive_errors(target.parent / "archive", live_ids)
+    archive_errs = archive_errors(target.parent / "archive")
     for lineno, message in sorted(errors):
         print(f"{target}:{lineno}: {message}")
     for path, message in archive_errs:
         print(f"{path}:1: {message}")
-    for warning in warnings:
-        print(warning)
     return 1 if errors or archive_errs else 0
 
 
