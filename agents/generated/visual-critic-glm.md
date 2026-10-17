@@ -8,7 +8,6 @@ model: zai/glm-4.6v
 options:
   reasoningEffort: max
 permission:
-  read: allow
   edit: deny
   glob: allow
   grep: allow

@@ -4,7 +4,6 @@ mode: primary
 options:
   reasoningEffort: high
 permission:
-  read: allow
   edit: allow
   glob: allow
   grep: allow

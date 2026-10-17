@@ -103,6 +103,22 @@ The sample sets:
 - `agent.build.disable` and `agent.scout.disable`: hide the built-in `build` primary and the built-in `scout` subagent.
 - `permission`: `edit`/`bash` ask, `skill` allow, and `external_directory` allows `/tmp/*` so scratch files under `/tmp` do not prompt for approval.
 
+The `edit`/`bash` asks are a fallback only: every generated role sets its own `edit`/`bash` permission, and agent rules are evaluated after the global ones, so a role's rule wins on a tie. The prompts you actually see across a multi-repo workspace come from `external_directory`, which defaults to `ask` and fires on any path outside the directory OpenCode was launched in. The sample only allowlists `/tmp/*`; add your workspace roots and regular user folders after install:
+
+```json
+"external_directory": {
+  "/tmp/*": "allow",
+  "**/mnt/**": "allow",
+  "~/Downloads/**": "allow"
+}
+```
+
+A wildcard matches slashes, so `**/mnt/**` matches any `mnt` directory at any depth and on any machine: `~/mnt/...`, `/mnt/...`, `/Volumes/disk/mnt/...`. Use `~/mnt/**` if the mount point is fixed to the home directory. `~/Downloads/**` expands per machine, so it ports without hardcoding a home path. Never use `~/*` or a top-level `**`: they would also match `~/.ssh` and `~/.config`. Leave `~/.config/opencode/**` out so harness edits keep prompting; that is a speed bump, not a boundary: a bash-capable agent can reach the same path through a symlink planted in an allowed writable root. The `always` option lasts for the current session.
+
+Pair the allowlist with `read` denies for secrets such as `*.env`, `**/.ssh/**`, and `**/*.pem`, since an allowed directory inherits the workspace read defaults. These denies gate the `read` tool only: `bash` and `grep` do not consult them, so they stop accidental exposure, not a determined or injected agent.
+
+Roles deliberately do not set `read` in their frontmatter. Agent permission rules are appended after the global rules and last match wins, so a role-level `read: allow` silently overrides every global `read` deny, including the built-in `.env` ask. Leave `read` to the global config so the secret denies apply to every agent.
+
 To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/apply-models.py` (prerequisite: Python 3 with PyYAML installed; `pip install pyyaml`), then reinstall the regenerated `agents/generated/*.md` and merge the regenerated `opencode.json.sample` back into your `opencode.json` or `opencode.jsonc`. The repo `models.yaml` is the single source of truth: `scripts/apply-models.py` reads only the repo copy, and the installed `<config-dir>/models.yaml` is an inert reference the generator never reads.
 
 5. Restart OpenCode or reload config.

@@ -6,7 +6,6 @@ model: deepseek/deepseek-flash
 options:
   reasoningEffort: high
 permission:
-  read: allow
   edit: allow
   write: allow
   glob: allow

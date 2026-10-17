@@ -6,7 +6,6 @@ model: zai-coding-plan/glm-5.3-flash
 options:
   reasoningEffort: high
 permission:
-  read: allow
   edit: deny
   glob: allow
   grep: allow

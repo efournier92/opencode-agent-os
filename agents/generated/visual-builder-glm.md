@@ -6,7 +6,6 @@ model: zai/glm-4.6v-flash
 options:
   reasoningEffort: high
 permission:
-  read: allow
   edit: allow
   write: allow
   glob: allow

@@ -4,7 +4,6 @@ mode: subagent
 options:
   reasoningEffort: high
 permission:
-  read: allow
   edit: deny
   glob: allow
   grep: allow
