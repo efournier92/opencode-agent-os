@@ -5,6 +5,10 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/discovery, plugin/skill
 
 ## Entries
 
+- D-20261017-04 | 2026-10-17 | [outcome] | plugin/agents | Permission redteam converged: 17 findings, 4 rejected on evidence, residual bash/grep/symlink risk accepted | docs/critique/2026-10-17_Permission-Loosening.md
+- D-20261017-03 | 2026-10-17 | [trap] | plugin/agents | Read denies gate only the read tool; bash and grep skip them, so treat the list as accident protection | INSTALL.md:118
+- D-20261017-02 | 2026-10-17 | [decision] | plugin/agents | Roles no longer set read; agent rules append after global and last-match wins, so role read allow would nullify global denies | agents/roles/chief.md:6
+- D-20261017-01 | 2026-10-17 | [decision] | plugin/architecture | Hold OpenCode 1.19.3: V1 patches ship same-day; V2 ignores subagent_depth and compaction.prune; DB migration blocks downgrade | https://opencode.ai/v2/docs/migrate-v1
 - D-20261011-01 | 2026-10-11 | [decision] | plugin/architecture | Redteam audit found only photo-generator droppable; all other merge/drop proposals refuted by deliberate contracts | docs/rulebook/roster.md
 - D-20261011-02 | 2026-10-11 | [decision] | plugin/agents | Demoted photo-generator to a /photo-generator command plus docs/rulebook/photo-generator.md; dropped from crew and models.yaml | commands/photo-generator.md
 - D-20261011-03 | 2026-10-11 | [decision] | plugin/architecture | chief.md trimmed 92->85: dropped AGENTS.md-duplicate lines; offloaded loop triage and memory format to operator-detail.md | docs/rulebook/operator-detail.md
@@ -34,8 +38,3 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/discovery, plugin/skill
 - D-20261005-12 | 2026-10-05 | [decision] | plugin/architecture | Retired deepseek-v4-pro: `ds` profile's four gate seats now all-flash; v4-pro is phasing out, 3.3x-7.3x costlier, V4.1-Flash leads on performance | models.yaml:38
 - D-20261005-13 | 2026-10-05 | [decision] | plugin/architecture | Dropped model-tier language from live docs; one hop role->model id; 2026-10-01 spec keeps history under a superseded banner | docs/rulebook/model-profiles.md:5
 - D-20261005-14 | 2026-10-05 | [decision] | plugin/architecture | Markdown style covers posted PR/issue bodies and requires a blank line after each heading; ship-changes lints a drafted PR body first | docs/rulebook/markdown-style.md:14
-- D-20261005-15 | 2026-10-05 | [decision] | plugin/skills | create-spec always copies the implement-spec handoff prompt to the clipboard on completion, printing it if the clipboard command fails | skills/create-spec/SKILL.md:68
-- D-20261005-16 | 2026-10-05 | [decision] | plugin/skills | create-spec always opens question rounds in the `question` tool (free-text kept); sign-off adds `Add details` so typed additions fold in | skills/create-spec/SKILL.md:23
-- D-20261005-17 | 2026-10-05 | [find] | plugin/skills | OpenCode delete unshares via the ShareNext Deleted-event subscriber; a burn revokes the link | https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/share/share-next.ts
-- D-20261005-18 | 2026-10-05 | [decision] | plugin/skills | `implement-spec` cuts a kebab-case feature branch before any code (spec branch context else title); dirty tree stops rather than stashes | skills/implement-spec/SKILL.md:32
-- D-20261005-19 | 2026-10-05 | [decision] | plugin/skills | `ship-changes` adds `autoship`: auto commit and push plus ask-gated PR create, trunk merge, and merged-branch cleanup chain, fail-closed | skills/ship-changes/SKILL.md:22
