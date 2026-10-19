@@ -11,7 +11,7 @@ Same brain. Smaller mouth.
 
 ## When To Use
 
-The chief agents (`chief-ds`, `chief-glm`, `chief-ds+glm`) default to terse output. Load this skill to change intensity, apply to another agent, or temporarily turn off. `tighten-prose` is this skill's name; "terse" is its trigger word.
+The chief agents (`chief-ds`, `chief-glm`, `chief-ds+glm`, `chief-local`) default to terse output. Load this skill to change intensity, apply to another agent, or temporarily turn off. `tighten-prose` is this skill's name; "terse" is its trigger word.
 
 ## How To Use
 

@@ -34,7 +34,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 ### Verify
 
 1. **Run `/agents` in the OpenCode TUI**
-    - Expect all primaries and their crews: `chief-ds`, `chief-glm`, `chief-ds+glm`, and each `<role>-<profile>` subagent *(`builder-ds`, `verifier-ds+glm`, etc).*
+    - Expect all primaries and their crews: `chief-ds`, `chief-glm`, `chief-ds+glm`, `chief-local`, and each `<role>-<profile>` subagent *(`builder-ds`, `verifier-ds+glm`, etc).*
 2. The `skill` tool description should list all 13 skills *(`create-spec`, `implement-spec`, etc).*
 3. Typing `/engineer-prompt` in the TUI autocompletes the command.
 
@@ -127,7 +127,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `visual-critic` | subagent | Holistic visual design sweep of print, PDF, and HTML deliverables. |
 | `visual-builder` | subagent | Applies visual fixes from `visual-critic` findings. |
 
-*Mode ships with each role. Each profile injects a concrete model per role from `models.yaml` (see Model Profiles); the primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm`.*
+*Mode ships with each role. Each profile injects a concrete model per role from `models.yaml` (see Model Profiles); the primaries are `chief-ds`, `chief-glm`, `chief-ds+glm`, and `chief-local`.*
 
 ### `skills/` (13 Skills)
 
@@ -207,9 +207,16 @@ profiles:
       visual-critic: zai-coding-plan/glm-5.3-flash
       builder: deepseek/deepseek-flash
       ...
+  local:
+    label: Local (Qwen3.6 35B-A3B, offline)
+    options:
+      reasoningEffort: low
+    roles:
+      chief: ollama/qwen3.6:35b-a3b
+      ...
 ```
 
-*The shipped default profile is `ds+glm` (chief agent `chief-ds+glm`, prettified to Chief-Ds+Glm in the TUI): DeepSeek carries the many-turn and coding seats on pay-as-you-go pricing, GLM 5.3 is kept for the low-volume, high-stakes text gates and long-form language, and glm-5.3-flash covers the seats where GLM's independent eyes matter but volume or vision rules out the flagship. The primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm`.*
+*The shipped default profile is `ds+glm` (chief agent `chief-ds+glm`, prettified to Chief-Ds+Glm in the TUI): DeepSeek carries the many-turn and coding seats on pay-as-you-go pricing, GLM 5.3 is kept for the low-volume, high-stakes text gates and long-form language, and glm-5.3-flash covers the seats where GLM's independent eyes matter but volume or vision rules out the flagship. The `local` profile is an additional opt-in that pins every seat to `ollama/qwen3.6:35b-a3b` for offline sessions; see `INSTALL.md` for the provider and `share` keys it needs.*
 
 ### Update
 

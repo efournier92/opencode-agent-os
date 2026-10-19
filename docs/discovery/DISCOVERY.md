@@ -5,6 +5,9 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/discovery, plugin/skill
 
 ## Entries
 
+- D-20261019-01 | 2026-10-19 | [decision] | plugin/architecture | Kept chief-local core; removed capability gating, standalone lane, archive retrofit | models.yaml
+- D-20261019-02 | 2026-10-19 | [question] | plugin/architecture | Title egress accepted; num_ctx dropped from profile options as advisory | INSTALL.md
+- D-20261019-03 | 2026-10-19 | [outcome] | plugin/architecture | Minimality redteam converged: 18 findings, 14 settled, 4 human decisions | docs/critique/2026-10-19_ChiefLocalMinimality.md
 - D-20261017-04 | 2026-10-17 | [outcome] | plugin/agents | Permission redteam converged: 17 findings, 4 rejected on evidence, residual bash/grep/symlink risk accepted | docs/critique/2026-10-17_Permission-Loosening.md
 - D-20261017-03 | 2026-10-17 | [trap] | plugin/agents | Read denies gate only the read tool; bash and grep skip them, so treat the list as accident protection | INSTALL.md:118
 - D-20261017-02 | 2026-10-17 | [decision] | plugin/agents | Roles no longer set read; agent rules append after global and last-match wins, so role read allow would nullify global denies | agents/roles/chief.md:6

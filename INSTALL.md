@@ -42,6 +42,77 @@ Nested keys merge as leaves, so an existing `compaction.reserved` survives while
 
 A config that is not strict JSON, such as one with JSONC comments, is skipped with a warning and must be merged by hand. To change the managed set, edit `MANAGED` in `scripts/merge-config.py`.
 
+## Local Profile Prerequisites
+
+The `local` profile pins every seat to `ollama/qwen3.6:35b-a3b`, the clean Qwen3.6-35B-A3B MoE at Q4_K_M (22 GB), so no local-profile agent can reach a remote model provider. It requires Ollama 0.30.0 or later. Because the installer never merges `provider`, add these keys to your active `opencode.json` or `opencode.jsonc` by hand for `chief-local` to resolve and to disable session sharing:
+
+- `provider.ollama`: points at the local Ollama server. Keep `limit.context` equal to the served context or OpenCode's compaction misbehaves.
+- `share`: set `disabled` so a session can never be uploaded.
+
+Session titles are not pinned and may use the cloud default model.
+
+```jsonc
+{
+  "share": "disabled",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": { "baseURL": "http://localhost:11434/v1" },
+      "models": {
+        "qwen3.6:35b-a3b": {
+          "name": "Qwen3.6 35B-A3B (local)",
+          "limit": { "context": 8192, "output": 4096 }
+        }
+      }
+    }
+  }
+}
+```
+
+Pull the model and give it the tag the profile pins:
+
+```bash
+ollama pull qwen3.6:35b-a3b
+```
+
+If your local tag differs, retag it with `ollama cp <source> qwen3.6:35b-a3b`; the alias shares blobs, so it costs no extra disk. Then reinstall, restart OpenCode, and press Shift+Tab to `chief-local`. `default_profile` stays `ds+glm`; the local profile is opt-in.
+
+Context note: the `ollama` provider uses Ollama's OpenAI-compatible endpoint, which ignores options sent in the request body. The served context comes from `OLLAMA_CONTEXT_LENGTH` (or a Modelfile), and `limit.context` must match it. The 16k KV cache (2.6 GB) plus the 22 GB Q4_K_M weights would eat the OS reserve on the reference box, so the served context is 8192. Measured there (4 GB RTX 3050 Laptop, i7-12700H, 31 GB RAM): 30 tok/s decode at 8192 context, prefill about 44 tok/s on short prompts. Only one copy fits in RAM, so parallel subagent work serializes on the single loaded model.
+
+Set the protective server settings in a systemd override so they survive restarts and cannot be bypassed from the request body:
+
+```bash
+sudo systemctl edit ollama.service
+```
+
+```ini
+[Service]
+Environment=OLLAMA_CONTEXT_LENGTH=8192
+Environment=OLLAMA_NUM_PARALLEL=1
+Environment=OLLAMA_KEEP_ALIVE=-1
+Environment=OLLAMA_MAX_LOADED_MODELS=1
+```
+
+- `OLLAMA_CONTEXT_LENGTH=8192`: caps the served context window; without it the endpoint serves the 4096 default and silently truncates the older half of the conversation.
+- `OLLAMA_NUM_PARALLEL=1`: the KV cache multiplies per slot, and the 31 GB box cannot afford a second slot.
+- `OLLAMA_KEEP_ALIVE=-1`: keeps the model resident; a reload costs a 22 GB load plus a full re-prefill of the running context.
+- `OLLAMA_MAX_LOADED_MODELS=1`: the default 3 would let a stray second tag load beside the 22 GB resident model and wedge the box.
+
+Optional hardening on the same unit, so it throttles before the box swaps to death (example values for the 31 GB reference box; size per host):
+
+```ini
+[Service]
+MemoryHigh=25G
+MemoryMax=28G
+MemorySwapMax=0
+OOMScoreAdjust=300
+```
+
+Reasoning note: `/v1` honors `reasoning_effort`, and the profile pins `reasoningEffort: low` profile-wide via the options merge, so the reasoning trace cannot crowd out the 8192 window.
+
+Session note: a session's history follows the active agent, so pressing Shift+Tab to a cloud chief resends it to that provider. End a `chief-local` session before switching if the content must stay on-device.
+
 ## Prerequisites
 
 - OpenCode installed and able to locate `~/.config/opencode/`.
@@ -96,7 +167,7 @@ fi
 ```
 
 The sample sets:
-- `default_agent`: `chief-ds+glm`: every new session starts as the hybrid operator agent (DeepSeek operator model, GLM on the verification gates). `chief-ds` and `chief-glm` are the other primaries; press Tab to switch between them.
+- `default_agent`: `chief-ds+glm`: every new session starts as the hybrid operator agent (DeepSeek operator model, GLM on the verification gates). `chief-ds`, `chief-glm`, and `chief-local` are the other primaries; press Shift+Tab to switch between them.
 - `model`: the fallback for any agent without an explicit override; every generated agent carries its own `model` line, so this rarely applies.
 - `subagent_depth`: `2`, allowing a subagent to launch one nested level.
 - `compaction.prune`: `true`, dropping old tool outputs from context to reduce token cost.
@@ -124,10 +195,10 @@ To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/a
 5. Restart OpenCode or reload config.
 
 6. Verify:
-   - Run `/agents` in the TUI; expect `chief-ds`, `chief-glm`, `chief-ds+glm`, plus all installed subagents.
+   - Run `/agents` in the TUI; expect `chief-ds`, `chief-glm`, `chief-ds+glm`, `chief-local`, plus all installed subagents.
    - Check the `skill` tool description; it should list all 12 skills.
    - Type `/` in the TUI; expect the `engineer-prompt` and `fix-bug` commands.
-   - Start a new session; it should begin as `chief-ds+glm`; press Tab to cycle to `chief-ds` and `chief-glm`.
+   - Start a new session; it should begin as `chief-ds+glm`; press Shift+Tab to cycle to `chief-ds`, `chief-glm`, and `chief-local`.
 
 ## Per-Project Install
 
@@ -244,5 +315,5 @@ rm AGENTS.md
 
 - **Agents not listed**: confirm the `.md` files are in a directory OpenCode searches (`~/.config/opencode/agents/` or `.opencode/agents/`) and that YAML frontmatter is valid.
 - **Skills not listed**: confirm each skill is in its own folder with a file named exactly `SKILL.md` and that the frontmatter `name` matches the folder name.
-- **Chief is not the default**: confirm `default_agent: chief-ds+glm` (or `chief-ds` / `chief-glm`) is set in the active `opencode.json` or `opencode.jsonc`.
+- **Chief is not the default**: confirm `default_agent: chief-ds+glm` (or `chief-ds` / `chief-glm` / `chief-local`) is set in the active `opencode.json` or `opencode.jsonc`.
 - **Model overrides not applied**: confirm the provider prefix in `models.yaml` matches your OpenCode provider, then re-run `python3 scripts/apply-models.py` and merge the regenerated `opencode.json.sample` into your active config.

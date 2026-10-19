@@ -107,7 +107,7 @@ class TestApplyModels(unittest.TestCase):
         # Profiles may mix providers per seat, so no single-provider
         # assertion can hold. Keep the typo-catching spirit: every pinned
         # model must use a known provider prefix.
-        known = {"deepseek", "zai-coding-plan", "zai", "google", "openrouter"}
+        known = {"deepseek", "zai-coding-plan", "zai", "google", "openrouter", "ollama"}
         for prefix, profile in self.profiles.items():
             for role, model in profile["roles"].items():
                 self.assertIn(
@@ -129,6 +129,46 @@ class TestApplyModels(unittest.TestCase):
         bad = {"ds": {"roles": {"chief": "vendor/unlisted-model"}}}
         with self.assertRaises(SystemExit):
             apply_models.validate_model_ids(bad)
+
+    def test_colon_model_id_allowed(self):
+        # An Ollama tag carries a colon in the model segment; the allowlist
+        # (not the regex) remains the gate.
+        apply_models.validate_model_ids(
+            {"local": {"roles": {"chief": "ollama/qwen3.6:35b-a3b"}}}
+        )
+
+    def test_profile_options_merge(self):
+        chief = read_frontmatter(GENERATED_DIR / "chief-local.md")
+        self.assertEqual(chief["options"], {"reasoningEffort": "low"})
+        builder = read_frontmatter(GENERATED_DIR / "builder-local.md")
+        self.assertEqual(builder["options"], {"reasoningEffort": "low"})
+        ds_chief = read_frontmatter(GENERATED_DIR / "chief-ds.md")
+        self.assertNotIn("num_ctx", ds_chief.get("options", {}))
+
+    def test_profile_options_bad_type_fails(self):
+        profiles = dict(self.profiles)
+        profiles["zz"] = {
+            "label": "Bad",
+            "options": "nope",
+            "roles": dict(self.profiles["ds"]["roles"]),
+        }
+        with self.assertRaises(SystemExit):
+            apply_models.validate_models(profiles, self.default_profile, ROLES_DIR)
+
+    def test_all_local_agents_pinned_and_tuned(self):
+        local_roles = self.profiles["local"]["roles"]
+        self.assertEqual(len(local_roles), 14)
+        for role in local_roles:
+            fm = read_frontmatter(GENERATED_DIR / f"{role}-local.md")
+            self.assertEqual(fm["model"], "ollama/qwen3.6:35b-a3b", role)
+            self.assertEqual(fm["options"], {"reasoningEffort": "low"}, role)
+
+    def test_malformed_model_ids_fail(self):
+        for bad_id in ("ollama/", "a/b/c", "noshape", "ollama/qwen3:v2:extra"):
+            with self.assertRaises(SystemExit):
+                apply_models.validate_model_ids(
+                    {"x": {"roles": {"chief": bad_id}}}
+                )
 
     def test_idempotent(self):
         _, generated, sample = apply_models.run(REPO)
@@ -241,6 +281,16 @@ class TestApplyModels(unittest.TestCase):
 
     def test_no_skill_model_lines(self):
         apply_models.assert_no_skill_model_lines()
+
+    def test_nonlocal_generated_agent_unchanged(self):
+        fm = read_frontmatter(GENERATED_DIR / "chief-ds+glm.md")
+        self.assertEqual(
+            fm["permission"]["task"], {"*": "deny", "*-ds+glm": "allow"}
+        )
+        self.assertEqual(fm["permission"]["skill"], "allow")
+        self.assertEqual(fm["permission"]["bash"], "allow")
+        self.assertEqual(fm["permission"]["webfetch"], "allow")
+        self.assertEqual(fm["permission"]["websearch"], "allow")
 
 
 if __name__ == "__main__":

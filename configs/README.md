@@ -7,7 +7,7 @@ Provider and model selection now lives in `models.yaml` profiles; no swap step r
 
 - `models.yaml` holds `profiles:` (per-profile role-to-model maps) and `default_profile:`.
 - `scripts/apply-models.py` renders those profiles into `agents/generated/*.md` and `opencode.json.sample`.
-- The primaries are `chief-ds`, `chief-glm`, and `chief-ds+glm` (the hybrid default: DeepSeek volume seats, GLM gates); switch between them with Tab in the TUI.
+- The primaries are `chief-ds`, `chief-glm`, `chief-ds+glm` (the hybrid default: DeepSeek volume seats, GLM gates), and `chief-local` (offline Qwen3); switch between them with Shift+Tab in the TUI.
 
 ## Choosing A Profile
 

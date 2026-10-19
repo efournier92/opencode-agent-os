@@ -38,7 +38,11 @@ SKILLS_DIR = ROOT / "skills"
 SAMPLE_CONFIG = ROOT / "opencode.json.sample"
 
 PROFILE_ID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_+-]*$")
-MODEL_ID_RE = re.compile(r"^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$")
+# The model segment may carry a colon for local tags (for example
+# `ollama/qwen3.6:35b-a3b`); the vendor prefix may not. Exactly one slash.
+MODEL_ID_RE = re.compile(
+    r"^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+(?::[A-Za-z0-9._-]+)?$"
+)
 
 # Matches a single `model:` line. Used only against the frontmatter
 # slice of a file (extracted by strip_frontmatter_model_line), never
@@ -103,6 +107,12 @@ def validate_models(
             )
         if "roles" not in profile:
             raise SystemExit(f"profile '{pid}' missing required key: roles")
+        options = profile.get("options")
+        if options is not None and not isinstance(options, dict):
+            raise SystemExit(
+                f"profile '{pid}' options must be a mapping, "
+                f"got {type(options).__name__}"
+            )
         pinned = set(profile["roles"])
         missing = sorted(role_files - pinned)
         if missing:
@@ -189,8 +199,13 @@ def split_frontmatter(content):
     return lines[1:end], lines[end + 1:]
 
 
-def generate_agent(role_content, model, prefix, is_chief):
-    """Resolve one role file for one profile into generated-file text."""
+def generate_agent(role_content, model, prefix, is_chief, profile_options=None):
+    """Resolve one role file for one profile into generated-file text.
+
+    A profile-level `options` map (models.yaml) is merged over the role's own
+    options, so a profile can lower reasoning effort for every one of its
+    agents without editing the shared role source.
+    """
     text = role_content.replace("{{prefix}}", prefix)
     fm_lines, body_lines = split_frontmatter(text)
     fm = yaml.safe_load("\n".join(fm_lines)) or {}
@@ -198,12 +213,14 @@ def generate_agent(role_content, model, prefix, is_chief):
     # A role source must not pin a model; the generator owns that field.
     fm.pop("model", None)
     out = {"description": fm["description"], "mode": fm["mode"], "model": model}
-    if "options" in fm:
-        out["options"] = fm["options"]
+    merged_options = dict(fm.get("options") or {})
+    merged_options.update(profile_options or {})
+    if merged_options:
+        out["options"] = merged_options
     permission = fm.get("permission")
     if permission is not None:
+        permission = dict(permission)
         if is_chief:
-            permission = dict(permission)
             permission["task"] = {"*": "deny", f"*-{prefix}": "allow"}
         out["permission"] = permission
 
@@ -227,7 +244,13 @@ def render_agents(profiles, roles_dir=ROLES_DIR):
     for prefix, profile in profiles.items():
         for role, model in profile["roles"].items():
             role_content = (roles_dir / f"{role}.md").read_text()
-            content = generate_agent(role_content, model, prefix, role == "chief")
+            content = generate_agent(
+                role_content,
+                model,
+                prefix,
+                role == "chief",
+                profile.get("options"),
+            )
             expected[f"{resolved_name(prefix, role)}.md"] = content
     return expected
 

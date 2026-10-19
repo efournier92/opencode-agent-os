@@ -1,0 +1,67 @@
+# Critique Ledger: LocalChiefPremise
+
+- Goal: A local-only agent OS on this machine (i7-12700H, 4 GB RTX 3050 Laptop, 31 GB RAM), uniform single local model, currently clean qwen3.6:35b-a3b Q4_K_M; decide if a cheaper/faster single model fits the chat+recon bar, and what tuning prevents machine overload. Runtime alternatives in scope; full machine dedication acceptable; second resident model is not. Plus: per-profile capability declarations (chief-local incapable of redteam/implement/ship etc.) enforced in agent-os config, instruction plus permission gate.
+- Started: 2026-10-18
+- Branch: none
+- Intake: capability bar = chat + read-only recon; full machine dedication during runs; uniform single model only; open to alternative runtimes; capability gating must be config-enforced (2026-10-18).
+
+## Findings
+
+- C-20261018-01 | 2026-10-18 | scale | high | high | addressed | Parallel fan-out serializes on one KV slot; worst case re-prefills per switch (3-agent batch ~2.3 h), mitigated by prompt-cache restore | agents/roles/chief.md:54
+  - rebuttal | rejected | https://github.com/ollama/ollama/pull/18265 | Thrash mechanism split: evicted-prompt KV saves to a host prompt cache and restores on prefix match, so the 2.3 h figure holds only on restore failure; serialization itself upheld; memory side tracked as C-20261018-21
+- C-20261018-02 | 2026-10-18 | scale | high | high | addressed | Prefill wall: 20k-token chief context ~7.6 min to first token, 40k ~15.2 min; structural on this CPU, documented as the operating constraint | INSTALL.md:83
+  - rebuttal | addressed | INSTALL.md:83 | No hardware fix exists at 44 tok/s prefill; constraint documented in the perf note, reasoning trace cut via reasoningEffort low, sessions expected short
+- C-20261018-03 | 2026-10-18 | scale | high | medium | addressed | Memory cliff: ~24-25 GB residency on 31 GB with NUM_PARALLEL or ctx growth recreating the OS-eating state; nothing pinned it | models.yaml:42
+  - rebuttal | addressed | INSTALL.md:75 | INSTALL now prints the systemd override: OLLAMA_NUM_PARALLEL=1, MemoryHigh=27G, MemorySwapMax=2G, OOMScoreAdjust=200; cgroup bounds weights plus KV plus host prompt cache
+- C-20261018-04 | 2026-10-18 | scale | high | high | addressed | Served-window footgun: /v1 serves 4096 ctx by default while OpenCode grows to 8k, silently truncating older turns; no override was printed anywhere | INSTALL.md:51
+  - rebuttal | addressed | INSTALL.md:71 | Verifier PASS on docs.ollama.com (4096 default, no /v1 ctx field); override block with OLLAMA_CONTEXT_LENGTH=8192 now in INSTALL
+- C-20261018-05 | 2026-10-18 | scale | high | medium | addressed | keep_alive 5 min default evicts the 22 GB model during quiet bash steps (check.sh, suite-to-green); each return pays reload plus re-prefill | INSTALL.md:83
+  - rebuttal | addressed | INSTALL.md:73 | Verifier PASS on 5-min default and -1 semantics; OLLAMA_KEEP_ALIVE=-1 pinned in the override block (full dedication accepted at intake)
+- C-20261018-06 | 2026-10-18 | scale | medium | high | addressed | limit.output equals limit.context (8192) while reasoning eats the window, leaving near-zero visible-answer budget on full contexts | INSTALL.md:66
+  - rebuttal | addressed | INSTALL.md:66 | limit.output lowered to 4096; reasoningEffort low pinned profile-wide via options merge
+- C-20261018-07 | 2026-10-18 | cost | high | high | rejected | 35B pin reflects the 14-seat uniform rule, not the chat+recon bar; retired 2B ran 70 tok/s GPU-resident | /mnt/bnk/snc/Desk/2026-10-17_OpenCode_Agent_OS_Local_Model_Stack.md:45
+  - rebuttal | rejected | agents/roles/chief.md:11 | Chat+recon IS tool-calling (chief dispatch = task tool, recon = tool loops) and the 2B failed BFCL-V4 43.6 exactly there; family offers nothing between 2B and 35B-A3B and dense 27B ran 3-4 tok/s; cheaper-candidate set is empty
+- C-20261018-08 | 2026-10-18 | cost | medium | high | rejected | Q4_K_M swap lost recorded axes vs IQ4_XS (+3 GB, ctx halved, 236 vs 44 tok/s recorded prefill) | docs/discovery/DISCOVERY.md:8
+  - rebuttal | rejected | /mnt/bnk/snc/Desk/2026-10-17_OpenCode_Agent_OS_Local_Model_Stack.md:62 | Swap was decided on the unrecorded axis: abliterated + bash allow is a prompt-injection foot-gun; axes upheld, indictment reversed; quant re-trial stays a walkthrough option pending measurement
+- C-20261018-09 | 2026-10-18 | cost | medium | high | rejected | 30 tok/s was measured thinking-off while /v1 forces thinking on, so throughput is lower and reasoning eats the window | models.yaml:47
+  - rebuttal | rejected | https://docs.ollama.com/openai | Verifier reversal: /v1 chat completions accepts reasoning_effort fields; stale cannot-disable text corrected in models.yaml and INSTALL; profile pins reasoningEffort low
+- C-20261018-10 | 2026-10-18 | correctness | high | high | addressed | Capability gating absent: no incapable key, no generator branch, no denies or instruction text | scripts/apply-models.py:91
+  - rebuttal | addressed | models.yaml:131 | incapable list + CAPABILITY_MAP + validation + generated denies + Profile Limits section shipped; check.sh green, non-local agents byte-identical
+- C-20261018-11 | 2026-10-18 | correctness | high | high | addressed | Name-only denies bypassable: chief-local keeps bash and edit allow, so gated capabilities run inline | agents/generated/chief-local.md:10
+  - rebuttal | addressed | agents/generated/chief-local.md:15 | Tokens now bind to tool, skill, and task-pattern denies plus instruction layer; git commit/push bash denies added; residual inline bypass accepted for the chat+recon bar per D-20261017-04 precedent
+- C-20261018-12 | 2026-10-18 | correctness | high | high | escalated | On-device claim fails from message one: unset small_model sends session titles to the cloud fallback deepseek/deepseek-flash | opencode.json.sample:3
+  - rebuttal | escalated | https://opencode.ai/docs/config/ | Egress confirmed; schema exposes agent.title.disable (small_model deprecated); runtime 1.19.0 behavior unverified; egress vs disabled titles vs cold-load is human-only
+- C-20261018-13 | 2026-10-18 | correctness | medium | high | addressed | Local agents kept webfetch/websearch allows: egress or dead weight offline; generator had no tool awareness | agents/generated/external-researcher-local.md:14
+  - rebuttal | addressed | agents/generated/chief-local.md:30 | web token denies webfetch/websearch on every local agent and kills external-researcher dispatch; residual egress is bash curl, instruction-gated
+- C-20261018-14 | 2026-10-18 | correctness | medium | medium | addressed | Unpinned built-ins leak to cloud: plan primary and general subagent resolve on the cloud fallback | opencode.json.sample:3
+  - rebuttal | addressed | INSTALL.md:87 | Switch is user-initiated (Shift+Tab) and the session note already warns history resends to the provider; premise scope is the chief-local session, not the TUI as a whole
+- C-20261018-15 | 2026-10-18 | correctness | medium | high | addressed | Skill surface unguarded: global allow-all made redteam, implement-spec, ship-changes, verify-in-browser loadable | opencode.json.sample:9
+  - rebuttal | addressed | agents/generated/chief-local.md:24 | Skill denies emitted for all mapped tokens on every local agent; unmapped skills stay allowed by design (burn-session kept: it confirms first)
+- C-20261018-16 | 2026-10-18 | correctness | medium | high | addressed | Local-only was documented not enforced: share, provider, small_model, OLLAMA_CONTEXT_LENGTH hand-applied, absent from MANAGED | scripts/merge-config.py:18
+  - rebuttal | addressed | INSTALL.md:71 | Machine-level keys are per-host by nature (global config, systemd); INSTALL now carries the exact override block and a strict-on-device note; readiness script deferred as veto option
+- C-20261018-17 | 2026-10-18 | research | high | high | addressed | No smaller Qwen3.6 A3B exists (family: 35B-A3B, 27B dense, FP8s); cheaper: unsloth quants 12.3-17.7 GB, no CPU tok/s data | https://huggingface.co/collections/Qwen/qwen36
+- C-20261018-18 | 2026-10-18 | scale | medium | high | addressed | The 8192 window holds ~4-5k tokens of baseline system context, so compaction fires every few turns at re-prefill cost | agents/generated/chief-local.md:5
+  - rebuttal | addressed | models.yaml:131 | Structural at 8192 served ctx; reasoning trace cut (reasoningEffort low) frees window share; constraint documented in the perf note
+- C-20261018-19 | 2026-10-18 | research | medium | high | addressed | Documented controls exist and are pinned: OLLAMA_NUM_PARALLEL, keep_alive, systemd memory caps; llama-server remains a runtime option | https://docs.ollama.com/faq
+- C-20261018-20 | 2026-10-18 | cost | low | high | addressed | No residency slack: an interleaved cloud session evicts the resident copy and pays a 23 s+ reload | models.yaml:48
+  - rebuttal | addressed | INSTALL.md:73 | OLLAMA_KEEP_ALIVE=-1 keeps the local model resident; interleaving a cloud session is user-initiated and the cost is documented
+- C-20261018-21 | 2026-10-18 | scale | high | high | addressed | Hidden residency: llama-server's default 8192 MiB host prompt cache is scheduler-invisible, on top of the model | https://github.com/ollama/ollama/pull/18265
+  - rebuttal | addressed | INSTALL.md:75 | The cache lives inside the ollama cgroup; MemoryHigh=27G plus MemorySwapMax=2G bound the unit total including the prompt cache
+- C-20261018-22 | 2026-10-18 | correctness | medium | high | addressed | Token map not closed: polish-ui, manage-worktrees, simplify-code, create-spec uncovered; commands have no permission class | scripts/apply-models.py
+  - rebuttal | addressed | agents/generated/chief-local.md:24 | Map closed: simplify-code, create-spec, manage-worktrees under implement; polish-ui under visual; commands stay instruction-layer only (no permission class exists)
+- C-20261018-23 | 2026-10-18 | correctness | medium | high | addressed | Ship gate stops at the skill layer while bash supports per-command patterns: no git commit or git push deny on chief-local | https://opencode.ai/docs/permissions/
+  - rebuttal | addressed | agents/generated/chief-local.md:15 | ship token now emits bash pattern denies git commit* and git push* after the allow rule; last-match-wins documented
+- C-20261018-24 | 2026-10-18 | maintainability | high | high | rejected | Standalone-agents machinery (install branch, test branch, doc passages) has zero entries behind it: speculative generality | scripts/install.sh:58
+  - rebuttal | rejected | docs/rulebook/model-profiles.md:11 | Lane is a recorded decision (D-20261017-05) documented in the installed rulebook; the machinery is 10 guarded lines; revisit when a second entry lands
+- C-20261018-25 | 2026-10-18 | maintainability | medium | medium | rejected | Per-file deny rules on the 8 task-gated local agents are unreachable: the chief's task denies already block their dispatch | agents/generated/builder-local.md:13
+  - rebuttal | rejected | agents/generated/chief-local.md:20 | At-mention reachability outside the task scope is unverified (the un-ship pass itself named it as its reversal condition); defense-in-depth on a security premise is earned
+- C-20261018-26 | 2026-10-18 | maintainability | low | high | addressed | Rulebook restated the local-profile perf diary, a third copy of drifting host numbers; behavior stays, numbers point to INSTALL | docs/rulebook/model-profiles.md:9
+  - rebuttal | addressed | docs/rulebook/model-profiles.md:9 | Diary trimmed to behavior plus an INSTALL pointer
+- C-20261018-27 | 2026-10-18 | maintainability | low | medium | addressed | models.yaml carried a 15-line benchmark diary where a pointer belongs; only pin, serialization, ctx-cap, and reasoning lines are load-bearing | models.yaml:36
+  - rebuttal | addressed | models.yaml:36 | Comment trimmed to load-bearing lines plus INSTALL pointer
+- C-20261018-28 | 2026-10-18 | maintainability | low | medium | addressed | INSTALL hardening constants (MemoryHigh/MemorySwapMax) are per-host values hard-coded in a general install doc | INSTALL.md:102
+  - rebuttal | addressed | INSTALL.md:102 | Snippet labeled example values for the 31 GB reference box, size per host
+- C-20261018-29 | 2026-10-18 | maintainability | low | medium | addressed | A unit test asserted the exact Profile Limits prose wording, coupling the test to phrasing the drift checker already guards | scripts/test_apply_models.py:141
+  - rebuttal | addressed | scripts/test_apply_models.py:141 | Profile Limits test removed with the 2026-10-19 gating removal; the nonlocal regression test remains
+- C-20261018-30 | 2026-10-18 | scale | high | high | addressed | Host drift live: the unit still serves OLLAMA_CONTEXT_LENGTH=16384 (the 8192 lowering was never applied); override block awaits user sudo | INSTALL.md:85
+  - rebuttal | addressed | systemctl show ollama | User applied 2026-10-19 12:16:56 EDT: MemoryHigh=25G, MemoryMax=28G, MemorySwapMax=0, OOMScoreAdjust=300, all five OLLAMA_* env vars live, CONTEXT_LENGTH=8192; verified via systemctl show and cgroup memory.current

@@ -6,7 +6,7 @@ Read a referenced `docs/rulebook/` file with the Read tool when its rule applies
 ## Shape
 
 One **operator** role runs a session: it decomposes work, routes to specialist subagents, verifies output, and writes handoffs, and never re-does their work.
-The operator resolves per profile as `chief-ds`, `chief-glm`, or `chief-ds+glm` (the default); its loop, dispatch tactics, and voice live in `agents/roles/chief.md`.
+The operator resolves per profile as `chief-ds`, `chief-glm`, `chief-ds+glm` (the default), or `chief-local` (offline Qwen3); its loop, dispatch tactics, and voice live in `agents/roles/chief.md`.
 
 ## Delegation Contract (Every Dispatch)
 

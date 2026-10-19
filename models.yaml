@@ -32,6 +32,13 @@
 #   - a builder session compacts, or
 #   - a builder task fails on context size, or
 #   - a single-level builder returns repeated NEED-INPUT from context churn.
+#
+# local: offline profile. Every seat pins ollama/qwen3.6:35b-a3b, the clean
+# Qwen3.6-35B-A3B MoE (Q4_K_M) served from this machine, so no local-profile
+# agent can reach a remote model provider. Only one copy fits in 31 GB RAM,
+# so parallel subagent work serializes. Host context limits and systemd
+# settings live in INSTALL.md, Local Profile Prerequisites. Requires
+# Ollama >= 0.30.0; default_profile stays ds+glm so the profile is opt-in.
 
 default_profile: ds+glm
 
@@ -104,3 +111,24 @@ profiles:
       # vision-capable DeepSeek: critic and builder see with different eyes.
       visual-critic: zai-coding-plan/glm-5.3-flash
       visual-builder: deepseek/deepseek-flash
+  local:
+    label: Local (Qwen3.6 35B-A3B, offline)
+    # Local-only: every seat runs on-device. See INSTALL.md, Local Profile
+    # Prerequisites, for the served context and systemd settings.
+    options:
+      reasoningEffort: low
+    roles:
+      chief: ollama/qwen3.6:35b-a3b
+      verifier: ollama/qwen3.6:35b-a3b
+      claim-critic: ollama/qwen3.6:35b-a3b
+      redteamer: ollama/qwen3.6:35b-a3b
+      referee: ollama/qwen3.6:35b-a3b
+      builder: ollama/qwen3.6:35b-a3b
+      system-fixer: ollama/qwen3.6:35b-a3b
+      external-researcher: ollama/qwen3.6:35b-a3b
+      code-locator: ollama/qwen3.6:35b-a3b
+      context-curator: ollama/qwen3.6:35b-a3b
+      wordsmith: ollama/qwen3.6:35b-a3b
+      phraser: ollama/qwen3.6:35b-a3b
+      visual-critic: ollama/qwen3.6:35b-a3b
+      visual-builder: ollama/qwen3.6:35b-a3b

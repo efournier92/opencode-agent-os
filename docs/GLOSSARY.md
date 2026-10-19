@@ -45,3 +45,7 @@ The interactive final stage where the operator puts only human-only decisions to
 **Convergence**
 
 The state where a round adds no new high-severity finding and every high or medium finding is settled with evidence. _Avoid_: done, finished.
+
+**Local profile**
+
+The profile named `local`, whose every role pins `ollama/qwen3.6:35b-a3b` so the whole crew runs on-device and no local-profile agent is pinned to a remote model provider. _Avoid_: offline mode, local mode.
