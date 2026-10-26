@@ -1,0 +1,68 @@
+# Critique Ledger: Redteam Loop Token Cost
+
+- Goal: Cut redteam loop token spend at least 30 percent per run through shared reads, adaptive lenses, phase restructuring, and effort tiering, without losing high or medium findings; wall-clock trade accepted.
+- Started: 2026-10-26
+- Branch: main
+
+## Findings
+
+- C-20261026-01 | 2026-10-26 | cost | high | high | open | R2 cap-4 is a no-op at the unweighted median: 18 recent redteam parents run a median of 4 lenses, so R1/R3 must carry the whole 30 percent gate | `python3 scripts/cost-report.py`
+  - rebuttal | rejected | `scripts/cost-report.py:21` | Verifier V1: 18 parents, 9 run 5-10 lenses holding 78.3 percent of lens tokens, so a cap bites despite a 4.5 unweighted median
+- C-20261026-02 | 2026-10-26 | cost | high | high | addressed | R5 cannot isolate replay spend: cost-report sums all sessions by agent, so --since mixes replays with other traffic and n=2 cannot prove a median | `scripts/cost-report.py:13`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-03 | 2026-10-26 | cost | medium | medium | open | Operator parent is an uncapped sink that re-reads every lens report each turn, and R1 adds an operator pack-building pass to that same seat | `agents/roles/chief.md:49`
+  - rebuttal | rejected | `sqlite3 -readonly ~/.local/share/opencode/opencode.db` | Parent-window query: loop-phase operator tokens are 0.19M-0.67M while 29.5M sits post-loop in one run; the 21x figure is whole-session chatter
+- C-20261026-04 | 2026-10-26 | cost | medium | medium | addressed | Claim-critic exemption re-enables the seat on doc and spec targets, which are both R5 replay artifacts, so the benchmark skips the code path | `skills/redteam/SKILL.md:71`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-05 | 2026-10-26 | cost | medium | medium | addressed | Pack duplication is re-paid per reader (4k x 4 to 7 readers); the win is deleted turns, and small artifacts make it net-negative | `agents/roles/redteamer.md:50`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-06 | 2026-10-26 | maintainability | high | high | addressed | Pack spec duplicates code-locator output but assigns the work to the operator cost center; a locator dispatch should build it | `agents/roles/code-locator.md:26`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-07 | 2026-10-26 | maintainability | high | high | addressed | R5 scaffolding is unearned for a config trim: replay, recall scoring, dual gates; one goal, one delta, one human pass suffices | `skills/redteam/SKILL.md:55`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-08 | 2026-10-26 | maintainability | medium | high | addressed | Artifact-type lens table has no yield data behind it; keep the hard cap and delete the table | `skills/redteam/SKILL.md:71`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-09 | 2026-10-26 | maintainability | medium | high | addressed | Critics half-trimmed: claim-critic demoted but keeps a role file and three pins, visual-critic untouched; cut both from the loop | `skills/redteam/SKILL.md:71`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-10 | 2026-10-26 | maintainability | low | medium | addressed | Referee-once restates current behavior: Phase 3 re-dispatches only redteamer, builder, verifier | `skills/redteam/SKILL.md:75`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-11 | 2026-10-26 | maintainability | low | medium | open | commands/redteam.md self-declares redundant and restates skill rules; fold no-nesting into the skill, delete only if no slash entry is lost | `commands/redteam.md:21`
+  - rebuttal | rejected | `commands/redteam.md:21` | It is the only tracked /redteam slash entry; keeping it costs nothing per turn, so no change
+- C-20261026-12 | 2026-10-26 | correctness | high | high | addressed | Maintainability cannot move to Phase 4: the 10-17 ledger shows it producing 5 doc fact-error fixes, no deletions | `docs/critique/2026-10-17_Permission-Loosening.md:30`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+  - rebuttal | open | `docs/critique/2026-10-17_Permission-Loosening.md:30` | Verifier V5: 5 of 6 maintainability findings are corrections and 1 is deletion, so the lens stays in Diverge
+- C-20261026-13 | 2026-10-26 | correctness | high | high | addressed | Lens arithmetic breaks the cap: code-change lenses fill 4 while testing is mandatory then, so the loop breaches the cap or drops testing | `skills/redteam/SKILL.md:71`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-14 | 2026-10-26 | correctness | high | high | addressed | Recall experiment is unenforceable: ground-truth ledgers are committed in the tree and lenses hold grep, so withholding has no mechanism | `skills/redteam/SKILL.md:25`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-15 | 2026-10-26 | correctness | high | medium | addressed | Recall denominator is not mechanical: rejected findings and fixed defects still resolve their pointers, so the gate needs curation | `scripts/check_critique.py:61`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-16 | 2026-10-26 | correctness | medium | medium | addressed | Pack gates source access on a formed suspicion, designing out the cold probe that produced three 10-17 findings | `agents/roles/redteamer.md:44`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-17 | 2026-10-26 | reliability | high | high | addressed | R2 routing leaves abuse unreachable, yet the replay target holds three abuse-lens high findings | `docs/critique/2026-10-17_Permission-Loosening.md:13`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+  - rebuttal | open | `docs/critique/2026-10-17_Permission-Loosening.md:13` | Verifier V6 confirms 3 abuse-lens highs; v2 routes abuse for config and permission artifacts
+- C-20261026-18 | 2026-10-26 | reliability | medium | high | addressed | Consolidated rebuttal is a single failure point on the plan-pinned redteamer seat: one 429 kills every rebuttal and the loop burns to the round cap | `models.yaml:91`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-19 | 2026-10-26 | reliability | medium | high | addressed | No pack existence or staleness check: /tmp purge, same-day collision, or a Phase 3 edit shifting lines forces cold reads | `skills/redteam/SKILL.md:75`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-20 | 2026-10-26 | reliability | medium | medium | open | R3 forbids re-dispatching the referee after a veto reopens a CONVERGED item, leaving no evidence path to re-adjudicate | `skills/redteam/SKILL.md:101`
+  - rebuttal | rejected | `skills/redteam/SKILL.md:87` | Dig-deeper re-runs Phases 2-5 including the referee, so re-adjudication after a veto already exists
+- C-20261026-21 | 2026-10-26 | reliability | low | high | addressed | Verbatim excerpts into /tmp with no redaction or TTL can copy secrets out of permission and config artifacts | `skills/redteam/SKILL.md:25`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-22 | 2026-10-26 | cost | low | high | open | Referee-once saving is near zero: referee sessions per parent are already median 1, 15k-806k versus builder 0.69M-68.8M | `scripts/cost-report.py:21`
+  - rebuttal | addressed | `scripts/cost-report.py:21` | Verifier V3 confirms referee median 1 per parent; the referee-once clause is dropped as a saving
+- C-20261026-23 | 2026-10-26 | cost | high | high | addressed | Builder removal is a no-op: in 8 redteam-only parents 7 spent zero builder tokens, so the 0.69M-68.8M range is mixed implementation work | `scripts/cost-report.py:21`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | v2 closes it: pack from code-locator, 1.5k cap, HEAD/staleness guard, testing inside 4, abuse routed, consolidated rebuttal with fail-open, proof narrowed
+- C-20261026-24 | 2026-10-26 | cost | high | high | open | Operator seat is first-order: parent rows 1.0M-34.7M against lens 0.13M-2.46M in the same runs, and R1 grows that seat | `agents/roles/chief.md:49`
+  - rebuttal | rejected | `sqlite3 -readonly ~/.local/share/opencode/opencode.db` | Window split: 0.19M-0.67M during the loop against 29.5M post-loop in one parent; the 21x is whole-session chatter, not loop cost
+- C-20261026-25 | 2026-10-26 | maintainability | high | medium | rejected | Un-ship says delete the whole Proof section as scaffolding | `cat /tmp/redteam-system/design-v2.md`
+  - rebuttal | rejected | `cat /tmp/redteam-system/design-v2.md` | The benchmark is a user-chosen intake decision, not design invention; n=1 with named IDs is the minimal honest proof
+- C-20261026-26 | 2026-10-26 | maintainability | medium | high | addressed | Un-ship says delete the claim-critic and visual-critic clauses | `cat /tmp/redteam-system/design-v2.md`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | Both deleted; specialist critics are out of the loop and their concerns fold into correctness and visual lenses
+- C-20261026-27 | 2026-10-26 | maintainability | low | high | addressed | Un-ship says delete the Kept section as a list of non-changes | `cat /tmp/redteam-system/design-v2.md`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | Section removed
+- C-20261026-28 | 2026-10-26 | maintainability | low | high | addressed | Un-ship says delete the Non-Goals section, which restates other lines | `cat /tmp/redteam-system/design-v2.md`
+  - rebuttal | addressed | `cat /tmp/redteam-system/design-v2.md` | Section removed
+- C-20261026-29 | 2026-10-26 | maintainability | low | high | rejected | Un-ship says delete the intake override line as documenting inherent behavior | `cat /tmp/redteam-system/design-v2.md`
+  - rebuttal | rejected | `cat /tmp/redteam-system/design-v2.md` | One line encodes a real gate: the lens set is fixed at intake and the user can change it there

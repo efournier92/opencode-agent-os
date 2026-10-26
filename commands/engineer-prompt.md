@@ -19,7 +19,7 @@ Pick exactly one, because shape follows it.
 
 - Subagent dispatch.
 - Skill invocation.
-- Operator plan or handoff.
+- Multi-session plan.
 - User-facing LLM prompt.
 
 If no idea followed the command, or the idea is already a finished prompt for one destination, say so and stop.
@@ -38,7 +38,7 @@ Fill the template for the destination.
 
 - Subagent dispatch: the fields defined by the Delegation Contract in `AGENTS.md`.
 - Skill invocation: exact skill name, its argument, and the expected exit claim.
-- Operator plan or handoff: ordered phases, each with a done-check; link existing skills instead of restating them.
+- Multi-session plan: ordered phases, each with a done-check; link existing skills instead of restating them. Session state belongs to `write-handoff`, not this command.
 - User-facing prompt: role, task, constraints, output format, and an observable success condition.
 
 ## Step 5: Verify

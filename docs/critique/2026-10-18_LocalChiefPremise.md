@@ -19,7 +19,7 @@
   - rebuttal | addressed | INSTALL.md:73 | Verifier PASS on 5-min default and -1 semantics; OLLAMA_KEEP_ALIVE=-1 pinned in the override block (full dedication accepted at intake)
 - C-20261018-06 | 2026-10-18 | scale | medium | high | addressed | limit.output equals limit.context (8192) while reasoning eats the window, leaving near-zero visible-answer budget on full contexts | INSTALL.md:66
   - rebuttal | addressed | INSTALL.md:66 | limit.output lowered to 4096; reasoningEffort low pinned profile-wide via options merge
-- C-20261018-07 | 2026-10-18 | cost | high | high | rejected | 35B pin reflects the 14-seat uniform rule, not the chat+recon bar; retired 2B ran 70 tok/s GPU-resident | /mnt/bnk/snc/Desk/2026-10-17_OpenCode_Agent_OS_Local_Model_Stack.md:45
+- C-20261018-07 | 2026-10-18 | cost | high | high | rejected | 35B pin follows the 14-seat uniform rule, not the chat+recon bar; 2B ran 70 tok/s GPU-resident; source doc machine-local | docs/rulebook/model-profiles.md:1
   - rebuttal | rejected | agents/roles/chief.md:11 | Chat+recon IS tool-calling (chief dispatch = task tool, recon = tool loops) and the 2B failed BFCL-V4 43.6 exactly there; family offers nothing between 2B and 35B-A3B and dense 27B ran 3-4 tok/s; cheaper-candidate set is empty
 - C-20261018-08 | 2026-10-18 | cost | medium | high | rejected | Q4_K_M swap lost recorded axes vs IQ4_XS (+3 GB, ctx halved, 236 vs 44 tok/s recorded prefill) | docs/discovery/DISCOVERY.md:8
   - rebuttal | rejected | /mnt/bnk/snc/Desk/2026-10-17_OpenCode_Agent_OS_Local_Model_Stack.md:62 | Swap was decided on the unrecorded axis: abliterated + bash allow is a prompt-injection foot-gun; axes upheld, indictment reversed; quant re-trial stays a walkthrough option pending measurement

@@ -17,8 +17,9 @@ Turns a goal into a sound, evidence-converged, safe-to-ship solution by fanning 
 
 - Walkthrough entries: 7.
 - Rounds: 3.
+- Redteamer dispatches per run: 6, of which up to 4 diverge, 1 is the consolidated rebuttal, and 1 is the un-ship; one extra only for a `NOT-CONVERGED` `high` finding.
 
-Past either cap, the behavior in the phases below applies; the caps are constants, not suggestions.
+Past any of these caps, the behavior in the phases below applies; the caps are constants, not suggestions.
 
 ## Ledger Schema
 
@@ -30,6 +31,7 @@ Path: `docs/critique/YYYY-MM-DD_Topic.md`, one file per run, created when missin
 - Goal: <one line>
 - Started: YYYY-MM-DD
 - Branch: <branch or none>
+- Lens set: <comma list>
 
 ## Findings
 
@@ -38,7 +40,7 @@ Path: `docs/critique/YYYY-MM-DD_Topic.md`, one file per run, created when missin
 ```
 
 - `id` is `C-YYYYMMDD-NN`; its date part equals the `date` field.
-- `lens` is one lowercase token: `security`, `scale`, `reliability`, `cost`, `abuse`, `data-integrity`, `maintainability`, `correctness`, `product`, `compliance`, `visual`, `research`.
+- `lens` is one lowercase token: `security`, `scale`, `reliability`, `cost`, `abuse`, `data-integrity`, `maintainability`, `correctness`, `testing`, `product`, `compliance`, `visual`, `research`.
 - `severity` and `confidence` are each `high`, `medium`, or `low`.
 - `status` is `open`, `addressed`, `rejected`, or `escalated`.
 - `evidence` is a `path:line`, a backticked command, or a URL, and is required for every finding.
@@ -50,7 +52,7 @@ Path: `docs/critique/YYYY-MM-DD_Topic.md`, one file per run, created when missin
 
 Checked by the `referee`.
 
-- `CONVERGED` when the latest round added no new `high` severity finding, every `high` or `medium` finding is `addressed` or `rejected` with evidence, and no `research` finding is `open`.
+- `CONVERGED` when no `high` severity finding raised in the latest round is still `open`, every `high` or `medium` finding is `addressed` or `rejected` with evidence, and no `research` finding is `open`.
 - Otherwise `NOT-CONVERGED`, naming the blocking findings.
 - The loop runs at most 3 rounds; on the cap the `referee` escalates every unresolved `high` or `medium` finding to `HUMAN` with status `escalated`.
 
@@ -62,17 +64,37 @@ Phases in order.
 
 Restate the goal in one line. Run one material question round through the `question` tool, matching `skills/create-spec/SKILL.md` Phase 2: 2-4 options per decision, recommended first, no artificial cap, free-text answer kept. Every decision the user cannot answer becomes a `research` finding with status `open` in the ledger. When the goal needs a design document, delegate design to `create-spec`.
 
+- One `code-locator` dispatch does the recon, so the operator never reads the artifact tree.
+- The operator fixes the lens set at intake: `correctness` plus 3 non-correctness lenses chosen from the goal, with no artifact-type table.
+- `testing` joins the set when functionality changes and counts inside the 4; `maintainability` is allowed.
+- The user may override the lens set at intake.
+- No specialist critic dispatch: a visual artifact takes the `visual` lens, a claim or handoff artifact takes `correctness`.
+
 ### Phase 1: Ledger Init
 
 Write the ledger file with the header. The operator is the only writer.
 
 ### Phase 2: Diverge
 
-Dispatch in one parallel batch: up to 3 recon agents (`code-locator`, `external-researcher`) to kill `research` findings; N `redteamer` dispatches, each a distinct lens; the specialist critics that fit the artifact (`claim-critic`, `visual-critic`); and `builder` tasks for candidate fixes. Cap tool calls per recon dispatch (about 20). Each dispatch follows the Delegation Contract: scope, goal, exact paths, output shape, what not to re-report, shell discipline, and a `NEED-INPUT` clause. Append returned findings to the ledger with new IDs and status `open`.
+- Evidence pack first: built from the `code-locator` dispatch plus operator diff and excerpt lines, target 1,200-1,500 tokens, hard cap 2,000.
+- The pack path is `/tmp/rta-<date>-<topic>-<runid>/pack.md`; its header records `git rev-parse HEAD` and every artifact path used.
+- The operator screens excerpts with one grep for secrets before writing; the pack holds no conclusions, severities, or suspected defects.
+- Every lens reads the pack first and source reads stay unrestricted; each lens checks the header HEAD against current `git rev-parse HEAD` before trusting the pack.
+- Missing or stale pack: regenerate once, then proceed cold.
+- Dispatch in one parallel batch: up to 3 recon agents (`code-locator`, `external-researcher`) to kill `research` findings, and up to 4 `redteamer` dispatches, each a distinct lens.
+- No `builder` dispatch and no specialist critics here; `maintainability` is dispatchable.
+- Cap tool calls per recon dispatch (about 20).
+- Each dispatch follows the Delegation Contract: scope, goal, exact paths, output shape, what not to re-report, shell discipline, and a `NEED-INPUT` clause.
+- Append returned findings to the ledger with new IDs and status `open`.
 
 ### Phase 3: Rebut
 
-Re-dispatch `redteamer`, `builder`, and `verifier` to attack the current findings and each other's findings. A contradiction between findings is settled only by a `verifier` command or a resolving evidence pointer. Record each outcome as a `rebuttal | ` line and set the parent finding's status to `addressed`, `rejected`, or `escalated`.
+- One `redteamer` runs a single consolidated rebuttal over all open findings; `verifier` runs the commands a contradiction needs.
+- At most one `builder`, only for a finding that needs an executable counterexample, written under the run directory, never the repo.
+- A failed rebuttal dispatch leaves its findings open and the round continues; never burn to the cap.
+- Record each outcome as a `rebuttal | ` line and set the parent finding's status to `addressed`, `rejected`, or `escalated`.
+- The `referee` runs once per round; a veto that reopens an item is the only trigger for another dispatch.
+- A `Dig deeper` mini-round is one lens plus one verifier.
 
 ### Phase 4: Un-Ship
 
@@ -97,5 +119,6 @@ Append `[decision]`, `[question]`, and `[outcome]` entries to `docs/discovery/DI
 ## Rules
 
 - The operator is the only ledger writer; subagents never write it.
+- The evidence pack is evidence scaffolding, never a finding store.
 - Settle a contradiction by executed command or resolving pointer, never by counting opinions.
 - The loop ends only when the user explicitly agrees with everything; that agreement is the only trigger for the ship gate.

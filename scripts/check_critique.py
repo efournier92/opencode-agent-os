@@ -20,8 +20,8 @@ MAX_LINE = 240
 MAX_BYTES = 16 * 1024
 LENSES = (
     "security", "scale", "reliability", "cost", "abuse", "data-integrity",
-    "maintainability", "correctness", "product", "compliance", "visual",
-    "research",
+    "maintainability", "correctness", "testing", "product", "compliance",
+    "visual", "research",
 )
 LEVELS = ("high", "medium", "low")
 STATUSES = ("open", "addressed", "rejected", "escalated")

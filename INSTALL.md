@@ -5,7 +5,7 @@ Install this plugin into OpenCode so the multi-agent system is available in ever
 ## What Gets Installed
 
 - Generated per-profile agents in `agents/generated/` to `<config-dir>/agents/`
-- **12 skills** in `skills/` to `<config-dir>/skills/`
+- **14 skills** in `skills/` to `<config-dir>/skills/`
 - **2 commands** in `commands/` to `<config-dir>/commands/`
 - **Shared rulebook** `AGENTS.md` to `~/.config/opencode/AGENTS.md` (global) or `<project-root>/AGENTS.md` (per-project)
 - **Rulebook references** `docs/rulebook/` to `<config-dir>/docs/rulebook/`, linked from `AGENTS.md` and read on demand
@@ -179,12 +179,11 @@ The `edit`/`bash` asks are a fallback only: every generated role sets its own `e
 ```json
 "external_directory": {
   "/tmp/*": "allow",
-  "**/mnt/**": "allow",
-  "~/Downloads/**": "allow"
+  "**/mnt/**": "allow"
 }
 ```
 
-A wildcard matches slashes, so `**/mnt/**` matches any `mnt` directory at any depth and on any machine: `~/mnt/...`, `/mnt/...`, `/Volumes/disk/mnt/...`. Use `~/mnt/**` if the mount point is fixed to the home directory. `~/Downloads/**` expands per machine, so it ports without hardcoding a home path. Never use `~/*` or a top-level `**`: they would also match `~/.ssh` and `~/.config`. Leave `~/.config/opencode/**` out so harness edits keep prompting; that is a speed bump, not a boundary: a bash-capable agent can reach the same path through a symlink planted in an allowed writable root. The `always` option lasts for the current session.
+A wildcard matches slashes, so `**/mnt/**` matches any `mnt` directory at any depth and on any machine: `~/mnt/...`, `/mnt/...`, `/Volumes/disk/mnt/...`. Use `~/mnt/**` if the mount point is fixed to the home directory. Never use `~/*` or a top-level `**`: they would also match `~/.ssh` and `~/.config`. Leave `~/.config/opencode/**` out so harness edits keep prompting; that is a speed bump, not a boundary: a bash-capable agent can reach the same path through a symlink planted in an allowed writable root. The `always` option lasts for the current session.
 
 Pair the allowlist with `read` denies for secrets such as `*.env`, `**/.ssh/**`, and `**/*.pem`, since an allowed directory inherits the workspace read defaults. These denies gate the `read` tool only: `bash` and `grep` do not consult them, so they stop accidental exposure, not a determined or injected agent.
 
@@ -196,7 +195,7 @@ To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/a
 
 6. Verify:
    - Run `/agents` in the TUI; expect `chief-ds`, `chief-glm`, `chief-ds+glm`, `chief-local`, plus all installed subagents.
-   - Check the `skill` tool description; it should list all 12 skills.
+   - Check the `skill` tool description; it should list all 14 skills.
    - Type `/` in the TUI; expect the `engineer-prompt` and `fix-bug` commands.
    - Start a new session; it should begin as `chief-ds+glm`; press Shift+Tab to cycle to `chief-ds`, `chief-glm`, and `chief-local`.
 

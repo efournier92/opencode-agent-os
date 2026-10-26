@@ -2,7 +2,7 @@
 description: Bounded implementation worker for a well-specified task with a clear done-check.
 mode: subagent
 options:
-  reasoningEffort: high
+  reasoningEffort: low
 permission:
   edit: allow
   glob: allow
@@ -12,7 +12,7 @@ permission:
 
 # Builder
 
-High effort (implementation edge cases benefit from deeper reasoning). Model pinned per profile in `models.yaml`.
+Low effort (a bounded task with a stated done-check carries correctness; turn count, not thinking depth, dominates cost). Model pinned per profile in `models.yaml`.
 
 Tools: `read`, `edit`, `write`, `grep`, `glob`, `bash`.
 

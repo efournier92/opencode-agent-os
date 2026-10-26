@@ -32,6 +32,7 @@ VALID = HEADER + (
     + finding("C-20261010-02", "2026-10-10", "scale", "medium", "low", "addressed", "another")
     + finding("C-20261010-03", "2026-10-10", "cost", "low", "medium", "rejected", "third")
     + finding("C-20261010-04", "2026-10-10", "reliability", "high", "low", "escalated", "fourth")
+    + finding("C-20261010-05", "2026-10-10", "testing", "medium", "high", "open", "fifth")
     + "  - rebuttal | addressed | foo.md:1 | fixed\n"
 )
 

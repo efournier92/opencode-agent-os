@@ -35,7 +35,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 1. **Run `/agents` in the OpenCode TUI**
     - Expect all primaries and their crews: `chief-ds`, `chief-glm`, `chief-ds+glm`, `chief-local`, and each `<role>-<profile>` subagent *(`builder-ds`, `verifier-ds+glm`, etc).*
-2. The `skill` tool description should list all 13 skills *(`create-spec`, `implement-spec`, etc).*
+2. The `skill` tool description should list all 14 skills *(`create-spec`, `implement-spec`, etc).*
 3. Typing `/engineer-prompt` in the TUI autocompletes the command.
 
 ## Contents
@@ -129,7 +129,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 *Mode ships with each role. Each profile injects a concrete model per role from `models.yaml` (see Model Profiles); the primaries are `chief-ds`, `chief-glm`, `chief-ds+glm`, and `chief-local`.*
 
-### `skills/` (13 Skills)
+### `skills/` (14 Skills)
 
 - 1 directory per skill, each with a `SKILL.md` inside, capped at 200 lines; detail moves to sibling files.
 
@@ -148,6 +148,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `simplify-code` | Force the laziest, minimal solution that works: cut over-engineering, reuse existing code, ship the smallest diff. |
 | `polish-ui` | Sleek, distinctive frontend design guidance: typography, palette, layout, and anti-AI-slop checks. |
 | `burn-session` | Delete the current session from local history once you quit, after confirming. Session-only. |
+| `prune-sessions` | Delete session families idle past 7 days, revoke their shares, and vacuum the database once OpenCode exits. |
 
 ### `commands/` (4 Commands)
 

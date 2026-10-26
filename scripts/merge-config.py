@@ -6,8 +6,10 @@ Usage:
     merge-config.py <existing-config> <sample-config>
 
 Only the leaf paths listed in MANAGED are overridden; every other key in the
-existing config is preserved. The existing file is rewritten as indent-2 JSON
-only when a managed value actually changes.
+existing config is preserved. Paths in IF_ABSENT leave an existing value
+untouched, so a user who hardened one keeps their value; a missing key still
+receives the default. The existing file is
+rewritten as indent-2 JSON only when a managed value actually changes.
 """
 
 import json
@@ -23,6 +25,10 @@ MANAGED = [
     "agent.scout.disable",
     "permission.external_directory./tmp/*",
 ]
+
+# Managed paths that leave an existing value untouched. A user who hardened
+# the /tmp allow keeps their value; a missing key still receives the default.
+IF_ABSENT = frozenset({"permission.external_directory./tmp/*"})
 
 
 def get(data, path):
@@ -58,7 +64,7 @@ def merge(existing, sample):
         if not present:
             continue
         old, had = get(existing, path)
-        if had and old == value:
+        if had and (path in IF_ABSENT or old == value):
             continue
         set_leaf(existing, path, value)
         changes.append((path, old, value, had))

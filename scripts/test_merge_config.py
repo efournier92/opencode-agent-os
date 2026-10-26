@@ -60,6 +60,28 @@ class TestMergeConfig(unittest.TestCase):
         self.assertIn("set default_agent:", out)
         self.assertIn("wrote ", out)
 
+    def test_tmp_allow_present_value_wins(self):
+        existing = {
+            "permission": {"external_directory": {"/tmp/*": "deny"}},
+            "default_agent": "stale",
+        }
+        code, text, _, _ = run_merge(json.dumps(existing))
+        self.assertEqual(code, 0)
+        cfg = json.loads(text)
+        self.assertEqual(
+            cfg["permission"]["external_directory"], {"/tmp/*": "deny"}
+        )
+        sample = json.loads(SAMPLE.read_text())
+        self.assertEqual(cfg["default_agent"], sample["default_agent"])
+
+    def test_tmp_allow_reseeded_when_key_absent(self):
+        existing = {"permission": {"external_directory": {"~/code/**": "allow"}}}
+        code, text, _, _ = run_merge(json.dumps(existing))
+        self.assertEqual(code, 0)
+        cfg = json.loads(text)
+        self.assertEqual(cfg["permission"]["external_directory"]["/tmp/*"], "allow")
+        self.assertEqual(cfg["permission"]["external_directory"]["~/code/**"], "allow")
+
     def test_nested_sibling_preserved(self):
         existing = {"compaction": {"reserved": 20000}}
         code, text, _, _ = run_merge(json.dumps(existing))

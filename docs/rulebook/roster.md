@@ -39,6 +39,7 @@ The live crew and skills are also listed by the `task` and `skill` tools; this t
 | `skills/simplify-code/SKILL.md` | skill | forces the laziest, minimal solution that works to cut code volume |
 | `skills/polish-ui/SKILL.md` | skill | sleek, distinctive frontend design: typography, palette, layout, anti-slop, verification checklist |
 | `skills/burn-session/SKILL.md` | skill | deletes the current session from local history on quit, with confirmation |
+| `skills/prune-sessions/SKILL.md` | skill | deletes session families idle past 7 days, revokes shares, vacuums after quit |
 | `commands/engineer-prompt.md` | command | user-invoked prompt engineering; adds no model context until run |
 | `commands/fix-bug.md` | command | red-green bug-fix loop: reproduce, fix via `builder`, prove via `verifier`; explicit-invocation only |
 | `commands/redteam.md` | command | pressure-tests a goal through `redteam`; explicit-invocation only |

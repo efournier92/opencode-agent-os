@@ -31,7 +31,7 @@ Reads a critique ledger and decides convergence by evidence, not opinion. Classi
   - `HUMAN`: only an irreversible, costly, product-priority, cross-system, or values call that evidence cannot settle.
 - **Rank the `HUMAN` set** by severity times confidence times irreversibility, highest first.
 - **Convergence verdict** per the predicate:
-  - `CONVERGED` when the latest round added no new `high` severity finding, every `high` or `medium` finding is `addressed` or `rejected` with evidence, and no `research` finding is `open`.
+  - `CONVERGED` when no `high` severity finding raised in the latest round is still `open`, every `high` or `medium` finding is `addressed` or `rejected` with evidence, and no `research` finding is `open`.
   - Otherwise `NOT-CONVERGED`, naming the blocking findings.
   - On the 3-round cap, escalate every unresolved `high` or `medium` finding to `HUMAN` with status `escalated`.
 - **Never fixes, never writes the ledger.** Findings and the agenda only; the operator is the sole writer.

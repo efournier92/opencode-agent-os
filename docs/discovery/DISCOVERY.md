@@ -5,6 +5,13 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/discovery, plugin/skill
 
 ## Entries
 
+- D-20261026-01 | 2026-10-26 | [outcome] | plugin/skills | Redteam loop redesigned for tokens: shared pack, 4-lens cap, consolidated rebuttal, 6-dispatch budget; replay hit the bar at 694k | docs/critique/2026-10-26_RedteamTokenCost.md
+- D-20261026-02 | 2026-10-26 | [decision] | plugin/skills | Evidence pack is built by one code-locator dispatch, 1.2-1.5k tokens, HEAD-guarded; lenses read it first and source reads stay unrestricted | skills/redteam/SKILL.md:79
+- D-20261026-03 | 2026-10-26 | [trap] | plugin/agents | Agent rules concat after global and last match wins, so role bash allow beats the global ask; bash and grep skip read denies | docs/critique/2026-10-26_PermissionsReplay.md:11
+- D-20261026-04 | 2026-10-26 | [trap] | plugin/architecture | merge-config force-merges permission.external_directory./tmp/* every install, silently reverting a user who removed it | scripts/merge-config.py:24
+- D-20261026-05 | 2026-10-26 | [outcome] | plugin/skills | CONVERGED clause now keys on "still open", so a high finding rejected inside the round no longer blocks | skills/redteam/SKILL.md:55
+- D-20261025-01 | 2026-10-25 | [decision] | plugin/skills | Session retention: 7 days; `prune-sessions` wipes expired families, spares the newest, revokes shares, defers vacuum to exit; curator applies it | skills/prune-sessions/SKILL.md
+- D-20261025-02 | 2026-10-25 | [trap] | plugin/architecture | Session delete leaves event rows (no session FK); old events held 16 GB of an 18.9 GB DB, so prune events by aggregate_id first | skills/prune-sessions/scripts/prune_sessions.py
 - D-20261019-01 | 2026-10-19 | [decision] | plugin/architecture | Kept chief-local core; removed capability gating, standalone lane, archive retrofit | models.yaml
 - D-20261019-02 | 2026-10-19 | [question] | plugin/architecture | Title egress accepted; num_ctx dropped from profile options as advisory | INSTALL.md
 - D-20261019-03 | 2026-10-19 | [outcome] | plugin/architecture | Minimality redteam converged: 18 findings, 14 settled, 4 human decisions | docs/critique/2026-10-19_ChiefLocalMinimality.md
@@ -26,7 +33,6 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/discovery, plugin/skill
 - D-20261010-03 | 2026-10-10 | [decision] | plugin/agents | Added adversary (lens red-team) and adjudicator (convergence gate, minimal agenda); ds+glm pins both on GLM flash and flagship | docs/specs/2026-10-10_Grill.md
 - D-20261010-04 | 2026-10-10 | [decision] | plugin/architecture | Critique ledger Markdown-first at docs/critique/, operator-only writes; SQLite graduation on concurrency, size, or query triggers | docs/specs/2026-10-10_Grill.md
 - D-20261010-06 | 2026-10-10 | [trap] | plugin/architecture | Bare `scripts/lint-markdown.py` in AGENTS.md reads project-local, so a chief in a non-plugin repo reports a missing path; only capture-session qualifies it | AGENTS.md:43
-- D-20261010-05 | 2026-10-10 | [decision] | plugin/skills | Grill walkthrough caps 7 batched human-only decisions and 3 rounds with evidence-gated convergence; shipping stays confirm-gated | docs/specs/2026-10-10_Grill.md
 - D-20261009-01 | 2026-10-09 | [decision] | plugin/architecture | QualityGates hardened after red-team: green needs executed assertions, new-file red ties to green, CRAP drops uncovered functions | docs/rulebook/quality-gates.md
 - D-20261009-02 | 2026-10-09 | [decision] | plugin/agents | Approved QualityGates spec: a per-task quality gate (green proof, red proof, CRAP check) makes tests constrain the change; pilot deferred | docs/specs/2026-10-09_QualityGates.md
 - D-20261009-03 | 2026-10-09 | [decision] | plugin/discovery | Adopted entry IDs D-YYYYMMDD-NN and per-ID archive files under docs/discovery/archive/; validator checks IDs and headings | docs/specs/2026-10-09_DiscoveryHardening.md
@@ -35,9 +41,3 @@ Scope tokens: plugin/agents, plugin/architecture, plugin/discovery, plugin/skill
 - D-20261008-01 | 2026-10-08 | [decision] | plugin/architecture | ds+glm retuned: verifier/visual-critic/phraser -> glm-5.3-flash, product-critic -> deepseek-flash; GLM kept where volume or vision rules out the flagship | models.yaml:76
 - D-20261008-02 | 2026-10-08 | [find] | plugin/architecture | glm-5.3-flash: native multimodal, 1M ctx, 3x plan quota, 4.4x smaller KV, ~9x cheaper pay-go than glm-5.3; glm-5.3 is text-only | https://docs.z.ai/guides/vlm/glm-5.3-flash
 - D-20261008-03 | 2026-10-08 | [find] | plugin/architecture | deepseek-flash (V4.1-Flash) cache-hit input $0.003/1M off-peak, $0.006 peak - ~10x cheaper cached reads than glm-5.3-flash | https://api-docs.deepseek.com/quick_start/pricing
-- D-20261005-09 | 2026-10-05 | [trap] | plugin/architecture | high->max reasoning-effort is high-variance on deepseek-flash (max/high 1.35x/0.41x/1.74x); treat max raises as cheap bets | `opencode run --variant max`
-- D-20261005-10 | 2026-10-05 | [outcome] | plugin/architecture | effort is live: same prompt on opencode->deepseek-flash gave reasoning low 73/229 vs max 332/323 at equal input; direct API low 128 vs max 182 | `opencode run --variant max`
-- D-20261005-11 | 2026-10-05 | [decision] | plugin/architecture | Effort map: max for the four critic/gate seats; low for code-locator, context-curator, external-researcher; rest high (DeepSeek default) | agents/roles/claim-critic.md:5
-- D-20261005-12 | 2026-10-05 | [decision] | plugin/architecture | Retired deepseek-v4-pro: `ds` profile's four gate seats now all-flash; v4-pro is phasing out, 3.3x-7.3x costlier, V4.1-Flash leads on performance | models.yaml:38
-- D-20261005-13 | 2026-10-05 | [decision] | plugin/architecture | Dropped model-tier language from live docs; one hop role->model id; 2026-10-01 spec keeps history under a superseded banner | docs/rulebook/model-profiles.md:5
-- D-20261005-14 | 2026-10-05 | [decision] | plugin/architecture | Markdown style covers posted PR/issue bodies and requires a blank line after each heading; ship-changes lints a drafted PR body first | docs/rulebook/markdown-style.md:14

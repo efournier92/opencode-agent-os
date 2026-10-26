@@ -6,6 +6,7 @@ Read a referenced `docs/rulebook/` file with the Read tool when its rule applies
 ## Shape
 
 One **operator** role runs a session: it decomposes work, routes to specialist subagents, verifies output, and writes handoffs, and never re-does their work.
+Its own `bash` is for verification spot-checks, never for exploration; `edit`/`write` on project files belongs to a subagent.
 The operator resolves per profile as `chief-ds`, `chief-glm`, `chief-ds+glm` (the default), or `chief-local` (offline Qwen3); its loop, dispatch tactics, and voice live in `agents/roles/chief.md`.
 
 ## Delegation Contract (Every Dispatch)
@@ -47,9 +48,17 @@ When the same friction appears twice, dispatch `system-fixer` in improvement mod
 - Use absolute paths instead of `cd`.
 - Scope git commands explicitly to a path, not cwd.
 - Never combine `cd` with `&&`-chains or output redirection.
-- One simple command per shell call where practical.
+- Batch independent read-only commands as parallel calls in one message: every assistant turn re-reads the whole context, so N separate calls cost N context reads and N model turns.
+- Keep mutating commands to one per shell call, and never chain a write with a read of its own result.
 - Keep read-only work to side-effect-free commands (status/log/diff/show, grep, ls, find, head, tail).
 - Use `/tmp` for scratch files; it is allowed by default and does not prompt.
+
+## Tool-Call Hygiene (Failed Calls Burn Whole Turns)
+
+- `edit`: read the target region in this session first; when `oldString` is not found, re-read and retry once with fresh context instead of guessing again.
+- `read`: confirm a path you have not just seen in tool output exists (`glob`) before reading it.
+- `grep`: on minified or generated files pass `--max-columns=200`, or the tool fails on oversized records.
+- `webfetch`: a paywall, bot block, or 404 rarely recovers on retry; switch source or fall back to search instead of repeating the fetch.
 
 ## Stash Discipline (Destructive Git Operations)
 

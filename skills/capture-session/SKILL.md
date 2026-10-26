@@ -111,7 +111,7 @@ Length: no hard cap, but a topic set can legitimately run long (a full rollout o
 4. **Gather.** Pull the concrete evidence from the session: paths, commands run, results, decisions. Do not invent facts not actually established.
 5. **Write** to the content contract, terse, with the H1 as a human title.
 6. **Sync the index.** If the set has a `<Project_Label>_Instructions.md`, add this file's entry and refresh any snapshot it holds.
-7. **Record discovery.** If the repo has opted in with a `docs/discovery/` directory, append a one-line entry with an ID to its `DISCOVERY.md` linking this file, so the capture is findable without loading it. The link is a path token and counts as external evidence only when the capture sits outside `docs/discovery/`; a typed entry still needs external evidence. Otherwise skip (the capture itself is the durable record).
+7. **Record discovery.** If the repo has opted in with a `docs/discovery/` directory, append an entry linking this file, following `log-discoveries` for the ID, format, caps, and evidence rule. Otherwise skip (the capture itself is the durable record).
 8. **Verify**, then report.
 
 ## Verify

@@ -38,7 +38,7 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(
                 len(list((root / "agents").glob("*.md"))), expected_agent_count()
             )
-            self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 13)
+            self.assertEqual(len(list((root / "skills").glob("*/SKILL.md"))), 14)
             for name in ("engineer-prompt.md", "fix-bug.md"):
                 self.assertEqual(
                     (root / "commands" / name).read_bytes(),
