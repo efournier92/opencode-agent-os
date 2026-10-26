@@ -35,6 +35,7 @@
   - rebuttal | addressed | scripts/install.sh:45 | User approved install; the live config tree is copied to tmp first, so rollback is a copy back.
 - C-20261026-23 | 2026-10-26 | reliability | low | high | rejected | A preserved live models.yaml could disagree with shipped generated agents | scripts/install.sh:85
   - rebuttal | rejected | models.yaml:1 | Verified byte-identical to the live copy, so regeneration stays consistent.
+  - rebuttal | rejected | models.yaml:1 | After rebasing onto the chief-local commit, install kept the older live models.yaml, so the new local profile was absent; copied the repo file over it and re-verified identical.
 - C-20261026-24 | 2026-10-26 | maintainability | medium | high | addressed | The prune-sessions vertical is a new feature riding a retune push | skills/prune-sessions/SKILL.md:1
   - rebuttal | addressed | skills/prune-sessions/SKILL.md:1 | One commit follows the push directive; a file-level split would put the Downloads doc change in the prune commit.
 - C-20261026-25 | 2026-10-26 | correctness | high | high | addressed | Docstring claims a removed key stays removed; the file's own test proves re-seeding | scripts/merge-config.py:28
