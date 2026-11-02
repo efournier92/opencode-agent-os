@@ -2,7 +2,7 @@
 description: Bounded implementation worker for a well-specified task with a clear
   done-check.
 mode: subagent
-model: deepseek/deepseek-flash
+model: opencode-go/deepseek-v4.1-flash
 options:
   reasoningEffort: low
 permission:

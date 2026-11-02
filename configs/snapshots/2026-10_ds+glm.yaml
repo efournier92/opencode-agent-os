@@ -1,0 +1,36 @@
+# Snapshot of active model profile: ds+glm (snapshot month 2026-10).
+# Kept active in models.yaml and installed; this is a reference copy.
+
+ds+glm:
+  label: DeepSeek + GLM hybrid
+  # Agent ids are lowercase `<role>-ds+glm` (chief-ds+glm, verifier-ds+glm, ...);
+  # the TUI prettifies ids for display (chief-ds+glm shows as Chief-Ds+Glm).
+  roles:
+    # Operator re-reads full session context every turn; pay-go beats plan credits.
+    chief: deepseek/deepseek-flash
+    # GLM research strength on the highest-stakes, lowest-turn text gates; the
+    # vendor split also keeps the review layer independent of the DeepSeek
+    # operator and builder.
+    claim-critic: zai-coding-plan/glm-5.3
+    # verifier is the one high-turn GLM gate (prove loops, suites); glm-5.3-flash
+    # holds GLM's independent eyes at 3x plan quota and a 4.4x smaller KV cache.
+    verifier: zai-coding-plan/glm-5.3-flash
+    # The critique layer sits off the DeepSeek operator/builder vendor: an
+    # independent redteamer and referee catch failure modes the DeepSeek
+    # builder shares with its own critic.
+    redteamer: zai-coding-plan/glm-5.3-flash
+    referee: zai-coding-plan/glm-5.3
+    # wordsmith keeps flagship prose: long-form wording is the seat's whole point.
+    wordsmith: zai-coding-plan/glm-5.3
+    # phraser is short, interactive riffing; glm-5.3-flash suffices and is cheaper.
+    phraser: zai-coding-plan/glm-5.3-flash
+    # Many-turn volume seats; deepseek-flash cache-hit input ~$0.003/1M off-peak.
+    builder: deepseek/deepseek-flash
+    system-fixer: deepseek/deepseek-flash
+    external-researcher: deepseek/deepseek-flash
+    code-locator: deepseek/deepseek-flash
+    context-curator: deepseek/deepseek-flash
+    # visual-critic on GLM's native multimodal lane, visual-builder on
+    # vision-capable DeepSeek: critic and builder see with different eyes.
+    visual-critic: zai-coding-plan/glm-5.3-flash
+    visual-builder: deepseek/deepseek-flash

@@ -2,7 +2,7 @@
 description: Read-only adversarial critic that attacks a candidate solution through
   one assigned lens and returns evidence-backed findings, never fixes.
 mode: subagent
-model: zai-coding-plan/glm-5.3-flash
+model: opencode-go/deepseek-v4.1-flash
 options:
   reasoningEffort: max
 permission:

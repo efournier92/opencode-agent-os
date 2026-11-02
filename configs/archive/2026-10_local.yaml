@@ -1,0 +1,26 @@
+# Archived model profile: local (archive month 2026-10).
+# Retired from models.yaml; not generated or installed.
+# Restore: re-indent under `profiles:` in models.yaml, then run
+# python3 scripts/apply-models.py
+
+local:
+  label: Local (Qwen3.6 35B-A3B, offline)
+  # Local-only: every seat runs on-device. See INSTALL.md, Local Profile
+  # Prerequisites, for the served context and systemd settings.
+  options:
+    reasoningEffort: low
+  roles:
+    chief: ollama/qwen3.6:35b-a3b
+    verifier: ollama/qwen3.6:35b-a3b
+    claim-critic: ollama/qwen3.6:35b-a3b
+    redteamer: ollama/qwen3.6:35b-a3b
+    referee: ollama/qwen3.6:35b-a3b
+    builder: ollama/qwen3.6:35b-a3b
+    system-fixer: ollama/qwen3.6:35b-a3b
+    external-researcher: ollama/qwen3.6:35b-a3b
+    code-locator: ollama/qwen3.6:35b-a3b
+    context-curator: ollama/qwen3.6:35b-a3b
+    wordsmith: ollama/qwen3.6:35b-a3b
+    phraser: ollama/qwen3.6:35b-a3b
+    visual-critic: ollama/qwen3.6:35b-a3b
+    visual-builder: ollama/qwen3.6:35b-a3b

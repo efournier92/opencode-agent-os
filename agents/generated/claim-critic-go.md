@@ -2,7 +2,7 @@
 description: Red-team reviewer that attacks handoffs, plans, diffs, and claims for
   fake progress before they are trusted.
 mode: subagent
-model: zai-coding-plan/glm-5.3
+model: opencode-go/glm-5.3-flash
 options:
   reasoningEffort: max
 permission:

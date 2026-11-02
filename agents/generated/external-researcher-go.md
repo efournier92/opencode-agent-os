@@ -2,7 +2,7 @@
 description: Cheap external-research agent for docs, versions, APIs, and changelogs
   outside the codebase.
 mode: subagent
-model: deepseek/deepseek-flash
+model: opencode-go/deepseek-v4.1-flash
 options:
   reasoningEffort: low
 permission:

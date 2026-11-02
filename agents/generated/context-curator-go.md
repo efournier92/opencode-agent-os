@@ -2,7 +2,7 @@
 description: Hygiene agent for instruction docs, memory index, and handoffs; keeps
   context lean and claims true.
 mode: subagent
-model: deepseek/deepseek-flash
+model: opencode-go/deepseek-v4.1-flash
 options:
   reasoningEffort: low
 permission:

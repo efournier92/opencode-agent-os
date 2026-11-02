@@ -2,7 +2,7 @@
 description: Repairs the agent system itself (configs, hooks, instruction docs) and
   runs improvement mode for recurring failures.
 mode: subagent
-model: deepseek/deepseek-flash
+model: opencode-go/deepseek-v4.1-flash
 options:
   reasoningEffort: high
 permission:

@@ -103,11 +103,35 @@ class TestApplyModels(unittest.TestCase):
             config["permission"]["external_directory"], {"/tmp/*": "allow"}
         )
 
+    def test_sample_read_denies_secrets(self):
+        read = json.loads(SAMPLE.read_text())["permission"]["read"]
+        for path in (
+            "**/.env",
+            "*.env",
+            "**/.ssh/**",
+            "**/*.pem",
+            "**/auth.json",
+            "**/.aws/credentials",
+            "**/.netrc",
+        ):
+            self.assertEqual(read.get(path), "deny", path)
+
+    def test_role_sources_have_no_read_permission(self):
+        apply_models.assert_no_role_read_permission()
+
     def test_role_models_use_known_providers(self):
         # Profiles may mix providers per seat, so no single-provider
         # assertion can hold. Keep the typo-catching spirit: every pinned
         # model must use a known provider prefix.
-        known = {"deepseek", "zai-coding-plan", "zai", "google", "openrouter", "ollama"}
+        known = {
+            "deepseek",
+            "zai-coding-plan",
+            "zai",
+            "google",
+            "openrouter",
+            "ollama",
+            "opencode-go",
+        }
         for prefix, profile in self.profiles.items():
             for role, model in profile["roles"].items():
                 self.assertIn(
@@ -138,12 +162,20 @@ class TestApplyModels(unittest.TestCase):
         )
 
     def test_profile_options_merge(self):
-        chief = read_frontmatter(GENERATED_DIR / "chief-local.md")
-        self.assertEqual(chief["options"], {"reasoningEffort": "low"})
-        builder = read_frontmatter(GENERATED_DIR / "builder-local.md")
-        self.assertEqual(builder["options"], {"reasoningEffort": "low"})
-        ds_chief = read_frontmatter(GENERATED_DIR / "chief-ds.md")
-        self.assertNotIn("num_ctx", ds_chief.get("options", {}))
+        role = (ROLES_DIR / "verifier.md").read_text()
+
+        def options(profile_options=None):
+            rendered = apply_models.generate_agent(
+                role, "deepseek/deepseek-flash", "ds", False, profile_options
+            )
+            lines = rendered.split("\n")
+            end = lines.index("---", 1)
+            return yaml.safe_load("\n".join(lines[1:end])).get("options", {})
+
+        self.assertEqual(
+            options({"reasoningEffort": "low"}), {"reasoningEffort": "low"}
+        )
+        self.assertEqual(options(), {"reasoningEffort": "high"})
 
     def test_profile_options_bad_type_fails(self):
         profiles = dict(self.profiles)
@@ -155,13 +187,32 @@ class TestApplyModels(unittest.TestCase):
         with self.assertRaises(SystemExit):
             apply_models.validate_models(profiles, self.default_profile, ROLES_DIR)
 
-    def test_all_local_agents_pinned_and_tuned(self):
-        local_roles = self.profiles["local"]["roles"]
-        self.assertEqual(len(local_roles), 14)
-        for role in local_roles:
-            fm = read_frontmatter(GENERATED_DIR / f"{role}-local.md")
-            self.assertEqual(fm["model"], "ollama/qwen3.6:35b-a3b", role)
-            self.assertEqual(fm["options"], {"reasoningEffort": "low"}, role)
+    def test_every_profile_has_fourteen_seats(self):
+        for prefix, profile in self.profiles.items():
+            self.assertEqual(len(profile["roles"]), 14, prefix)
+
+    def test_shipped_profiles_exact(self):
+        self.assertEqual(
+            set(self.profiles), {"ds", "glm", "go", "local"}
+        )
+
+    def test_default_profile_is_go(self):
+        self.assertEqual(self.default_profile, "go")
+
+    def test_profiles_share_role_names(self):
+        expected = set(next(iter(self.profiles.values()))["roles"])
+        for prefix, profile in self.profiles.items():
+            self.assertEqual(set(profile["roles"]), expected, prefix)
+        self.assertEqual(
+            len(list(GENERATED_DIR.glob("*.md"))),
+            14 * len(self.profiles),
+        )
+
+    def test_go_profile_excludes_glm_5_3(self):
+        # 2026-11-01: the go profile runs only deepseek-v4.1-flash and
+        # glm-5.3-flash; the flagship glm-5.3 was retired from it.
+        for role, model in self.profiles["go"]["roles"].items():
+            self.assertNotEqual(model, "opencode-go/glm-5.3", role)
 
     def test_malformed_model_ids_fail(self):
         for bad_id in ("ollama/", "a/b/c", "noshape", "ollama/qwen3:v2:extra"):
@@ -283,9 +334,9 @@ class TestApplyModels(unittest.TestCase):
         apply_models.assert_no_skill_model_lines()
 
     def test_nonlocal_generated_agent_unchanged(self):
-        fm = read_frontmatter(GENERATED_DIR / "chief-ds+glm.md")
+        fm = read_frontmatter(GENERATED_DIR / "chief-ds.md")
         self.assertEqual(
-            fm["permission"]["task"], {"*": "deny", "*-ds+glm": "allow"}
+            fm["permission"]["task"], {"*": "deny", "*-ds": "allow"}
         )
         self.assertEqual(fm["permission"]["skill"], "allow")
         self.assertEqual(fm["permission"]["bash"], "allow")

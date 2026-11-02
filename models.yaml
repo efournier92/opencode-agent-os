@@ -2,17 +2,8 @@
 # Run scripts/apply-models.py after editing to regenerate agents/generated/
 # and opencode.json.sample.
 #
-# ds+glm (default): GLM plan credits are charged on cached
-# context re-reads too (input 6.9 / cached 1.7 / output 24 per 10k tokens
-# for glm-5.3), so any many-turn seat on glm-5.3 dominates the weekly
-# quota. Measured 2026-10: an operator on glm-5.3 burned ~75% of a week's
-# credits in 351 steps, almost entirely cached input; DeepSeek carried
-# ~80% of all steps for single-digit dollars pay-as-you-go. So GLM 5.3
-# stays only on low-volume, high-stakes text seats plus language quality;
-# every many-turn seat runs on pay-as-you-go DeepSeek. Where GLM's
-# independent failure modes are worth keeping but volume or vision rules
-# out the flagship, glm-5.3-flash carries the seat: 3x plan quota, native
-# multimodal input, and a 4.4x smaller KV cache, at a modest coding drop.
+# ds+glm was retired on 2026-11-01; its definition and rationale now live in
+# configs/archive/2026-11_ds+glm.yaml.
 #
 # glm-5.3 is text-only; glm-5.3-flash is native multimodal
 # (image/video/file). visual-critic runs on glm-5.3-flash and
@@ -38,9 +29,9 @@
 # agent can reach a remote model provider. Only one copy fits in 31 GB RAM,
 # so parallel subagent work serializes. Host context limits and systemd
 # settings live in INSTALL.md, Local Profile Prerequisites. Requires
-# Ollama >= 0.30.0; default_profile stays ds+glm so the profile is opt-in.
+# Ollama >= 0.30.0; the local profile stays opt-in and is selected explicitly.
 
-default_profile: ds+glm
+default_profile: go
 
 profiles:
   ds:
@@ -78,39 +69,87 @@ profiles:
       phraser: zai-coding-plan/glm-5.3
       visual-critic: zai/glm-4.6v
       visual-builder: zai/glm-4.6v-flash
-  ds+glm:
-    label: DeepSeek + GLM hybrid
-    # Agent ids are lowercase `<role>-ds+glm` (chief-ds+glm, verifier-ds+glm, ...);
-    # the TUI prettifies ids for display (chief-ds+glm shows as Chief-Ds+Glm).
+  go:
+    label: OpenCode Go
+    # go: OpenCode Go plan, $10/mo. Two models only: deepseek-v4.1-flash
+    # on the high-volume and high-stakes seats, glm-5.3-flash on the review
+    # layer (claim-critic, referee) and the prose/vision seats (wordsmith,
+    # phraser, visual-critic). Allowances are per-model
+    # MONTHLY DOLLAR amounts, not request counts or credits; each model
+    # splits 20% per 5h, 50% weekly, 100% monthly. Allowances used here:
+    # deepseek-v4.1-flash $100, glm-5.3-flash $60. Measured
+    # 2026-10-18..2026-11-01 on this machine: 491 DeepSeek sessions, 30.6M
+    # input cache-miss, 1428M cached, 12.07M output+reasoning, $16.12 over
+    # 13.78 days = ~$35/mo projected, 35% of the $100 allowance; cache hit
+    # rate 97.8%, so cached reads dominate token count. The operator is the
+    # cost center (chief $7.11 recorded over 130 sessions; DeepSeek total
+    # $16.12 over 491 sessions across 13.8 days) and its context is re-read
+    # every turn, so the high-volume and high-stakes seats stay on
+    # deepseek-v4.1-flash: largest allowance ($100) and cheapest cached
+    # read ($0.003/1M). glm-5.3-flash is NOT for volume seats: its cached
+    # read is $0.03/1M, 10x DeepSeek, and on the measured mix
+    # all-GLM-5.3-Flash would cost ~$116/mo against its $60 allowance; it
+    # serves only low-turn, capability-motivated seats (native multimodal
+    # visual-critic, short phraser riffing, wordsmith prose). Chief plus
+    # builder still dominate at about $33/mo of a ~$65/mo notional workload.
+    #
+    # glm-5.3 was removed from this profile on 2026-11-01. Measured, the
+    # referee seat on glm-5.3 was $6.95/mo, 46.3% of the $15 pool; on
+    # glm-5.3-flash it is $0.78/mo, 1.3% of the $60 pool, and the whole
+    # flash pool becomes $4.29/mo at 7.1% of $60 (14.3% at 2x). On a flat
+    # $10 plan the flagship bought allowance headroom, not cash: $6.17/mo
+    # of a pool the profile otherwise did not touch, plus an unmeasured
+    # quality delta on a seat whose work is rubric-following against a
+    # written convergence predicate. Removing it does not change the real
+    # 2x risk, because DeepSeek is the binding pool at 92.6% of $100 at 2x
+    # burn. Accepted cost: the review layer is now single-family, so a
+    # failure mode shared by the GLM-5.3-Flash family passes both gates
+    # (critique ledger C-20261101-12). The referee's suppressive failure
+    # mode, a false CONVERGED that never reaches the human, is the one
+    # reason to revisit.
+    #
+    # claim-critic moved to glm-5.3-flash because keeping both review seats
+    # on glm-5.3 measured 106.6% of the $15 pool at last month's burn, which
+    # would have blocked the review layer late in the month; on flash it is
+    # about $1.0/mo against the shared $60 pool.
+    # Reviewed 2026-11-01: option C measured 46% of the $15 pool at last
+    # month's burn and 92.8% at 2x burn, with the worst 5-hour window at 91%
+    # of the $3 cap at 2x; removing glm-5.3 retires that leg, and the usage
+    # gate added in scripts/check_usage.py stays as the mitigation.
+    # claim-critic's contract pins reasoningEffort max; the flash critic is a
+    # deliberate, reviewed trade against the goal of never exceeding a
+    # monthly allowance, to be revisited against its measured miss rate.
+    # code-locator and context-curator briefly ran mimo-v2.6-flash for cost
+    # (cheapest output in the tier, $0.28/1M, plus a second allowance pool)
+    # and were reverted to deepseek-v4.1-flash on security grounds:
+    # code-locator has edit: deny but reads arbitrary untrusted repo content
+    # and its path:line output is trusted by the operator, making it the
+    # highest prompt-injection surface in the roster, while context-curator
+    # has edit: allow plus bash and writes the memory index and instruction
+    # docs that load into every future session, a persistence vector for
+    # planted instructions. Those two seats are the worst places for the
+    # least-vetted model, and the saving was roughly $2 to $3 per month
+    # against a $100 allowance running at ~35%, so the trade was not worth
+    # it. Extra Usage is off, so a drained pool blocks; the fallback is
+    # switching the affected seat to deepseek-v4.1-flash. Go requires
+    # Region = Global in Console privacy settings or DeepSeek V4.1 Flash
+    # stays blocked.
     roles:
-      # Operator re-reads full session context every turn; pay-go beats plan credits.
-      chief: deepseek/deepseek-flash
-      # GLM research strength on the highest-stakes, lowest-turn text gates; the
-      # vendor split also keeps the review layer independent of the DeepSeek
-      # operator and builder.
-      claim-critic: zai-coding-plan/glm-5.3
-      # verifier is the one high-turn GLM gate (prove loops, suites); glm-5.3-flash
-      # holds GLM's independent eyes at 3x plan quota and a 4.4x smaller KV cache.
-      verifier: zai-coding-plan/glm-5.3-flash
-      # The critique layer sits off the DeepSeek operator/builder vendor: an
-      # independent redteamer and referee catch failure modes the DeepSeek
-      # builder shares with its own critic.
-      redteamer: zai-coding-plan/glm-5.3-flash
-      referee: zai-coding-plan/glm-5.3
-      # wordsmith keeps flagship prose: long-form wording is the seat's whole point.
-      wordsmith: zai-coding-plan/glm-5.3
-      # phraser is short, interactive riffing; glm-5.3-flash suffices and is cheaper.
-      phraser: zai-coding-plan/glm-5.3-flash
-      # Many-turn volume seats; deepseek-flash cache-hit input ~$0.003/1M off-peak.
-      builder: deepseek/deepseek-flash
-      system-fixer: deepseek/deepseek-flash
-      external-researcher: deepseek/deepseek-flash
-      code-locator: deepseek/deepseek-flash
-      context-curator: deepseek/deepseek-flash
-      # visual-critic on GLM's native multimodal lane, visual-builder on
-      # vision-capable DeepSeek: critic and builder see with different eyes.
-      visual-critic: zai-coding-plan/glm-5.3-flash
-      visual-builder: deepseek/deepseek-flash
+      chief: opencode-go/deepseek-v4.1-flash
+      verifier: opencode-go/deepseek-v4.1-flash
+      builder: opencode-go/deepseek-v4.1-flash
+      system-fixer: opencode-go/deepseek-v4.1-flash
+      external-researcher: opencode-go/deepseek-v4.1-flash
+      redteamer: opencode-go/deepseek-v4.1-flash
+      visual-builder: opencode-go/deepseek-v4.1-flash
+      claim-critic: opencode-go/glm-5.3-flash
+      referee: opencode-go/glm-5.3-flash
+      wordsmith: opencode-go/glm-5.3-flash
+      phraser: opencode-go/glm-5.3-flash
+      visual-critic: opencode-go/glm-5.3-flash
+      code-locator: opencode-go/deepseek-v4.1-flash
+      context-curator: opencode-go/deepseek-v4.1-flash
+
   local:
     label: Local (Qwen3.6 35B-A3B, offline)
     # Local-only: every seat runs on-device. See INSTALL.md, Local Profile

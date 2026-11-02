@@ -172,6 +172,24 @@ def strip_agent_model_lines(roles_dir=ROLES_DIR):
     return changed
 
 
+def assert_no_role_read_permission(roles_dir=ROLES_DIR):
+    """Roles must not set `read`; the sample config owns the secret-path deny."""
+    if not roles_dir.is_dir():
+        return
+    offenders = []
+    for path in sorted(roles_dir.glob("*.md")):
+        fm_lines, _ = split_frontmatter(path.read_text())
+        fm = yaml.safe_load("\n".join(fm_lines)) or {}
+        if "read" in (fm.get("permission") or {}):
+            offenders.append(path)
+    if offenders:
+        for p in offenders:
+            print(f"error: role sets a read permission: {p}", file=sys.stderr)
+        raise SystemExit(
+            "roles must not set read permission; the sample config owns the deny block"
+        )
+
+
 def assert_no_skill_model_lines(skills_dir=SKILLS_DIR):
     """Skill frontmatter must never pin a model. Fail loud if one does."""
     if not skills_dir.is_dir():
@@ -312,6 +330,15 @@ def render_sample_config(profiles, default_profile):
         "permission": {
             "edit": "ask",
             "bash": "ask",
+            "read": {
+                "**/.env": "deny",
+                "*.env": "deny",
+                "**/.ssh/**": "deny",
+                "**/*.pem": "deny",
+                "**/auth.json": "deny",
+                "**/.aws/credentials": "deny",
+                "**/.netrc": "deny",
+            },
             "skill": {"*": "allow"},
             "external_directory": {"/tmp/*": "allow"},
         },
@@ -354,6 +381,7 @@ def run(root=ROOT):
     print(f"Default profile: {default_profile}")
 
     validate_models(profiles, default_profile, roles_dir, root / "models.allowlist")
+    assert_no_role_read_permission(roles_dir)
     assert_no_skill_model_lines(skills_dir)
     stripped = strip_agent_model_lines(roles_dir)
     generated = generate_agents(profiles, roles_dir, generated_dir)
@@ -381,6 +409,7 @@ def run_check(root=ROOT):
     sample_config = root / "opencode.json.sample"
     profiles, default_profile = load_models(models_yaml)
     validate_models(profiles, default_profile, roles_dir, root / "models.allowlist")
+    assert_no_role_read_permission(roles_dir)
     problems = check_agents(profiles, roles_dir, generated_dir)
 
     # Render the sample in memory and compare; a stale sample is drift too.

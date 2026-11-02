@@ -2,7 +2,7 @@
 description: Read-only convergence gate that classifies ledger findings as settled-by-evidence
   or human-only and emits the minimal walkthrough agenda.
 mode: subagent
-model: zai-coding-plan/glm-5.3
+model: opencode-go/glm-5.3-flash
 options:
   reasoningEffort: max
 permission:

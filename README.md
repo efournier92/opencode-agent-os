@@ -34,9 +34,19 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 ### Verify
 
 1. **Run `/agents` in the OpenCode TUI**
-    - Expect all primaries and their crews: `chief-ds`, `chief-glm`, `chief-ds+glm`, `chief-local`, and each `<role>-<profile>` subagent *(`builder-ds`, `verifier-ds+glm`, etc).*
+    - Expect all primaries and their crews: `chief-go` (the default), `chief-ds`, `chief-glm`, `chief-local`, and each `<role>-<profile>` subagent *(`builder-ds`, `verifier-glm`, etc).*
 2. The `skill` tool description should list all 14 skills *(`create-spec`, `implement-spec`, etc).*
 3. Typing `/engineer-prompt` in the TUI autocompletes the command.
+
+## Privacy and Data Handling
+
+- **OpenCode Go (default profile):** the [Go privacy table](https://opencode.ai/docs/go) lists the models as not used for training with 0-day retention. Re-check the linked table for current terms.
+- Go defaults to Europe and US regions and blocks paid training endpoints. The shipped `models.yaml` needs `Region=Global` in the Console privacy settings to unblock DeepSeek V4.1 Flash, and Global is the China-served path. Pick between the region default and that model deliberately instead of assuming one option keeps every seat in Europe or the US.
+- **Z.ai (review and language seats):** the [Z.ai privacy policy](https://docs.z.ai/legal-agreement/privacy-policy) states API inputs are not used for training by default, and data is generally processed and stored in Singapore. See [z.ai/subscribe](https://z.ai/subscribe).
+- **Local profile:** `chief-local` keeps every seat on-device through ollama and `qwen3.6:35b-a3b`.
+- **Sharing:** keep it disabled (`share: disabled`) so no session is uploaded.
+- **Retention:** the 7-day session prune is manual via `prune-sessions`, never automatic.
+- **On disk:** raw tool output and session diffs persist on disk until pruned or [burned](skills/burn-session/SKILL.md).
 
 ## Contents
 
@@ -102,7 +112,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 
 ### `opencode.json.sample`
 
-- Sample global config: `chief-ds+glm` as default agent, the default model, the built-in `build` and `scout` agents disabled, `subagent_depth: 2`, `compaction.prune: true`, and `/tmp/*` allowed without an approval prompt.
+- Sample global config: `chief-go` as default agent, the default model, the built-in `build` and `scout` agents disabled, `subagent_depth: 2`, `compaction.prune: true`, and `/tmp/*` allowed without an approval prompt.
 - The installer merges the plugin-managed keys from this sample into an existing config; see Managed Config Keys in `INSTALL.md`.
 
 ### `agents/`
@@ -127,7 +137,7 @@ See [`INSTALL.md`](INSTALL.md) for the manual steps and the per-project install.
 | `visual-critic` | subagent | Holistic visual design sweep of print, PDF, and HTML deliverables. |
 | `visual-builder` | subagent | Applies visual fixes from `visual-critic` findings. |
 
-*Mode ships with each role. Each profile injects a concrete model per role from `models.yaml` (see Model Profiles); the primaries are `chief-ds`, `chief-glm`, `chief-ds+glm`, and `chief-local`.*
+*Mode ships with each role. Each profile injects a concrete model per role from `models.yaml` (see Model Profiles). The primaries are `chief-ds`, `chief-glm`, `chief-local`, and `chief-go` (the default). `ds+glm` was retired on 2026-11-01. See `configs/archive/2026-11_ds+glm.yaml`.*
 
 ### `skills/` (14 Skills)
 
@@ -177,9 +187,10 @@ All model assignments are driven by `models.yaml`.
 The file holds `profiles:` (each with a `roles:` map of role name to concrete model id) and `default_profile:`.
 The generator renders that file into one agent per profile under `agents/generated/` and into `opencode.json.sample`, which is the JSON config OpenCode actually reads at runtime.
 Role sources under `agents/roles/` and skill `.md` files never declare a `model:` line; doing so would shadow the generated config and break this single-source-of-truth architecture.
+Retire a profile with `scripts/archive-profile.py`: it moves the profile to `configs/archive/<stamp>_<profile>.yaml` and removes it from generation and install.
 
 ```yaml
-default_profile: ds+glm
+default_profile: go
 
 profiles:
   ds:
@@ -189,35 +200,27 @@ profiles:
       verifier: deepseek/deepseek-flash
       claim-critic: deepseek/deepseek-flash
       ...
-  glm:
-    label: GLM
+  # ds+glm was retired on 2026-11-01; see configs/archive/2026-11_ds+glm.yaml.
+  go:
+    label: OpenCode Go
     roles:
-      chief: zai-coding-plan/glm-5.3
-      external-researcher: zai-coding-plan/glm-5.3-flash
-      ...
-  ds+glm:
-    label: DeepSeek + GLM hybrid
-    roles:
-      chief: deepseek/deepseek-flash
-      claim-critic: zai-coding-plan/glm-5.3
-      verifier: zai-coding-plan/glm-5.3-flash
-      redteamer: zai-coding-plan/glm-5.3-flash
-      referee: zai-coding-plan/glm-5.3
-      wordsmith: zai-coding-plan/glm-5.3
-      phraser: zai-coding-plan/glm-5.3-flash
-      visual-critic: zai-coding-plan/glm-5.3-flash
-      builder: deepseek/deepseek-flash
-      ...
-  local:
-    label: Local (Qwen3.6 35B-A3B, offline)
-    options:
-      reasoningEffort: low
-    roles:
-      chief: ollama/qwen3.6:35b-a3b
-      ...
+      chief: opencode-go/deepseek-v4.1-flash
+      verifier: opencode-go/deepseek-v4.1-flash
+      builder: opencode-go/deepseek-v4.1-flash
+      system-fixer: opencode-go/deepseek-v4.1-flash
+      external-researcher: opencode-go/deepseek-v4.1-flash
+      redteamer: opencode-go/deepseek-v4.1-flash
+      visual-builder: opencode-go/deepseek-v4.1-flash
+      claim-critic: opencode-go/glm-5.3-flash
+      referee: opencode-go/glm-5.3-flash
+      wordsmith: opencode-go/glm-5.3-flash
+      phraser: opencode-go/glm-5.3-flash
+      visual-critic: opencode-go/glm-5.3-flash
+      code-locator: opencode-go/deepseek-v4.1-flash
+      context-curator: opencode-go/deepseek-v4.1-flash
 ```
 
-*The shipped default profile is `ds+glm` (chief agent `chief-ds+glm`, prettified to Chief-Ds+Glm in the TUI): DeepSeek carries the many-turn and coding seats on pay-as-you-go pricing, GLM 5.3 is kept for the low-volume, high-stakes text gates and long-form language, and glm-5.3-flash covers the seats where GLM's independent eyes matter but volume or vision rules out the flagship. The `local` profile is an additional opt-in that pins every seat to `ollama/qwen3.6:35b-a3b` for offline sessions; see `INSTALL.md` for the provider and `share` keys it needs.*
+*The shipped default profile is `go` (chief agent `chief-go`, prettified to Chief-Go in the TUI): every seat runs on the OpenCode Go plan, with deepseek-v4.1-flash on the many-turn and high-stakes seats and glm-5.3-flash on the review layer and the low-turn multimodal and language seats. The `local` profile stays available and opt-in, running every seat on-device.*
 
 ### Update
 

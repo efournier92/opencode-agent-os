@@ -2,7 +2,7 @@
 description: PASS/FAIL verification agent that proves claims by executing commands;
   read-only on code.
 mode: subagent
-model: zai-coding-plan/glm-5.3-flash
+model: opencode-go/deepseek-v4.1-flash
 options:
   reasoningEffort: high
 permission:

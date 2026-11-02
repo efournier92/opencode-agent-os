@@ -1,0 +1,22 @@
+# Archived model profile: glm (archive month 2026-10).
+# Retired from models.yaml; not generated or installed.
+# Restore: re-indent under `profiles:` in models.yaml, then run
+# python3 scripts/apply-models.py
+
+glm:
+  label: GLM
+  roles:
+    chief: zai-coding-plan/glm-5.3
+    verifier: zai-coding-plan/glm-5.3
+    claim-critic: zai-coding-plan/glm-5.3
+    redteamer: zai-coding-plan/glm-5.3-flash
+    referee: zai-coding-plan/glm-5.3
+    builder: zai-coding-plan/glm-5.3
+    system-fixer: zai-coding-plan/glm-5.3
+    external-researcher: zai-coding-plan/glm-5.3-flash
+    code-locator: zai-coding-plan/glm-5.3-flash
+    context-curator: zai-coding-plan/glm-5.3-flash
+    wordsmith: zai-coding-plan/glm-5.3
+    phraser: zai-coding-plan/glm-5.3
+    visual-critic: zai/glm-4.6v
+    visual-builder: zai/glm-4.6v-flash

@@ -2,7 +2,7 @@
 description: Visual design builder that applies fixes to HTML/CSS based on visual-critic's
   findings, matching the design reference and framework conventions.
 mode: subagent
-model: deepseek/deepseek-flash
+model: opencode-go/deepseek-v4.1-flash
 options:
   reasoningEffort: high
 permission:

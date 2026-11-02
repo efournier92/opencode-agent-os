@@ -2,7 +2,7 @@
 description: 'Cheap read-only in-repo code locator: finds where symbols are defined
   and what calls them. Compressed deterministic output.'
 mode: subagent
-model: deepseek/deepseek-flash
+model: opencode-go/deepseek-v4.1-flash
 options:
   reasoningEffort: low
 permission:
