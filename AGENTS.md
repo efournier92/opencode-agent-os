@@ -1,46 +1,48 @@
 # Multi-Agent System: Shared Rulebook
 
-Domain-agnostic rules for the agent/skill system shipped as an OpenCode plugin; role behavior lives in `agents/roles/`, workflow detail in `skills/`, reference material in `docs/rulebook/`.
-Read a referenced `docs/rulebook/` file with the Read tool when its rule applies; in a global install that directory is `~/.config/opencode/docs/rulebook/`, beside the installed `AGENTS.md`. Never preload them all.
+Domain-agnostic rules for the agent/skill system shipped as an OpenCode plugin. Role behavior lives in `agents/roles/`, workflow detail in `skills/`, reference material in `docs/rulebook/`.
+Read a referenced `docs/rulebook/` file with the Read tool when its rule applies. In a global install that directory is `~/.config/opencode/docs/rulebook/`, beside the installed `AGENTS.md`. Never preload them all.
 
 ## Shape
 
 One **operator** role runs a session: it decomposes work, routes to specialist subagents, verifies output, and writes handoffs, and never re-does their work.
-Its own `bash` is for verification spot-checks, never for exploration; `edit`/`write` on project files belongs to a subagent.
-The operator resolves per profile as `chief-ds`, `chief-glm`, `chief-ds+glm` (the default), or `chief-local` (offline Qwen3); its loop, dispatch tactics, and voice live in `agents/roles/chief.md`.
+Its own `bash` is for verification spot-checks. By default `edit`/`write` on project files goes to a subagent, though the operator keeps `edit` for fixing this system repo itself.
+The operator resolves per profile as `chief-ds`, `chief-glm`, `chief-go` (OpenCode Go, the default), or `chief-local` (offline Qwen3). Its loop, dispatch tactics, and voice live in `agents/roles/chief.md`. `chief-ds+glm` was retired on 2026-11-01. Its definition lives in `configs/archive/2026-11_ds+glm.yaml`.
 
 ## Delegation Contract (Every Dispatch)
 
 Every subagent prompt states: scope/location, goal, exact paths if known, output shape ("fact + location, no prose"), and what NOT to re-report.
+Every dispatch also states an effort cap and a done-check/verify command.
+A user request missing goal, effort, or verify gets one batched question with recommended defaults in interactive mode, and labeled assumptions when unattended.
 Include shell discipline (below).
-Subagents enforce their own contracts and return `NEED-INPUT: <gap>` when underspecified; fill the gap, do not force it.
+Subagents enforce their own contracts and return `NEED-INPUT: <gap>` when underspecified. Fill the gap, do not force it.
 Prefer a specific pinned agent over a generic catch-all whenever one fits the lane.
 
 ## Decisions
 
-Decide and log; do not ask when the action is reversible and in scope.
+Decide and log. Do not ask when the action is reversible and in scope.
 Ask the user only for destructive or irreversible operations, scope changes, deploy-affecting choices, and any change touching a cross-system contract such as a shared schema.
-When implementation is verified, report done and stop; committing and pushing are the user's call via `ship-changes` (never unprompted).
+When implementation is verified, report done and stop. Committing and pushing are the user's call via `ship-changes` (never unprompted).
 
 ## Verify Before "Done"
 
-Never claim green without having run the project's check command this session; verification evidence is executed commands, not intent.
+Never claim green without having run the project's check command this session. Verification evidence is executed commands, not intent.
 Long convergence loops (a suite to green, a gate to clean) go to the user as a settable goal: proving command plus turn cap, and a cheap automatic evaluator keeps the loop honest without the operator polling its own context.
 
 ## Progressive Discovery
 
-Opt-in per repository: active only where a git working tree contains `docs/discovery/`; otherwise create nothing and read nothing.
-In an opted-in repo, load the `log-discoveries` skill and grep `docs/discovery/` by scope token when scoping; the operator appends at checkpoints and subagents return candidates, never write.
+Opt-in per repository: active only where a git working tree contains `docs/discovery/`. Otherwise create nothing and read nothing.
+In an opted-in repo, load the `log-discoveries` skill and grep `docs/discovery/` by scope token when scoping. The operator appends at checkpoints and subagents return candidates, never write.
 
 ## Markdown Style (Every Agent, Every File)
 
-Applies to every Markdown file an agent writes or edits, and any Markdown it posts (PR and issue bodies, comments); full rules and examples live in `docs/rulebook/markdown-style.md`.
-`scripts/lint-markdown.py` enforces rules 1 to 4 (no banned glyphs or smart quotes, no LLM-artifact phrases, a blank line after every heading, no sentence split across lines); run it on any Markdown deliverable before PASS.
+Applies to every Markdown file an agent writes or edits, and any Markdown it posts (PR and issue bodies, comments). Full rules and examples live in `docs/rulebook/markdown-style.md`.
+`scripts/lint-markdown.py` enforces the mechanical rules: banned glyphs and smart quotes, LLM-artifact phrases, a blank line after every heading, no sentence split across lines, and no semicolon in prose. Run it on any Markdown deliverable before PASS.
 Rule 5 is review-enforced: Capitalize Every Word In Titles And Headings.
 
 ## Patch The System
 
-Fix friction hit in-session as its own small diff and tell the user; never work around it silently.
+Fix friction hit in-session as its own small diff and tell the user. Never work around it silently.
 When the same friction appears twice, dispatch `system-fixer` in improvement mode: root cause, fix, and an executable check.
 
 ## Shell Discipline (Every Agent, Every Dispatch)
@@ -51,14 +53,14 @@ When the same friction appears twice, dispatch `system-fixer` in improvement mod
 - Batch independent read-only commands as parallel calls in one message: every assistant turn re-reads the whole context, so N separate calls cost N context reads and N model turns.
 - Keep mutating commands to one per shell call, and never chain a write with a read of its own result.
 - Keep read-only work to side-effect-free commands (status/log/diff/show, grep, ls, find, head, tail).
-- Use `/tmp` for scratch files; it is allowed by default and does not prompt.
+- Use `/tmp` for scratch files. It is allowed by default and does not prompt.
 
 ## Tool-Call Hygiene (Failed Calls Burn Whole Turns)
 
-- `edit`: read the target region in this session first; when `oldString` is not found, re-read and retry once with fresh context instead of guessing again.
+- `edit`: read the target region in this session first. When `oldString` is not found, re-read and retry once with fresh context instead of guessing again.
 - `read`: confirm a path you have not just seen in tool output exists (`glob`) before reading it.
 - `grep`: on minified or generated files pass `--max-columns=200`, or the tool fails on oversized records.
-- `webfetch`: a paywall, bot block, or 404 rarely recovers on retry; switch source or fall back to search instead of repeating the fetch.
+- `webfetch`: a paywall, bot block, or 404 rarely recovers on retry. Switch source or fall back to search instead of repeating the fetch.
 
 ## Stash Discipline (Destructive Git Operations)
 
@@ -67,10 +69,10 @@ Never drop or pop a stash you did not create this invocation, never `git stash c
 
 ## Reference
 
-The full agent and skill catalog and the model-profile contract live in `docs/rulebook/`; the `task` and `skill` tools list the live crew.
+The full agent and skill catalog and the model-profile contract live in `docs/rulebook/`. The `task` and `skill` tools list the live crew.
 
 ## Context Size Budget
 
-Context-loaded files (`agents/roles/*.md`, `agents/generated/*.md`, `skills/*/SKILL.md`) stay at 200 lines; the always-loaded pair (`AGENTS.md`, `agents/roles/chief.md`) is held to 120.
+Context-loaded files (`agents/roles/*.md`, `agents/generated/*.md`, `skills/*/SKILL.md`) stay at 200 lines. The always-loaded pair (`AGENTS.md`, `agents/roles/chief.md`) is held to 120.
 A cap means split into an on-demand reference (`docs/rulebook/` or a skill sibling), never shrink the process it describes.
-`scripts/test_doc_budget.py` enforces the caps; `scripts/check.sh` runs it with the unit suite and markdown linter.
+`scripts/test_doc_budget.py` enforces the caps. `scripts/check.sh` runs it with the unit suite and markdown linter.

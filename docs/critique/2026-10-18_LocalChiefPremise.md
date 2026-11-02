@@ -27,11 +27,11 @@
   - rebuttal | rejected | https://docs.ollama.com/openai | Verifier reversal: /v1 chat completions accepts reasoning_effort fields; stale cannot-disable text corrected in models.yaml and INSTALL; profile pins reasoningEffort low
 - C-20261018-10 | 2026-10-18 | correctness | high | high | addressed | Capability gating absent: no incapable key, no generator branch, no denies or instruction text | scripts/apply-models.py:91
   - rebuttal | addressed | models.yaml:131 | incapable list + CAPABILITY_MAP + validation + generated denies + Profile Limits section shipped; check.sh green, non-local agents byte-identical
-- C-20261018-11 | 2026-10-18 | correctness | high | high | addressed | Name-only denies bypassable: chief-local keeps bash and edit allow, so gated capabilities run inline | agents/generated/chief-local.md:10
+- C-20261018-11 | 2026-10-18 | correctness | high | high | addressed | Name-only denies bypassable: chief-local keeps bash and edit allow, so gated capabilities run inline | configs/archive/2026-10_local.yaml
   - rebuttal | addressed | agents/generated/chief-local.md:15 | Tokens now bind to tool, skill, and task-pattern denies plus instruction layer; git commit/push bash denies added; residual inline bypass accepted for the chat+recon bar per D-20261017-04 precedent
 - C-20261018-12 | 2026-10-18 | correctness | high | high | escalated | On-device claim fails from message one: unset small_model sends session titles to the cloud fallback deepseek/deepseek-flash | opencode.json.sample:3
   - rebuttal | escalated | https://opencode.ai/docs/config/ | Egress confirmed; schema exposes agent.title.disable (small_model deprecated); runtime 1.19.0 behavior unverified; egress vs disabled titles vs cold-load is human-only
-- C-20261018-13 | 2026-10-18 | correctness | medium | high | addressed | Local agents kept webfetch/websearch allows: egress or dead weight offline; generator had no tool awareness | agents/generated/external-researcher-local.md:14
+- C-20261018-13 | 2026-10-18 | correctness | medium | high | addressed | Local agents kept webfetch/websearch allows: egress or dead weight offline; generator had no tool awareness | configs/archive/2026-10_local.yaml
   - rebuttal | addressed | agents/generated/chief-local.md:30 | web token denies webfetch/websearch on every local agent and kills external-researcher dispatch; residual egress is bash curl, instruction-gated
 - C-20261018-14 | 2026-10-18 | correctness | medium | medium | addressed | Unpinned built-ins leak to cloud: plan primary and general subagent resolve on the cloud fallback | opencode.json.sample:3
   - rebuttal | addressed | INSTALL.md:87 | Switch is user-initiated (Shift+Tab) and the session note already warns history resends to the provider; premise scope is the chief-local session, not the TUI as a whole
@@ -40,7 +40,7 @@
 - C-20261018-16 | 2026-10-18 | correctness | medium | high | addressed | Local-only was documented not enforced: share, provider, small_model, OLLAMA_CONTEXT_LENGTH hand-applied, absent from MANAGED | scripts/merge-config.py:18
   - rebuttal | addressed | INSTALL.md:71 | Machine-level keys are per-host by nature (global config, systemd); INSTALL now carries the exact override block and a strict-on-device note; readiness script deferred as veto option
 - C-20261018-17 | 2026-10-18 | research | high | high | addressed | No smaller Qwen3.6 A3B exists (family: 35B-A3B, 27B dense, FP8s); cheaper: unsloth quants 12.3-17.7 GB, no CPU tok/s data | https://huggingface.co/collections/Qwen/qwen36
-- C-20261018-18 | 2026-10-18 | scale | medium | high | addressed | The 8192 window holds ~4-5k tokens of baseline system context, so compaction fires every few turns at re-prefill cost | agents/generated/chief-local.md:5
+- C-20261018-18 | 2026-10-18 | scale | medium | high | addressed | The 8192 window holds ~4-5k tokens of baseline system context, so compaction fires every few turns at re-prefill cost | configs/archive/2026-10_local.yaml
   - rebuttal | addressed | models.yaml:131 | Structural at 8192 served ctx; reasoning trace cut (reasoningEffort low) frees window share; constraint documented in the perf note
 - C-20261018-19 | 2026-10-18 | research | medium | high | addressed | Documented controls exist and are pinned: OLLAMA_NUM_PARALLEL, keep_alive, systemd memory caps; llama-server remains a runtime option | https://docs.ollama.com/faq
 - C-20261018-20 | 2026-10-18 | cost | low | high | addressed | No residency slack: an interleaved cloud session evicts the resident copy and pays a 23 s+ reload | models.yaml:48
@@ -53,7 +53,7 @@
   - rebuttal | addressed | agents/generated/chief-local.md:15 | ship token now emits bash pattern denies git commit* and git push* after the allow rule; last-match-wins documented
 - C-20261018-24 | 2026-10-18 | maintainability | high | high | rejected | Standalone-agents machinery (install branch, test branch, doc passages) has zero entries behind it: speculative generality | scripts/install.sh:58
   - rebuttal | rejected | docs/rulebook/model-profiles.md:11 | Lane is a recorded decision (D-20261017-05) documented in the installed rulebook; the machinery is 10 guarded lines; revisit when a second entry lands
-- C-20261018-25 | 2026-10-18 | maintainability | medium | medium | rejected | Per-file deny rules on the 8 task-gated local agents are unreachable: the chief's task denies already block their dispatch | agents/generated/builder-local.md:13
+- C-20261018-25 | 2026-10-18 | maintainability | medium | medium | rejected | Per-file deny rules on the 8 task-gated local agents are unreachable: the chief's task denies already block their dispatch | configs/archive/2026-10_local.yaml
   - rebuttal | rejected | agents/generated/chief-local.md:20 | At-mention reachability outside the task scope is unverified (the un-ship pass itself named it as its reversal condition); defense-in-depth on a security premise is earned
 - C-20261018-26 | 2026-10-18 | maintainability | low | high | addressed | Rulebook restated the local-profile perf diary, a third copy of drifting host numbers; behavior stays, numbers point to INSTALL | docs/rulebook/model-profiles.md:9
   - rebuttal | addressed | docs/rulebook/model-profiles.md:9 | Diary trimmed to behavior plus an INSTALL pointer

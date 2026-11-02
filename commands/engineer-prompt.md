@@ -11,7 +11,9 @@ Turn `$ARGUMENTS` into one ready-to-use prompt. This command is explicit-invocat
 - Read-only on the repo; delegate all fact-finding to `task`.
 - Never pin a model; polish is model-agnostic.
 - One prompt out; write a file only when asked.
+- Always copy the final prompt to the clipboard before handing off.
 - Plain punctuation, no em dashes, arrows, or smart quotes.
+- The emitted prompt names the goal, an effort budget, and the verify command. If the user's request lacks any of the three, ask for the missing one before emitting.
 
 ## Step 1: Classify The Destination
 
@@ -47,4 +49,4 @@ Run the structural checklist: destination classified, template complete, every l
 
 ## Step 6: Hand Off
 
-Print the prompt. If it is a recurring workflow, suggest routing it to `create-spec` or `customize-opencode`. For cross-session work, suggest the `write-handoff` skill. Name load-bearing decisions for the operator to index by ID; never write the `docs/discovery/` index yourself.
+Print the prompt. Always copy the final prompt to the clipboard (`pbcopy` on macOS, `clip.exe` on Windows, `xclip -selection clipboard` on Linux) and confirm it was copied. This copy is mandatory on every run, including when the destination is a user-facing prompt or a written file. Only claim success if the clipboard command actually ran. If it is missing or fails, print the prompt as plain copyable text and say the copy did not happen. If it is a recurring workflow, suggest routing it to `create-spec` or `customize-opencode`. For cross-session work, suggest the `write-handoff` skill. Name load-bearing decisions for the operator to index by ID; never write the `docs/discovery/` index yourself.

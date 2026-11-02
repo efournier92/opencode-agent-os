@@ -77,7 +77,9 @@ Write the ledger file with the header. The operator is the only writer.
 ### Phase 2: Diverge
 
 - Evidence pack first: built from the `code-locator` dispatch plus operator diff and excerpt lines, target 1,200-1,500 tokens, hard cap 2,000.
-- The pack path is `/tmp/rta-<date>-<topic>-<runid>/pack.md`; its header records `git rev-parse HEAD` and every artifact path used.
+- The run directory is private, created with `mktemp -d` or `mkdir -m 700 /tmp/rta-<date>-<topic>-<runid>`, and the pack path is `<run-dir>/pack.md`.
+- Create `pack.md` with mode 0600 (`chmod 600 <run-dir>/pack.md` after writing), so the excerpts are not world-readable.
+- The pack header records `git rev-parse HEAD` and every artifact path used.
 - The operator screens excerpts with one grep for secrets before writing; the pack holds no conclusions, severities, or suspected defects.
 - Every lens reads the pack first and source reads stay unrestricted; each lens checks the header HEAD against current `git rev-parse HEAD` before trusting the pack.
 - Missing or stale pack: regenerate once, then proceed cold.
@@ -114,7 +116,9 @@ Only after the user explicitly agrees with everything, offer `ship-changes` thro
 
 ### Phase 8: Hand Off
 
-Append `[decision]`, `[question]`, and `[outcome]` entries to `docs/discovery/DISCOVERY.md` by ID; link them from the handoff. Subagents only ever return candidates.
+Append `[decision]`, `[question]`, and `[outcome]` entries to `docs/discovery/DISCOVERY.md` by ID, then link them from the handoff. Subagents only ever return candidates.
+
+After the handoff is written, remove the private run directory and its `pack.md` (`rm -rf <run-dir>`), so the excerpt pack does not linger on disk.
 
 ## Rules
 
