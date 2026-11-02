@@ -233,3 +233,30 @@ python3 scripts/apply-models.py
 The script regenerates `agents/generated/*.md` and `opencode.json.sample`; reinstall the generated agents and re-run the installer, which merges the plugin-managed keys into your existing `opencode.json` or `opencode.jsonc`.
 Role sources are touched only to strip a stray `model:` line from frontmatter; no other modification.
 
+## Remote Voice Dictation Over SSH
+
+This is the case where the OpenCode TUI runs on a different machine than the one holding the microphone, reached over an SSH session. It is distinct from local dictation, where one machine owns the mic, the recorder, and the TUI.
+
+- Topology: the microphone, `ffmpeg`, and `whisper` stay on the local machine. The OpenCode TUI and its HTTP server run on the remote host. Only the transcript text crosses SSH.
+- The remote host needs no voice pipeline at all, only OpenCode listening on a pinned port.
+- The keypress is captured locally, because `ctrl+alt+d` typed in the SSH session would go to the remote shell. The local terminal is the interceptor, and since Ghostty has no run-a-command keybind action, tmux provides it.
+- Injection is out of band: a fresh, short-lived `ssh` call from the local machine POSTs to the remote server, so the interactive SSH session and its pane are never typed into.
+- The POST targets `http://127.0.0.1:$port` as seen on the remote host, so it reaches the remote OpenCode server and nothing local.
+- `POST /tui/append-prompt` appends the transcript and `POST /tui/show-toast` shows listening, transcribing, and injected feedback, both on the remote TUI.
+- Pin the remote TUI port at launch with `opencode --port 4096`. A `server.port` config value applies only to `opencode serve` and `opencode web`, not the TUI.
+- Multiplex the SSH connection with `ControlMaster` and `ConnectTimeout=5` so repeated toasts and the injection stay sub-second and a stalled connect fails fast.
+- Implemented in the shell profile as `voice_remote` and `voice_toast`, both calling `_voice_ssh`, which builds the target from the host user, domain, and port variables.
+
+The tmux binding sits in the root table and is guarded so a local OpenCode pane keeps its own `ctrl+alt+d`:
+
+```
+bind -n C-M-d if-shell -F '#{==:#{pane_current_command},ssh}' 'run-shell -b "zsh -lic voice_remote >/dev/null 2>>/tmp/voice_remote.log"' 'send-keys C-M-d'
+```
+
+The recorder is local, so these local-side traps apply:
+
+- Background jobs ignore `SIGINT`, so `kill -INT voice.sh` does nothing. The stop targets the ffmpeg child instead.
+- ffmpeg also ignores `SIGINT` but finalizes the WAV on `SIGTERM`, which ends the capture loop and lets the local recorder transcribe.
+- A bare `pkill -P` also kills the capture loop sleep and trips the recorder's `set -e` with rc 143. Filter to ffmpeg with `pkill -TERM -P "$vpid" -x ffmpeg`.
+- Send `printf '%s '` for no newline and one trailing space, and add `-o /dev/null` so the remote API `true` reply does not leak to the pane.
+
