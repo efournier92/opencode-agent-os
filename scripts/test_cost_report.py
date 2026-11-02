@@ -9,6 +9,7 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SCRIPT = Path(__file__).resolve().parent / "cost-report.py"
 
@@ -80,6 +81,56 @@ class TestCostReport(unittest.TestCase):
         self.assertAlmostEqual(cost, 3.50)
         self.assertEqual(subagents, 1)
         self.assertEqual(compacted, 0)
+
+    def test_sliding_max_drops_points_outside_window(self):
+        day = cost_report.WINDOW_MS["5h"]
+        points = [(0, 1.0), (1000, 2.0), (day + 5000, 4.0)]
+        self.assertAlmostEqual(cost_report.sliding_max(points, day), 4.0)
+
+    def test_window_spend_trailing_sum_for_30d(self):
+        points = [(0, 1.0), (1000, 2.0), (10_000_000, 4.0)]
+        self.assertAlmostEqual(
+            cost_report.window_spend(points, cost_report.WINDOW_MS["30d"]), 7.0
+        )
+
+    def test_window_spend_is_sliding_for_5h(self):
+        day = cost_report.WINDOW_MS["5h"]
+        points = [(0, 1.0), (1000, 2.0), (day + 5000, 4.0)]
+        self.assertAlmostEqual(cost_report.window_spend(points, day), 4.0)
+
+    def test_archive_rows_fold_into_windows(self):
+        conn = mock.MagicMock()
+        conn.execute.return_value = []
+        now = 1_700_000_000_000
+        archive = [
+            {
+                "time_created": now,
+                "model": "glm-5.3",
+                "tokens_input": 10_000_000,
+                "tokens_output": 0,
+                "tokens_cache_read": 0,
+            }
+        ]
+        spend = cost_report.model_spend(
+            conn, now - 1, cost_report.WINDOW_MS["30d"], archive
+        )
+        self.assertAlmostEqual(spend["glm-5.3"], 14.0)
+
+    def test_archive_rows_older_than_since_ignored(self):
+        conn = mock.MagicMock()
+        conn.execute.return_value = []
+        now = 1_700_000_000_000
+        archive = [
+            {
+                "time_created": now - 1000,
+                "model": "glm-5.3",
+                "tokens_input": 10_000_000,
+            }
+        ]
+        spend = cost_report.model_spend(
+            conn, now, cost_report.WINDOW_MS["30d"], archive
+        )
+        self.assertAlmostEqual(spend["glm-5.3"], 0.0)
 
 
 if __name__ == "__main__":
