@@ -21,6 +21,9 @@ python3 scripts/apply-models.py --check
 echo "== unit tests =="
 python3 -m unittest discover -s scripts -p 'test_*.py'
 
+echo "== usage check =="
+python3 scripts/check_usage.py
+
 echo "== markdown lint =="
 python3 scripts/lint-markdown.py .
 
@@ -29,6 +32,12 @@ python3 scripts/check_discovery.py
 
 echo "== critique ledger =="
 python3 scripts/check_critique.py
+
+echo "== duplicate AGENTS.md =="
+python3 scripts/check_duplicate_agents.py
+
+echo "== install drift =="
+python3 scripts/check_install_drift.py
 
 echo
 echo "all checks passed"

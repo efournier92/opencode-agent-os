@@ -45,17 +45,18 @@ echo "config: $CFG"
 echo "backup: $bak"
 
 # 1. Back up anything we replace.
-for item in agents skills commands AGENTS.md models.yaml opencode.jsonc opencode.json tui.json; do
+for item in agents skills plugins commands AGENTS.md models.yaml opencode.jsonc opencode.json tui.json; do
   if [ -e "$CFG/$item" ]; then
     cp -R "$CFG/$item" "$bak/$item"
   fi
 done
 
-# 2. Agents and skills (clear stale entries, then copy fresh).
-rm -rf "$CFG/agents" "$CFG/skills"
-mkdir -p "$CFG/agents" "$CFG/skills"
+# 2. Agents, skills, and plugins (clear stale entries, then copy fresh).
+rm -rf "$CFG/agents" "$CFG/skills" "$CFG/plugins"
+mkdir -p "$CFG/agents" "$CFG/skills" "$CFG/plugins"
 cp -n "$REPO"/agents/generated/*.md "$CFG/agents/"
 cp -Rn "$REPO"/skills/* "$CFG/skills/"
+cp -R "$REPO"/plugins/. "$CFG/plugins/"
 
 # 2b. Commands (overwrite the plugin's own files, preserve any user command
 #     files). Commands are user-invoked and add no model context until run.
@@ -78,8 +79,14 @@ rm -rf "$CFG/docs/rulebook"
 mkdir -p "$CFG/docs"
 cp -R "$REPO/docs/rulebook" "$CFG/docs/rulebook"
 
-# 3. Shared rulebook.
-cp "$REPO/AGENTS.md" "$CFG/AGENTS.md"
+# 3. Shared rulebook. Skip a byte-identical copy so a global install plus a
+#    matching project-root copy does not make OpenCode load the rulebook twice.
+#    The backup above already ran, so a skipped copy is still recoverable.
+if [ -f "$CFG/AGENTS.md" ] && cmp -s "$REPO/AGENTS.md" "$CFG/AGENTS.md"; then
+  echo "AGENTS.md identical, skipped"
+else
+  cp "$REPO/AGENTS.md" "$CFG/AGENTS.md"
+fi
 
 # 4. models.yaml: seed a fresh install, never overwrite a customized copy.
 if [ -f "$CFG/models.yaml" ]; then

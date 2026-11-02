@@ -22,6 +22,8 @@ Hard constraints:
 - Never `git stash clear`.
 - When in doubt, copy the affected paths to `/tmp` instead of stashing, then clean up the copy afterward.
 
+The `git-guard` plugin enforces these verbs at the tool boundary, and `OPENCODE_GIT_GUARD=0` overrides it.
+
 ## Exception: The Quality Gate
 
 The quality gate's red proof reverts changed files with `git checkout --` and an exact-path removal per `docs/rulebook/quality-gates.md`, not the stash procedure here. That procedure is self-contained: it backs up to a per-invocation `/tmp` directory first, checks the index against HEAD, and verifies the restore against a pre-proof snapshot. It never touches the stash.

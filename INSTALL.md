@@ -6,7 +6,7 @@ Install this plugin into OpenCode so the multi-agent system is available in ever
 
 - Generated per-profile agents in `agents/generated/` to `<config-dir>/agents/`
 - **14 skills** in `skills/` to `<config-dir>/skills/`
-- **2 commands** in `commands/` to `<config-dir>/commands/`
+- **4 commands** in `commands/` to `<config-dir>/commands/`
 - **Shared rulebook** `AGENTS.md` to `~/.config/opencode/AGENTS.md` (global) or `<project-root>/AGENTS.md` (per-project)
 - **Rulebook references** `docs/rulebook/` to `<config-dir>/docs/rulebook/`, linked from `AGENTS.md` and read on demand
 - **OpenCode config** `opencode.json.sample`: seeded on a fresh install, or its plugin-managed keys merged into an existing `~/.config/opencode/opencode.json` or `opencode.jsonc` (see Managed Config Keys).
@@ -15,6 +15,18 @@ Install this plugin into OpenCode so the multi-agent system is available in ever
 
 Each generated agent carries a concrete `model:` line injected from its profile.
 Role sources under `agents/roles/` and skill `.md` files declare mode and permissions but never a `model:` line; the generator strips and reports any stray one.
+
+## Stale Session Guard
+
+The `stale-session-guard` plugin blocks a prompt that would resend a long-idle session and pay full input price for a cold cache read. It fires only when a session has been idle for at least 60 minutes and holds at least 50000 tokens of context, then restores your text, writes a free note, and aborts the turn. Resend within 30 minutes to override once. Resuming a subagent session is never gated.
+
+Global plugins auto-load from `<config-dir>/plugins/`, so the installer drops it there. Set `OPENCODE_STALE_GUARD=0` to disable the guard, or override the idle default with `OPENCODE_STALE_GUARD_IDLE_MS` and the context floor with `OPENCODE_STALE_GUARD_MIN_CTX`.
+
+## Git Guard
+
+The `git-guard` plugin blocks destructive git verbs at the tool boundary before any command runs.
+Override it by prefixing a command with `OPENCODE_GIT_GUARD=0` or ending it with `# git-guard: allow`.
+It is accident protection, not a security control.
 
 ## Scripted Install (Recommended)
 
@@ -43,6 +55,8 @@ Nested keys merge as leaves, so an existing `compaction.reserved` survives while
 A config that is not strict JSON, such as one with JSONC comments, is skipped with a warning and must be merged by hand. To change the managed set, edit `MANAGED` in `scripts/merge-config.py`.
 
 ## Local Profile Prerequisites
+
+The `local` profile is active but opt-in: select `chief-local` explicitly, or set `default_profile: local` and run `scripts/apply-models.py`.
 
 The `local` profile pins every seat to `ollama/qwen3.6:35b-a3b`, the clean Qwen3.6-35B-A3B MoE at Q4_K_M (22 GB), so no local-profile agent can reach a remote model provider. It requires Ollama 0.30.0 or later. Because the installer never merges `provider`, add these keys to your active `opencode.json` or `opencode.jsonc` by hand for `chief-local` to resolve and to disable session sharing:
 
@@ -76,7 +90,7 @@ Pull the model and give it the tag the profile pins:
 ollama pull qwen3.6:35b-a3b
 ```
 
-If your local tag differs, retag it with `ollama cp <source> qwen3.6:35b-a3b`; the alias shares blobs, so it costs no extra disk. Then reinstall, restart OpenCode, and press Shift+Tab to `chief-local`. `default_profile` stays `ds+glm`; the local profile is opt-in.
+If your local tag differs, retag it with `ollama cp <source> qwen3.6:35b-a3b`; the alias shares blobs, so it costs no extra disk. Then reinstall, restart OpenCode, and press Shift+Tab to `chief-local`.
 
 Context note: the `ollama` provider uses Ollama's OpenAI-compatible endpoint, which ignores options sent in the request body. The served context comes from `OLLAMA_CONTEXT_LENGTH` (or a Modelfile), and `limit.context` must match it. The 16k KV cache (2.6 GB) plus the 22 GB Q4_K_M weights would eat the OS reserve on the reference box, so the served context is 8192. Measured there (4 GB RTX 3050 Laptop, i7-12700H, 31 GB RAM): 30 tok/s decode at 8192 context, prefill about 44 tok/s on short prompts. Only one copy fits in RAM, so parallel subagent work serializes on the single loaded model.
 
@@ -111,7 +125,7 @@ OOMScoreAdjust=300
 
 Reasoning note: `/v1` honors `reasoning_effort`, and the profile pins `reasoningEffort: low` profile-wide via the options merge, so the reasoning trace cannot crowd out the 8192 window.
 
-Session note: a session's history follows the active agent, so pressing Shift+Tab to a cloud chief resends it to that provider. End a `chief-local` session before switching if the content must stay on-device.
+Session note: if the local profile is restored, a session's history follows the active agent, so pressing Shift+Tab to a cloud chief resends it to that provider. End a `chief-local` session before switching if the content must stay on-device.
 
 ## Prerequisites
 
@@ -167,7 +181,7 @@ fi
 ```
 
 The sample sets:
-- `default_agent`: `chief-ds+glm`: every new session starts as the hybrid operator agent (DeepSeek operator model, GLM on the verification gates). `chief-ds`, `chief-glm`, and `chief-local` are the other primaries; press Shift+Tab to switch between them.
+- `default_agent`: `chief-go`: every new session starts as the OpenCode Go operator agent. `chief-ds`, `chief-glm`, and `chief-local` are the other active primaries; press Shift+Tab to switch between them.
 - `model`: the fallback for any agent without an explicit override; every generated agent carries its own `model` line, so this rarely applies.
 - `subagent_depth`: `2`, allowing a subagent to launch one nested level.
 - `compaction.prune`: `true`, dropping old tool outputs from context to reduce token cost.
@@ -185,7 +199,7 @@ The `edit`/`bash` asks are a fallback only: every generated role sets its own `e
 
 A wildcard matches slashes, so `**/mnt/**` matches any `mnt` directory at any depth and on any machine: `~/mnt/...`, `/mnt/...`, `/Volumes/disk/mnt/...`. Use `~/mnt/**` if the mount point is fixed to the home directory. Never use `~/*` or a top-level `**`: they would also match `~/.ssh` and `~/.config`. Leave `~/.config/opencode/**` out so harness edits keep prompting; that is a speed bump, not a boundary: a bash-capable agent can reach the same path through a symlink planted in an allowed writable root. The `always` option lasts for the current session.
 
-Pair the allowlist with `read` denies for secrets such as `*.env`, `**/.ssh/**`, and `**/*.pem`, since an allowed directory inherits the workspace read defaults. These denies gate the `read` tool only: `bash` and `grep` do not consult them, so they stop accidental exposure, not a determined or injected agent.
+Pair the allowlist with `read` denies for secrets such as `*.env`, `**/.ssh/**`, `**/*.pem`, `auth.json`, `~/.aws/credentials`, and `~/.netrc`, since an allowed directory inherits the workspace read defaults. These denies gate the `read` tool only: `bash` and `grep` do not consult them, so they stop accidental exposure, not a determined or injected agent.
 
 Roles deliberately do not set `read` in their frontmatter. Agent permission rules are appended after the global rules and last match wins, so a role-level `read: allow` silently overrides every global `read` deny, including the built-in `.env` ask. Leave `read` to the global config so the secret denies apply to every agent.
 
@@ -194,10 +208,10 @@ To change model IDs later, edit the repo's `models.yaml`, run `python3 scripts/a
 5. Restart OpenCode or reload config.
 
 6. Verify:
-   - Run `/agents` in the TUI; expect `chief-ds`, `chief-glm`, `chief-ds+glm`, `chief-local`, plus all installed subagents.
+   - Run `/agents` in the TUI; expect `chief-ds`, `chief-glm`, `chief-local`, `chief-go`, plus all installed subagents.
    - Check the `skill` tool description; it should list all 14 skills.
-   - Type `/` in the TUI; expect the `engineer-prompt` and `fix-bug` commands.
-   - Start a new session; it should begin as `chief-ds+glm`; press Shift+Tab to cycle to `chief-ds`, `chief-glm`, and `chief-local`.
+   - Type `/` in the TUI; expect the `engineer-prompt`, `fix-bug`, `redteam`, and `photo-generator` commands.
+   - Start a new session; it should begin as `chief-go`; press Shift+Tab to cycle to `chief-ds`, `chief-glm`, and `chief-local`.
 
 ## Per-Project Install
 
@@ -285,7 +299,7 @@ ts=$(date +%Y-%m-%d_%H%M%S)
 cp models.yaml ~/.config/opencode/models.yaml
 ```
 
-Replace the active config rather than merging it: the old per-agent `model` pins name agents that no longer exist (`chief`, `builder`), and the sample now sets `default_agent: chief-ds+glm` and disables the built-ins.
+Replace the active config rather than merging it: the old per-agent `model` pins name agents that no longer exist (`chief`, `builder`), and the sample now sets `default_agent: chief-go` and disables the built-ins.
 Back up the current config, then copy the regenerated `opencode.json.sample` over it (or hand-merge only the `model`, `default_agent`, `permission`, `provider`, and `agent` keys).
 
 ## Uninstall
@@ -314,5 +328,5 @@ rm AGENTS.md
 
 - **Agents not listed**: confirm the `.md` files are in a directory OpenCode searches (`~/.config/opencode/agents/` or `.opencode/agents/`) and that YAML frontmatter is valid.
 - **Skills not listed**: confirm each skill is in its own folder with a file named exactly `SKILL.md` and that the frontmatter `name` matches the folder name.
-- **Chief is not the default**: confirm `default_agent: chief-ds+glm` (or `chief-ds` / `chief-glm` / `chief-local`) is set in the active `opencode.json` or `opencode.jsonc`.
+- **Chief is not the default**: confirm `default_agent: chief-go` (or `chief-ds` / `chief-glm` / `chief-local`) is set in the active `opencode.json` or `opencode.jsonc`.
 - **Model overrides not applied**: confirm the provider prefix in `models.yaml` matches your OpenCode provider, then re-run `python3 scripts/apply-models.py` and merge the regenerated `opencode.json.sample` into your active config.

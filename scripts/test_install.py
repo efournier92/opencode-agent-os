@@ -52,6 +52,22 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(keybinds["agent_cycle"], "shift+tab")
             self.assertEqual(keybinds["agent_cycle_reverse"], "none")
 
+    def test_plugin_installed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = run_install(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            dest = root / "plugins" / "stale-session-guard.js"
+            self.assertTrue(dest.is_file())
+            self.assertEqual(
+                dest.read_bytes(),
+                (REPO / "plugins" / "stale-session-guard.js").read_bytes(),
+            )
+
+    def test_seat_count_covers_every_profile(self):
+        data = yaml.safe_load((REPO / "models.yaml").read_text())
+        self.assertEqual(expected_agent_count(), 14 * len(data["profiles"]))
+
     def test_reinstall_preserves(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -78,6 +94,18 @@ class TestInstall(unittest.TestCase):
             self.assertTrue((root / "commands" / "engineer-prompt.md").is_file())
             self.assertTrue((root / "commands" / "fix-bug.md").is_file())
             self.assertTrue(list(root.glob("backup-*")), "no backup dir written")
+
+    def test_identical_agents_md_is_skipped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(run_install(root).returncode, 0)
+            result = run_install(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("AGENTS.md identical, skipped", result.stdout)
+            self.assertEqual(
+                (root / "AGENTS.md").read_bytes(),
+                (REPO / "AGENTS.md").read_bytes(),
+            )
 
     def test_merge_updates_managed_preserves_provider(self):
         with tempfile.TemporaryDirectory() as tmp:
