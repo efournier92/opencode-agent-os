@@ -17,8 +17,10 @@
 set -eu
 
 DB="${OPENCODE_DB:-$HOME/.local/share/opencode/opencode.db}"
+DATA="${OPENCODE_DATA:-$(dirname "$DB")}"
 STATE="$HOME/.local/share/opencode/burn"
 LOG="$STATE/burn.log"
+HELPER="$(dirname "$0")/../../../scripts/session_artifacts.py"
 mkdir -p "$STATE"
 
 MODE=summary
@@ -64,11 +66,25 @@ msgs=$(sqlite3 -readonly "$DB" "SELECT count(*) FROM message WHERE session_id='$
 parts=$(sqlite3 -readonly "$DB" "SELECT count(*) FROM part WHERE session_id='$SID';")
 share=$(sqlite3 -readonly "$DB" "SELECT coalesce((SELECT url FROM session_share WHERE session_id='$SID'),'');" 2>/dev/null || true)
 
+ARTIFACTS=""
+if [ -f "$HELPER" ]; then
+  ARTIFACTS=$(python3 "$HELPER" paths "$DB" "$SID" "$DATA" 2>/dev/null || true)
+fi
+if [ -n "$ARTIFACTS" ]; then
+  artifact_count=$(printf '%s\n' "$ARTIFACTS" | wc -l | tr -d ' ')
+else
+  artifact_count=0
+fi
+
 echo "session : $SID"
 echo "title   : $title"
 echo "dir     : $dir"
 echo "content : $msgs messages, $parts parts"
 echo "share   : ${share:-none}"
+echo "artifacts: $artifact_count file(s)"
+if [ -n "$ARTIFACTS" ]; then
+  printf '%s\n' "$ARTIFACTS" | while IFS= read -r p; do echo "          $p"; done
+fi
 echo "cwd     : $PWD"
 if [ -n "$share" ]; then
   case "${OPENCODE_DISABLE_SHARE:-}" in
@@ -94,6 +110,16 @@ fi
 OC=$(command -v opencode || true)
 [ -n "$OC" ] || OC=opencode
 PF="$STATE/$SID.pid"
+
+# Artifacts are not held open by the client, so they go now while the
+# session delete stays deferred until process exit.
+if [ -f "$HELPER" ]; then
+  {
+    echo "[$(date -u +%FT%TZ)] artifacts $SID"
+    python3 "$HELPER" delete "$DB" "$SID" "$DATA"
+  } >> "$LOG" 2>&1 || true
+  echo "artifacts: removed (details in $LOG)"
+fi
 
 nohup sh -c "while kill -0 $PID 2>/dev/null; do sleep 2; done; { echo \"[\$(date -u +%FT%TZ)] burn $SID\"; $OC session delete $SID; } >> '$LOG' 2>&1; rm -f '$PF'" >/dev/null 2>&1 &
 wp=$!

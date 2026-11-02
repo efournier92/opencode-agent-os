@@ -8,6 +8,7 @@ as the live OpenCode store, then drives the script against it.
 """
 
 import os
+import json
 import sqlite3
 import subprocess
 import sys
@@ -27,6 +28,10 @@ CREATE TABLE session (
     directory TEXT,
     title TEXT,
     share_url TEXT,
+    model TEXT,
+    tokens_input INTEGER,
+    tokens_output INTEGER,
+    tokens_cache_read INTEGER,
     time_created INTEGER NOT NULL,
     time_updated INTEGER NOT NULL
 );
@@ -77,6 +82,23 @@ def ago(days):
     return int(time.time() * 1000) - days * 86400 * 1000
 
 
+USAGE_ARCHIVE_STUB = '''
+import json
+import os
+import sqlite3
+
+DEFAULT_PATH = os.environ["FAKE_ARCHIVE"]
+
+
+def append_rows(rows, path=DEFAULT_PATH):
+    conn = sqlite3.connect(os.environ["FAKE_DB"])
+    alive = [row[0] for row in conn.execute("SELECT id FROM session")]
+    conn.close()
+    with open(path, "a") as handle:
+        print(json.dumps({"rows": rows, "alive": alive}), file=handle)
+'''
+
+
 class PruneTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -106,35 +128,72 @@ class PruneTest(unittest.TestCase):
             "    conn.close()\n"
         )
         fake.chmod(0o755)
+        stub = self.root / "stub"
+        stub.mkdir()
+        (stub / "usage_archive.py").write_text(USAGE_ARCHIVE_STUB)
+        self.archive = self.root / "usage.jsonl"
         self.env = dict(os.environ)
         self.env.pop("OPENCODE_DISABLE_SHARE", None)
         self.env["PATH"] = str(bindir) + os.pathsep + os.environ["PATH"]
+        old_pythonpath = self.env.get("PYTHONPATH")
+        self.env["PYTHONPATH"] = str(stub) + (
+            os.pathsep + old_pythonpath if old_pythonpath else ""
+        )
         self.env["FAKE_LOG"] = str(self.calls)
         self.env["FAKE_DB"] = str(self.db)
+        self.env["FAKE_ARCHIVE"] = str(self.archive)
         conn = sqlite3.connect(self.db)
         conn.executescript(SCHEMA)
         conn.commit()
         conn.close()
 
     def add_session(
-        self, sid, age_days, parent=None, share_url=None, share_row=False
+        self,
+        sid,
+        age_days,
+        parent=None,
+        share_url=None,
+        share_row=False,
+        model=None,
+        artifact=None,
     ):
         ts = ago(age_days)
         conn = sqlite3.connect(self.db)
         conn.execute(
             "INSERT INTO session"
             "(id, parent_id, slug, directory, title, share_url,"
-            " time_created, time_updated) VALUES (?,?,?,?,?,?,?,?)",
-            (sid, parent, sid, "/tmp", sid, share_url, ts - 1000, ts),
+            " model, tokens_input, tokens_output, tokens_cache_read,"
+            " time_created, time_updated) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                sid,
+                parent,
+                sid,
+                "/tmp",
+                sid,
+                share_url,
+                model,
+                11 if model else None,
+                22 if model else None,
+                33 if model else None,
+                ts - 1000,
+                ts,
+            ),
         )
         conn.execute(
             "INSERT INTO message(id, session_id, time_created, time_updated, data)"
             " VALUES (?,?,?,?,?)",
             ("msg_" + sid, sid, ts, ts, "{}"),
         )
+        part_data = "{}"
+        if artifact:
+            artifact.parent.mkdir(parents=True, exist_ok=True)
+            artifact.write_text("tool output")
+            part_data = json.dumps(
+                {"state": {"metadata": {"outputPath": str(artifact)}}}
+            )
         conn.execute(
             "INSERT INTO part(id, message_id, session_id, data) VALUES (?,?,?,?)",
-            ("prt_" + sid, "msg_" + sid, sid, "{}"),
+            ("prt_" + sid, "msg_" + sid, sid, part_data),
         )
         conn.execute(
             "INSERT INTO todo"
@@ -320,6 +379,80 @@ class PruneTest(unittest.TestCase):
         self.assertEqual(first.returncode, 0, first.stderr)
         self.assertEqual(second.returncode, 0, second.stderr)
         self.assertIn("nothing to delete", second.stdout)
+
+    def test_usage_archived_before_delete(self):
+        self.add_session("ses_old", 10, model="model-x")
+        self.add_session("ses_recent", 0)
+
+        result = self.run_script("--apply", "--no-vacuum")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        records = [json.loads(line) for line in self.archive.read_text().splitlines()]
+        self.assertEqual(len(records), 1)
+        self.assertIn("ses_old", records[0]["alive"])
+        row = records[0]["rows"][0]
+        self.assertEqual(row["model"], "model-x")
+        self.assertEqual(row["tokens_input"], 11)
+        self.assertEqual(row["tokens_output"], 22)
+        self.assertEqual(row["tokens_cache_read"], 33)
+
+    def test_artifact_paths_removed_and_db_hardened(self):
+        artifact = self.root / "tool-output" / "ses_old.txt"
+        diff = self.root / "storage" / "session_diff" / "ses_old.json"
+        self.add_session("ses_old", 10, artifact=artifact)
+        self.add_session("ses_recent", 0)
+        diff.parent.mkdir(parents=True, exist_ok=True)
+        diff.write_text("{}")
+        os.chmod(self.db, 0o644)
+
+        result = self.run_script("--apply", "--no-vacuum")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(artifact.exists())
+        self.assertFalse(diff.exists())
+        self.assertIn("artifacts: 2 deleted", result.stdout)
+        self.assertEqual(self.db.stat().st_mode & 0o777, 0o600)
+
+    def test_dry_run_reports_artifacts_without_deleting(self):
+        artifact = self.root / "tool-output" / "ses_old.txt"
+        self.add_session("ses_old", 10, artifact=artifact)
+        self.add_session("ses_recent", 0)
+
+        result = self.run_script("--no-vacuum")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("artifacts: 1 file(s) would be deleted", result.stdout)
+        self.assertIn("content-addressed and shared", result.stdout)
+        self.assertTrue(artifact.exists())
+        self.assertFalse(self.archive.exists())
+
+    def test_gc_snapshots_dry_run_lists_without_deleting(self):
+        self.add_session("ses_recent", 0)
+        snap = self.root / "snapshot"
+        snap.mkdir()
+        candidate = snap / ("c" * 40)
+        candidate.mkdir()
+        env = dict(self.env, OPENCODE_SNAPSHOT_DIR=str(snap))
+
+        result = self.run_script("--gc-snapshots", env=env)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("candidates: 1", result.stdout)
+        self.assertTrue(candidate.exists())
+
+    def test_gc_snapshots_apply_deletes_unreferenced(self):
+        self.add_session("ses_recent", 0)
+        snap = self.root / "snapshot"
+        snap.mkdir()
+        candidate = snap / ("d" * 40)
+        candidate.mkdir()
+        env = dict(self.env, OPENCODE_SNAPSHOT_DIR=str(snap))
+
+        result = self.run_script("--apply", "--gc-snapshots", env=env)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("deleted: 1", result.stdout)
+        self.assertFalse(candidate.exists())
 
 
 if __name__ == "__main__":

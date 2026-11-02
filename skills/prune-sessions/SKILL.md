@@ -44,6 +44,20 @@ The policy is 7 days by default; `--days N` changes the cutoff.
 
 Other options: `--no-vacuum` skips the vacuum, `--vacuum-only` runs only the vacuum, and `--db PATH` targets another database.
 
+## Snapshot GC
+
+Session pruning never removes snapshots on its own. Snapshots live under `~/.local/share/opencode/snapshot/` as content-addressed git-object directories named by 40-hex hashes, and they are shared across sessions, so deleting them per session is unsafe.
+
+The garbage collector is opt-in. `--gc-snapshots` runs it after a successful prune and prints the candidates, which are snapshot directories whose hash appears in no text column of `session`, `message`, or `part`.
+
+Deletion requires both flags together: `--gc-snapshots --apply`. A dry run and a plain `--gc-snapshots` never delete anything, and a GC failure is reported without aborting the prune.
+
+The collector resolves its root from `$OPENCODE_SNAPSHOT_DIR` and its database from `$OPENCODE_DB`, defaulting to the paths above. It is also runnable directly:
+
+```
+python3 scripts/snapshot_gc.py --apply
+```
+
 ## Shared Links
 
 An expired session with a `share_url` or a `session_share` row is removed through `opencode session delete` first, which revokes the public link. If that command fails, the run aborts before any local deletion.
@@ -63,4 +77,5 @@ When `OPENCODE_DISABLE_SHARE` is truthy the share service is inert, so the scrip
 
 - The deletion commits immediately, even when the vacuum is deferred. Sessions that an open TUI still holds may error on their next write until OpenCode restarts.
 - The script never touches `auth.json`, logs, `tool-output/`, snapshots, or the DB file path itself.
+- Snapshots are only removed by the opt-in `--gc-snapshots --apply` pair, and only when no session references their hash.
 - A second run finds nothing to delete; the prune is idempotent.

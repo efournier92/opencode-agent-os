@@ -10,6 +10,7 @@ the vacuum until OpenCode exits, because a running client holds the DB open.
 """
 
 import argparse
+import importlib.util
 import os
 import shlex
 import shutil
@@ -22,6 +23,46 @@ from pathlib import Path
 DEFAULT_DAYS = 7
 DAY_MS = 86400 * 1000
 TRUTHY = {"1", "true", "yes", "on"}
+ARCHIVE_KEYS = (
+    "time_created",
+    "time_updated",
+    "model",
+    "tokens_input",
+    "tokens_output",
+    "tokens_cache_read",
+)
+
+
+def _scripts_dir():
+    return Path(__file__).resolve().parents[3] / "scripts"
+
+
+def _load_session_artifacts():
+    path = _scripts_dir() / "session_artifacts.py"
+    spec = importlib.util.spec_from_file_location("session_artifacts", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+session_artifacts = _load_session_artifacts()
+
+
+def _load_snapshot_gc():
+    path = _scripts_dir() / "snapshot_gc.py"
+    spec = importlib.util.spec_from_file_location("snapshot_gc", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _usage_archive():
+    try:
+        import usage_archive
+    except ImportError:
+        sys.path.insert(0, str(_scripts_dir()))
+        import usage_archive
+    return usage_archive
 
 FAMILY_SQL = """
 WITH RECURSIVE roots(id) AS (
@@ -119,6 +160,39 @@ def report_header(total, expired, cutoff, days, db):
     print(f"db: {human_size(db_size(db))}")
 
 
+def snapshot_note():
+    print("snapshot: content-addressed and shared; never deleted by session prune")
+
+
+def artifact_paths(db, session_ids):
+    root = Path(db).resolve().parent
+    found = {}
+    for sid in sorted(session_ids):
+        try:
+            found[sid] = session_artifacts.paths_for_session(db, sid, root)
+        except (OSError, sqlite3.Error) as exc:
+            print(f"warning: cannot list artifacts for {sid}: {exc}", file=sys.stderr)
+    return found
+
+
+def archive_usage(conn, session_ids):
+    rows = []
+    for sid in sorted(session_ids):
+        row = conn.execute(
+            f"SELECT {', '.join(ARCHIVE_KEYS)} FROM session WHERE id = ?", (sid,)
+        ).fetchone()
+        if row:
+            rows.append(dict(zip(ARCHIVE_KEYS, row)))
+    if not rows:
+        return
+    try:
+        module = _usage_archive()
+    except ImportError:
+        print("warning: usage_archive unavailable, pruning without archive", file=sys.stderr)
+        return
+    module.append_rows(rows)
+
+
 def dry_run(db, days):
     conn = connect_read(db)
     try:
@@ -127,6 +201,9 @@ def dry_run(db, days):
     finally:
         conn.close()
     report_header(total, expired, cutoff, days, db)
+    count = sum(len(paths) for paths in artifact_paths(db, expired).values())
+    print(f"artifacts: {count} file(s) would be deleted")
+    snapshot_note()
     print("dry run: nothing deleted, pass --apply to delete")
     print("vacuum: not run (dry run)")
     return 0
@@ -173,6 +250,7 @@ def delete_expired(db, days, no_vacuum):
         probe.close()
 
     report_header(total, expired, cutoff, days, db)
+    snapshot_note()
     if not expired:
         print("nothing to delete")
         return 0
@@ -213,6 +291,10 @@ def delete_expired(db, days, no_vacuum):
         expired -= skipped
         revoked = shared - skipped
 
+        doomed_ids = expired | revoked
+        archive_usage(conn, doomed_ids)
+        artifacts = artifact_paths(db, doomed_ids)
+
         conn.execute("CREATE TEMP TABLE doomed(id TEXT PRIMARY KEY)")
         conn.executemany(
             "INSERT OR IGNORE INTO doomed(id) VALUES (?)",
@@ -244,6 +326,22 @@ def delete_expired(db, days, no_vacuum):
         conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     finally:
         conn.close()
+    removed = kept = 0
+    for sid in sorted(artifacts):
+        try:
+            deleted_paths, failed = session_artifacts.delete_paths(artifacts[sid])
+        except Exception as exc:  # one bad artifact must not abort the prune
+            print(f"warning: artifact cleanup failed for {sid}: {exc}", file=sys.stderr)
+            continue
+        removed += len(deleted_paths)
+        kept += len(failed)
+        for path in failed:
+            print(f"warning: could not delete artifact {path}", file=sys.stderr)
+    try:
+        session_artifacts.harden_db(db)
+    except OSError as exc:
+        print(f"warning: cannot harden database permissions: {exc}", file=sys.stderr)
+    print(f"artifacts: {removed} deleted, {kept} skipped")
     deleted = local + len(revoked)
     print(f"deleted: {deleted} sessions, {events} events")
     print(f"db: {human_size(before)} -> {human_size(db_size(db))}")
@@ -336,12 +434,24 @@ def handle_vacuum(db):
     return vacuum(db)
 
 
+def run_snapshot_gc(db, apply):
+    """Run the shared-snapshot GC, never letting its failure abort the prune."""
+    argv = ["--db", str(db)]
+    if apply:
+        argv.append("--apply")
+    try:
+        _load_snapshot_gc().main(argv)
+    except Exception as exc:  # snapshot cleanup is best effort
+        print(f"warning: snapshot gc failed: {exc}", file=sys.stderr)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--days", type=int, default=DEFAULT_DAYS)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--vacuum-only", action="store_true")
     parser.add_argument("--no-vacuum", action="store_true")
+    parser.add_argument("--gc-snapshots", action="store_true")
     parser.add_argument("--db")
     args = parser.parse_args(argv)
 
@@ -355,13 +465,18 @@ def main(argv=None):
         return 1
     try:
         if args.vacuum_only:
-            return vacuum(db)
-        if args.apply:
-            return delete_expired(db, args.days, args.no_vacuum)
-        return dry_run(db, args.days)
+            result = vacuum(db)
+        elif args.apply:
+            result = delete_expired(db, args.days, args.no_vacuum)
+        else:
+            result = dry_run(db, args.days)
     except sqlite3.Error as exc:
         print(f"sqlite error: {exc}", file=sys.stderr)
         return 1
+    if args.gc_snapshots and result == 0 and not args.vacuum_only:
+        run_snapshot_gc(db, args.apply)
+    return result
+
 
 
 if __name__ == "__main__":
